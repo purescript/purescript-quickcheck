@@ -17,33 +17,33 @@ instance Arb Number where
 instance Arb Boolean where
   arb = do
     n <- random
-    ret ((n * 2) < 1)
+    return ((n * 2) < 1)
 
 instance (Arb a) => Arb [a] where
   arb = do
     b <- arb
-    if b then ret [] else do
+    if b then return [] else do
       a <- arb
       as <- arb
-      ret (a : as)
+      return (a : as)
 
 class Testable prop where
   test :: forall eff. prop -> Eff (random :: Random | eff) Result
 
 instance Testable Result where
-  test = ret
+  test = return
 
 instance Testable Boolean where
-  test true = ret Success
-  test false = ret $ Failed "Test returned false"
+  test true = return Success
+  test false = return $ Failed "Test returned false"
 
 instance (Show t, Arb t, Testable prop) => Testable (t -> prop) where
   test f = do
     t <- arb
     result <- test (f t)
     case result of
-      Success -> ret Success
-      Failed msg -> ret $ Failed $ "Failed on input " ++ show t ++ ": \n" ++ msg
+      Success -> return Success
+      Failed msg -> return $ Failed $ "Failed on input " ++ show t ++ ": \n" ++ msg
 
 quickCheck' :: forall prop eff. (Testable prop) => Number -> prop -> Eff (random :: Random, trace :: Trace | eff) {}
 quickCheck' 0 _ = trace "All tests passed" 
