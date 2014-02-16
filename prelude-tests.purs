@@ -19,3 +19,7 @@ main = do
 
   Trace.trace "Precedence of && and ||:"
   quickCheck $ \a b c -> ((a :: Boolean && b) || c) == ((a || c) && (b || c))
+  
+  Trace.trace "Test Eq instance for Ref:"
+  quickCheck $ \a -> (Ref a :: Ref Number) == Ref a
+  quickCheck $ \a -> not $ (Ref a :: Ref Number /= Ref a)
