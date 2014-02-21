@@ -1,9 +1,9 @@
 module Main where
 
 import Prelude
-import Eff
+import Data.Array
+import Control.Monad.Eff
 import QuickCheck
-import Arrays
 
 prop1 :: Number -> Number -> Boolean
 prop1 a b = a < b

@@ -1,10 +1,10 @@
 module QuickCheck where
 
 import Prelude
-import Eff
+import Data.Array
+import Debug.Trace
+import Control.Monad.Eff
 import Random
-import Arrays
-import Trace
 
 data Result = Success | Failed String
 
