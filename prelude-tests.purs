@@ -13,15 +13,15 @@ testReadShow :: Number -> Boolean
 testReadShow a = a == read (show a)
 
 main = do
-  trace "testConst:"
+  Debug.Trace.trace "testConst:"
   quickCheck testConst
 
-  trace "testReadShow:"
+  Debug.Trace.trace "testReadShow:"
   quickCheck testReadShow
 
-  trace "Precedence of && and ||:"
+  Debug.Trace.trace "Precedence of && and ||:"
   quickCheck $ \a b c -> ((a :: Boolean && b) || c) == ((a || c) && (b || c))
   
-  trace "Test Eq instance for Ref:"
+  Debug.Trace.trace "Test Eq instance for Ref:"
   quickCheck $ \a -> (Ref a :: Ref Number) == Ref a
   quickCheck $ \a -> not $ (Ref a :: Ref Number /= Ref a)
