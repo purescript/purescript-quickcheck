@@ -1,25 +1,25 @@
 module QuickCheck where
 
 import Prelude
-import Eff
+import Control.Monad.Eff
 import Random
-import Arrays
-import Trace
+import Data.Array
+import Debug.Trace
 
 data Result = Success | Failed String
 
 class Arb t where
   arb :: forall eff. Eff (random :: Random | eff) t
 
-instance Arb Number where
+instance arbNumber :: Arb Number where
   arb = random 
 
-instance Arb Boolean where
+instance arbBoolean :: Arb Boolean where
   arb = do
     n <- random
     return ((n * 2) < 1)
 
-instance (Arb a) => Arb [a] where
+instance arbArray :: (Arb a) => Arb [a] where
   arb = do
     b <- arb
     if b then return [] else do
@@ -30,14 +30,14 @@ instance (Arb a) => Arb [a] where
 class Testable prop where
   test :: forall eff. prop -> Eff (random :: Random | eff) Result
 
-instance Testable Result where
+instance testableResult :: Testable Result where
   test = return
 
-instance Testable Boolean where
+instance testableBoolean :: Testable Boolean where
   test true = return Success
   test false = return $ Failed "Test returned false"
 
-instance (Show t, Arb t, Testable prop) => Testable (t -> prop) where
+instance testableFunction :: (Show t, Arb t, Testable prop) => Testable (t -> prop) where
   test f = do
     t <- arb
     result <- test (f t)
