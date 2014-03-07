@@ -1,4 +1,4 @@
-module QuickCheck where
+module Test.QuickCheck where
 
 import Prelude
 import Data.Array

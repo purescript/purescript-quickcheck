@@ -3,7 +3,7 @@ module Main where
 import Prelude
 import Data.Array
 import Control.Monad.Eff
-import QuickCheck
+import Test.QuickCheck
 
 prop1 :: Number -> Number -> Boolean
 prop1 a b = a < b

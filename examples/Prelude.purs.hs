@@ -2,7 +2,7 @@ module Main where
 
 import Prelude
 import Control.Monad.Eff
-import QuickCheck
+import Test.QuickCheck
 import Data.Eq
 import Debug.Trace
 
