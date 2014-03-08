@@ -2,6 +2,9 @@ module Test.QuickCheck where
 
 import Prelude
 import Data.Array
+import Data.Maybe
+import Data.Either
+import Data.Tuple
 import Debug.Trace
 import Control.Monad.Eff
 import Random
@@ -26,6 +29,19 @@ instance arbArray :: (Arb a) => Arb [a] where
       a <- arb
       as <- arb
       return (a : as)
+
+instance arbMaybe :: (Arb a) => Arb (Maybe a) where
+  arb = do
+    b <- arb
+    if b then pure Nothing else Just <$> arb
+
+instance arbEither :: (Arb a, Arb b) => Arb (Either a b) where
+  arb = do
+    b <- arb
+    if b then Left <$> arb else Right <$> arb
+
+instance arbTuple :: (Arb a, Arb b) => Arb (Tuple a b) where
+  arb = Tuple <$> arb <*> arb
 
 class Testable prop where
   test :: forall eff. prop -> Eff (random :: Random | eff) Result

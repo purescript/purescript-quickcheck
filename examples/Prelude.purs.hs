@@ -9,15 +9,9 @@ import Debug.Trace
 testConst :: Number -> Number -> Number -> Boolean
 testConst a b c = const a b == const a c
 
-testReadShow :: Number -> Boolean
-testReadShow a = a == read (show a)
-
 main = do
   Debug.Trace.trace "testConst:"
   quickCheck testConst
-
-  Debug.Trace.trace "testReadShow:"
-  quickCheck testReadShow
 
   Debug.Trace.trace "Precedence of && and ||:"
   quickCheck $ \a b c -> ((a :: Boolean && b) || c) == ((a || c) && (b || c))
