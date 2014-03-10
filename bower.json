@@ -1,0 +1,12 @@
+{
+  "name": "purescript-quickcheck",
+  "version": "0.0.1",
+  "ignore": [
+    ".jshintrc",
+    "**/*.txt",
+    "tmp/**"
+  ],
+  "dependencies": {
+    "purescript-prelude": "src"
+  }
+}
