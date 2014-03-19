@@ -7,7 +7,7 @@ import Data.Either
 import Data.Tuple
 import Debug.Trace
 import Control.Monad.Eff
-import Random
+import Control.Monad.Eff.Random
 
 data Result = Success | Failed String
 
