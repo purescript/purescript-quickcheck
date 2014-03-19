@@ -1,4 +1,4 @@
-module Main where
+module Examples where
 
 import Prelude
 import Data.Array
