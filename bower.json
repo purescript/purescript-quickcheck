@@ -5,5 +5,12 @@
     ".jshintrc",
     "**/*.txt",
     "tmp/**"
-  ]
+  ],
+  "dependencies": {
+    "purescript-random": "*",
+    "purescript-arrays": "*",
+    "purescript-maybe": "*",
+    "purescript-either": "*",
+    "purescript-tuples": "*"
+  }
 }
