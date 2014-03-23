@@ -7,6 +7,7 @@ import Data.Either
 import Data.Tuple
 import Debug.Trace
 import Control.Monad.Eff
+import Control.Monad.Eff.Exception
 import Control.Monad.Eff.Random
 
 data Result = Success | Failed String
@@ -61,13 +62,13 @@ instance testableFunction :: (Show t, Arb t, Testable prop) => Testable (t -> pr
       Success -> return Success
       Failed msg -> return $ Failed $ "Failed on input " ++ show t ++ ": \n" ++ msg
 
-quickCheck' :: forall prop eff. (Testable prop) => Number -> prop -> Eff (random :: Random, trace :: Trace | eff) {}
+quickCheck' :: forall prop eff. (Testable prop) => Number -> prop -> Eff (random :: Random, trace :: Trace, err :: Exception String | eff) {}
 quickCheck' 0 _ = trace "All tests passed" 
 quickCheck' n prop = do
   result <- test prop
   case result of
     Success -> quickCheck' (n - 1) prop
-    Failed msg -> trace $ "Test failed: \n" ++ msg
+    Failed msg -> throwException $ "Test failed: \n" ++ msg
 
-quickCheck :: forall prop eff. (Testable prop) => prop -> Eff (random :: Random, trace :: Trace | eff) {}
+quickCheck :: forall prop eff. (Testable prop) => prop -> Eff (random :: Random, trace :: Trace, err :: Exception String | eff) {}
 quickCheck prop = quickCheck' 100 prop

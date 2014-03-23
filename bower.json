@@ -11,6 +11,7 @@
     "purescript-arrays": "*",
     "purescript-maybe": "*",
     "purescript-either": "*",
-    "purescript-tuples": "*"
+    "purescript-tuples": "*",
+    "purescript-exceptions": "*"
   }
 }
