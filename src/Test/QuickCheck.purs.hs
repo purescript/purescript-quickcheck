@@ -7,6 +7,7 @@ import Control.Monad.Eff.Random
 import Data.Array
 import Data.Maybe
 import Data.Either
+import Data.String
 import Data.Tuple
 
 import Debug.Trace
@@ -115,8 +116,3 @@ foreign import randomRange
   \    return Math.floor(Math.random() * (high - low + 1)) + low;\
   \  }\
   \}" :: Number -> Number -> Number
-
-foreign import fromCharCode
-  "function fromCharCode(n) {\
-  \  return String.fromCharCode(n);\
-  \}" :: Number -> String

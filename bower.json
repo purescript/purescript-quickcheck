@@ -13,6 +13,7 @@
     "purescript-either": "*",
     "purescript-tuples": "*",
     "purescript-exceptions": "*",
-    "purescript-math": "*"
+    "purescript-math": "*",
+    "purescript-strings": "*"
   }
 }
