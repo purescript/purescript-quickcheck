@@ -3,7 +3,6 @@ module Test.QuickCheck where
 import Control.Monad.Eff
 import Control.Monad.Eff.Exception
 import Control.Monad.Eff.Random
-import Control.Monad.Eff.Unsafe
 
 import Data.Array
 import Data.Maybe
