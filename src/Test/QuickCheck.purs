@@ -12,6 +12,8 @@ import Control.Monad.Eff.Random
 
 data Result = Success | Failed String
 
+type QC = forall eff. Eff (random :: Random, trace :: Trace, err :: Exception String | eff) {}
+
 class Arb t where
   arb :: forall eff. Eff (random :: Random | eff) t
 
@@ -62,7 +64,7 @@ instance testableFunction :: (Show t, Arb t, Testable prop) => Testable (t -> pr
       Success -> return Success
       Failed msg -> return $ Failed $ "Failed on input " ++ show t ++ ": \n" ++ msg
 
-quickCheck' :: forall prop eff. (Testable prop) => Number -> prop -> Eff (random :: Random, trace :: Trace, err :: Exception String | eff) {}
+quickCheck' :: forall prop. (Testable prop) => Number -> prop -> QC
 quickCheck' 0 _ = trace "All tests passed" 
 quickCheck' n prop = do
   result <- test prop
@@ -70,5 +72,5 @@ quickCheck' n prop = do
     Success -> quickCheck' (n - 1) prop
     Failed msg -> throwException $ "Test failed: \n" ++ msg
 
-quickCheck :: forall prop eff. (Testable prop) => prop -> Eff (random :: Random, trace :: Trace, err :: Exception String | eff) {}
+quickCheck :: forall prop. (Testable prop) => prop -> QC
 quickCheck prop = quickCheck' 100 prop

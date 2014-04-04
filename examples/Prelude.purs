@@ -1,10 +1,9 @@
 module PreludeTests where
 
-import Prelude
 import Control.Monad.Eff
-import Test.QuickCheck
 import Data.Eq
 import Debug.Trace
+import Test.QuickCheck
 
 testConst :: Number -> Number -> Number -> Boolean
 testConst a b c = const a b == const a c

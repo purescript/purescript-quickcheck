@@ -2,9 +2,15 @@
   "name": "purescript-quickcheck",
   "version": "0.0.1",
   "ignore": [
-    ".jshintrc",
-    "**/*.txt",
-    "tmp/**"
+    "**/.*",
+    "bower_components",
+    "externs",
+    "js",
+    "node_modules",
+    "tests",
+    "tmp",
+    "Gruntfile.js",
+    "package.json"
   ],
   "dependencies": {
     "purescript-random": "*",

@@ -1,29 +1,44 @@
 module.exports = function(grunt) {
 
-    "use strict";
+  "use strict";
 
-    grunt.initConfig({ 
+  grunt.initConfig({ 
+  
+    libFiles: [
+      "src/**/*.purs",
+      "bower_components/purescript-*/src/**/*.purs",
+      "bower_components/purescript-*/src/**/*.purs.hs"
+    ],
     
-        clean: ["externs", "js"],
+    clean: {
+      tmp: ["tmp"],
+      lib: ["js", "externs"]
+    },
+  
+    pscMake: ["<%=libFiles%>"],
+    dotPsci: ["<%=libFiles%>"],
+  
+    psc: {
+      prelude: {
+        options: {
+          module: "PreludeTests",
+          main: "PreludeTests"
+        },
+        src: ["examples/Prelude.purs", "<%=libFiles%>"],
+        dest: "tmp/Prelude.js"
+      }
+    },
     
-        "purescript-make": {
-            options: {
-                tco: true,
-                magicDo: true
-            },
-            lib: {
-                src:
-                    [ "src/**/*.purs.hs"
-                    , "examples/**/*.purs.hs"
-                    , "bower_components/purescript-*/src/**/*.purs"
-                    ]
-            }
-        }
-        
-    });
+    execute: {
+      prelude: "tmp/Prelude.js"
+    }      
+  });
 
-    grunt.loadNpmTasks("grunt-purescript");
-    grunt.loadNpmTasks("grunt-contrib-clean");
-
-    grunt.registerTask("default", ["purescript-make:lib"]);
+  grunt.loadNpmTasks("grunt-contrib-clean");
+  grunt.loadNpmTasks("grunt-purescript");
+  grunt.loadNpmTasks("grunt-execute");
+  
+  grunt.registerTask("make", ["pscMake", "dotPsci"]);
+  grunt.registerTask("examples", ["clean:tmp", "psc", "execute"]);
+  grunt.registerTask("default", ["make", "examples"]);
 };
