@@ -65,12 +65,15 @@ instance testableFunction :: (Show t, Arb t, Testable prop) => Testable (t -> pr
       Failed msg -> return $ Failed $ "Failed on input " ++ show t ++ ": \n" ++ msg
 
 quickCheck' :: forall prop. (Testable prop) => Number -> prop -> QC
-quickCheck' 0 _ = trace "All tests passed" 
-quickCheck' n prop = do
-  result <- test prop
-  case result of
-    Success -> quickCheck' (n - 1) prop
-    Failed msg -> throwException $ "Test failed: \n" ++ msg
+quickCheck' n prop = run n prop n
+  where
+  run 2 _ 1 = trace $ "Test passed" 
+  run n _ t | n == t = trace $ show t ++ " tests passed" 
+  run n prop t = do
+    result <- test prop
+    case result of
+      Success -> run (n + 1) prop t
+      Failed msg -> throwException $ "Test failed: \n" ++ msg
 
 quickCheck :: forall prop. (Testable prop) => prop -> QC
 quickCheck prop = quickCheck' 100 prop
