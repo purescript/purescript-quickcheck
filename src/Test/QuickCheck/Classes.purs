@@ -40,9 +40,6 @@ checkApplicative ta tb tc = do
 
   homomorphism :: forall f a b. (Applicative f, Arb (a -> b), Arb a, Eq (f b)) => f a -> f b -> (a -> b) -> a -> Boolean
   homomorphism _ tb f x = (pure f <*> pure x) == (pure (f x) `asTypeOf` tb)
-    where
-    asTypeOf :: forall a. a -> a -> a
-    asTypeOf x _ = x
 
   interchange :: forall f a b. (Applicative f, Arb a, Arb (f (a -> b)), Eq (f b)) => f a -> f b -> a -> f (a -> b) -> Boolean
   interchange _ _ y u = (u <*> pure y) == (pure (\x -> x y) <*> u)
