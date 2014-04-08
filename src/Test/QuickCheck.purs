@@ -14,7 +14,7 @@ data Result = Success | Failed String
 
 type QC = forall eff. Eff (random :: Random, trace :: Trace, err :: Exception String | eff) {}
 
-class Arb t where
+class (Show t) <= Arb t where
   arb :: forall eff. Eff (random :: Random | eff) t
 
 instance arbNumber :: Arb Number where

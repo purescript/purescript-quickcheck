@@ -6,7 +6,7 @@ import Test.QuickCheck (QC(..), Arb, quickCheck)
 -- Functor
 --
 
-checkFunctor :: forall f a. (Functor f, Arb a, Arb (a -> a), Arb (f a), Eq (f a), Show a, Show (a -> a), Show (f a)) => f a -> QC
+checkFunctor :: forall f a. (Functor f, Arb a, Arb (a -> a), Arb (f a), Eq (f a)) => f a -> QC
 checkFunctor t = do
   quickCheck $ identity t
   quickCheck $ associativity t
@@ -23,7 +23,7 @@ checkFunctor t = do
 -- Applicative
 --
 
-checkApplicative :: forall f a b c. (Applicative f, Show (f a), Show (f (a -> b)), Show (f (b -> c)), Show (a -> b), Show a, Arb (f a), Arb (f (a -> b)), Arb (f (b -> c)), Arb (a -> b), Arb a, Eq (f a), Eq (f b), Eq (f c)) => f a -> f b -> f c -> QC
+checkApplicative :: forall f a b c. (Applicative f, Arb (f a), Arb (f (a -> b)), Arb (f (b -> c)), Arb (a -> b), Arb a, Eq (f a), Eq (f b), Eq (f c)) => f a -> f b -> f c -> QC
 checkApplicative ta tb tc = do
   quickCheck $ identity ta
   quickCheck $ composition ta tb tc
@@ -48,7 +48,7 @@ checkApplicative ta tb tc = do
 -- Monad
 --
 
-checkMonad :: forall m a. (Monad m, Arb a, Arb (a -> m a), Arb (m a), Eq (m a), Show a, Show (a -> m a), Show (m a)) => m a -> QC
+checkMonad :: forall m a. (Monad m, Arb a, Arb (a -> m a), Arb (m a), Eq (m a)) => m a -> QC
 checkMonad t = do
   quickCheck $ leftIdentity t
   quickCheck $ rightIdentity t
