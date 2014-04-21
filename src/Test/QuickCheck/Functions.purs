@@ -1,7 +1,7 @@
 module Test.QuickCheck.Functions where
 
 import Control.Monad.Eff.Random.Extras.Unsafe (choice)
-import Test.QuickCheck (Arb)
+import Test.QuickCheck (Arb, arb)
 import qualified Data.String as S
 
 -- |
@@ -86,4 +86,14 @@ instance arbBoolToNum :: Arb (Boolean -> Number) where
 instance showBoolToNum :: Show (Boolean -> Number) where
   show _ = "<Boolean -> Number>"
   
+-- |
+-- Functors
+--
 
+instance arbFmap :: (Functor f, Arb (a -> b)) => Arb (f a -> f b) where
+  arb = do
+    f <- arb
+    return $ (<$>) f
+               
+instance showArbFmap :: (Functor f, Arb (a -> b)) => Show (f a -> f b) where
+  show _ = "<f a -> f b>"
