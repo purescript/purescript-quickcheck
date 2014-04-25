@@ -1,3 +1,4 @@
+{-
 module Test.QuickCheck.Functions where
 
 import Control.Monad.Eff.Random.Extras.Unsafe (choice)
@@ -97,3 +98,4 @@ instance arbFmap :: (Functor f, Arb (a -> b)) => Arb (f a -> f b) where
                
 instance showArbFmap :: (Functor f, Arb (a -> b)) => Show (f a -> f b) where
   show _ = "<f a -> f b>"
+-}

@@ -12,6 +12,9 @@ main = do
   Debug.Trace.trace "testConst:"
   quickCheck testConst
 
+  Debug.Trace.trace "id is a left unit for <<<"
+  quickCheck $ \f a -> (id <<< f) (a :: Number) == (f a) :: Number
+
   Debug.Trace.trace "Precedence of && and ||:"
   quickCheck $ \a b c -> ((a :: Boolean && b) || c) == ((a || c) && (b || c))
   

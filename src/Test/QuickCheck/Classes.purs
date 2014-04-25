@@ -1,3 +1,4 @@
+{-
 module Test.QuickCheck.Classes where
 
 import Test.QuickCheck (QC(..), Arb, quickCheck)
@@ -64,3 +65,4 @@ checkMonad t = do
 
   associativity :: forall m a. (Monad m, Arb a, Eq (m a)) => m a -> m a -> (a -> m a) -> (a -> m a) -> Boolean
   associativity _ m f g = ((m >>= f) >>= g) == (m >>= (\x -> f x >>= g))
+-}
