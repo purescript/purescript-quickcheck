@@ -14,7 +14,7 @@ import Control.Monad.Eff.Exception
 
 import Test.QuickCheck.LCG
 
-class (Show t) <= Arbitrary t where
+class Arbitrary t where
   arbitrary :: Gen t
 
 class CoArbitrary t where
@@ -22,19 +22,34 @@ class CoArbitrary t where
 
 data Result = Success | Failed String
 
+instance showResult :: Show Result where
+  show Success = "Success"
+  show (Failed msg) = "Failed: " ++ msg
+
+(<?>) :: Boolean -> String -> Result
+(<?>) true _ = Success
+(<?>) false msg = Failed msg
+
 instance arbNumber :: Arbitrary Number where
   arbitrary = uniform 
+
+instance coarbNumber :: CoArbitrary Number where
+  coarbitrary n (Gen f) = Gen (\l -> f (l + n * 1000000000))
 
 instance arbBoolean :: Arbitrary Boolean where
   arbitrary = do
     n <- uniform
     return ((n * 2) < 1)
 
-instance arbFunction :: (Show (a -> b), CoArbitrary a, Arbitrary b) => Arbitrary (a -> b) where
-  arbitrary = liftGen (\a -> coarbitrary a arbitrary)
+instance coarbBoolean :: CoArbitrary Boolean where
+  coarbitrary true (Gen f) = Gen (\l -> f (l + 1))
+  coarbitrary false (Gen f) = Gen (\l -> f (l + 2))
 
-liftGen :: forall a b. (a -> Gen b) -> Gen (a -> b)
-liftGen f = Gen $ \l -> { value: \a -> (runGen (f a) l).value, newSeed: l }
+instance arbFunction :: (CoArbitrary a, Arbitrary b) => Arbitrary (a -> b) where
+  arbitrary = repeatable (\a -> coarbitrary a arbitrary)
+
+repeatable :: forall a b. (a -> Gen b) -> Gen (a -> b)
+repeatable f = Gen $ \l -> { value: \a -> (runGen (f a) l).value, newSeed: l }
 
 {-
 instance arbArray :: (Arb a) => Arb [a] where
@@ -69,13 +84,10 @@ instance testableBoolean :: Testable Boolean where
   test true = return Success
   test false = return $ Failed "Test returned false"
 
-instance testableFunction :: (Show t, Arbitrary t, Testable prop) => Testable (t -> prop) where
+instance testableFunction :: (Arbitrary t, Testable prop) => Testable (t -> prop) where
   test f = do
     t <- arbitrary
-    result <- test (f t)
-    case result of
-      Success -> return Success
-      Failed msg -> return $ Failed $ "Failed on input " ++ show t ++ ": \n" ++ msg
+    test (f t)
 
 type QC a = forall eff. Eff (trace :: Trace, random :: Random, err :: Exception String | eff) a
 
