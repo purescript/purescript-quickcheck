@@ -7,38 +7,24 @@ module.exports = function(grunt) {
     libFiles: [
       "src/**/*.purs",
       "bower_components/purescript-*/src/**/*.purs",
-      "bower_components/purescript-*/src/**/*.purs.hs"
     ],
     
-    clean: {
-      tmp: ["tmp"],
-      lib: ["js", "externs"]
-    },
+    clean: ["output"],
   
     pscMake: ["<%=libFiles%>"],
     dotPsci: ["<%=libFiles%>"],
-  
-    psc: {
-      prelude: {
-        options: {
-          module: "PreludeTests",
-          main: "PreludeTests"
-        },
-        src: ["examples/Prelude.purs", "<%=libFiles%>"],
-        dest: "tmp/Prelude.js"
-      }
-    },
-    
-    execute: {
-      prelude: "tmp/Prelude.js"
-    }      
+    docgen: {
+        readme: {
+            src: "src/**/*.purs",
+            dest: "README.md"
+        }
+    }
+
   });
 
   grunt.loadNpmTasks("grunt-contrib-clean");
   grunt.loadNpmTasks("grunt-purescript");
-  grunt.loadNpmTasks("grunt-execute");
   
-  grunt.registerTask("make", ["pscMake", "dotPsci"]);
-  grunt.registerTask("examples", ["clean:tmp", "psc", "execute"]);
-  grunt.registerTask("default", ["make", "examples"]);
+  grunt.registerTask("make", ["pscMake", "dotPsci", "docgen"]);
+  grunt.registerTask("default", ["make"]);
 };
