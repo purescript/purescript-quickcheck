@@ -1,14 +1,14 @@
 {
   "name": "purescript-quickcheck",
-  "version": "0.0.1",
+  "license": "MIT",
   "ignore": [
     "**/.*",
     "bower_components",
-    "externs",
-    "js",
     "node_modules",
+    "output",
     "tests",
     "tmp",
+    "bower.json",
     "Gruntfile.js",
     "package.json"
   ],
