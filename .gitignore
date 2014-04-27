@@ -1,6 +1,7 @@
 /.*
 !/.gitignore
-/bower_components/
-/node_modules/
 /output/
+/node_modules/
+/bower_components/
 /tmp/
+/node_modules/
