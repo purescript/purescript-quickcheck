@@ -10,21 +10,47 @@ data Gen a = Gen (LCG -> { value :: a, newSeed :: LCG })
 runGen :: forall a. Gen a -> LCG -> { value :: a, newSeed :: LCG }
 runGen (Gen f) = f
 
+evalGen :: forall a. Gen a -> LCG -> a 
+evalGen gen seed = (runGen gen seed).value
+
 foreign import randomSeed
   "function randomSeed() {\
-  \  return Math.floor(Math.random() * (1 << 31));\
+  \  return Math.floor(Math.random() * (1 << 30));\
   \}" :: forall eff. Eff (random :: Random | eff) Number
 
-runGenWithRandomSeed :: forall a eff. Gen a -> Eff (random :: Random | eff) a
-runGenWithRandomSeed g = do
-  seed <- randomSeed
-  return (runGen g seed).value
+--
+-- Magic Numbers
+--
 
-stepLCG :: Gen Number
-stepLCG = Gen (\l -> { value: l, newSeed: (1664525 * l + 1013904223) % (1 `shl` 31) })
+lcgM :: Number
+lcgM = 1103515245 
+
+lcgC :: Number
+lcgC = 12345
+
+lcgN :: Number
+lcgN = 1 `shl` 30
+
+lcgNext :: Number -> Number
+lcgNext n = (lcgM * n + lcgC) % lcgN
+
+lcgStep :: Gen Number
+lcgStep = Gen (\l -> { value: l, newSeed: lcgNext l })
 
 uniform :: Gen Number
-uniform = (\n -> n / (1 `shl` 31)) <$> stepLCG
+uniform = (\n -> n / (1 `shl` 30)) <$> lcgStep 
+
+foreign import float32ToInt32 
+  "function float32ToInt32(n) {\
+  \  var arr = new ArrayBuffer(4);\
+  \  var fv = new Float32Array(arr);\
+  \  var iv = new Int32Array(arr);\
+  \  fv[0] = n;\
+  \  return iv[0];\
+  \}" :: Number -> Number
+
+perturbGen :: forall a. Number -> Gen a -> Gen a
+perturbGen n (Gen f) = Gen $ \l -> f (lcgNext (float32ToInt32 n) + l)
 
 instance functorGen :: Functor Gen where
   (<$>) f (Gen g) = Gen $ \l -> case g l of

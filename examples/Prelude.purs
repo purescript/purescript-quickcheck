@@ -27,3 +27,4 @@ main = do
   Debug.Trace.trace "Test Eq instance for Ref:"
   quickCheck $ \a -> (Ref a :: Ref Number) == Ref a
   quickCheck $ \a -> not $ (Ref a :: Ref Number /= Ref a)
+
