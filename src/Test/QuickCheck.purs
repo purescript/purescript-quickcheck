@@ -1,12 +1,5 @@
 module Test.QuickCheck where
 
-{- 
-import Data.Array
-import Data.Maybe
-import Data.Either
-import Data.Tuple
--}
-
 import Debug.Trace
 import Control.Monad.Eff
 import Control.Monad.Eff.Random
@@ -70,21 +63,6 @@ instance arbArray :: (Arbitrary a) => Arbitrary [a] where
 instance coarbArray :: (CoArbitrary a) => CoArbitrary [a] where
   coarbitrary [] = id
   coarbitrary (x : xs) = coarbitrary xs <<< coarbitrary x
-
-{-
-instance arbMaybe :: (Arb a) => Arb (Maybe a) where
-  arb = do
-    b <- arb
-    if b then pure Nothing else Just <$> arb
-
-instance arbEither :: (Arb a, Arb b) => Arb (Either a b) where
-  arb = do
-    b <- arb
-    if b then Left <$> arb else Right <$> arb
-
-instance arbTuple :: (Arb a, Arb b) => Arb (Tuple a b) where
-  arb = Tuple <$> arb <*> arb
--}
 
 class Testable prop where
   test :: prop -> Gen Result
