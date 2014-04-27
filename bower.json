@@ -14,11 +14,6 @@
   ],
   "dependencies": {
     "purescript-random": "*",
-    "purescript-arrays": "*",
-    "purescript-maybe": "*",
-    "purescript-either": "*",
-    "purescript-tuples": "*",
-    "purescript-exceptions": "*",
-    "purescript-strings": "*"
+    "purescript-exceptions": "*"
   }
 }

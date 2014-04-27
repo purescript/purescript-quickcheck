@@ -117,7 +117,7 @@ quickCheck' n prop = do
   seed <- randomSeed
   let results = quickCheckPure seed n prop
   let successes = countSuccesses results
-  trace $ show successes ++ " / " ++ show n ++ " test(s) passed."
+  trace $ show successes ++ "/" ++ show n ++ " test(s) passed."
   throwOnFirstFailure 1 results
 
   where
