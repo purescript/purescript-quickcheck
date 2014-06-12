@@ -4,11 +4,11 @@
 
 ### Types
 
-    type QC a = forall eff. Eff (err :: Exception Prim.String, random :: Random, trace :: Trace | eff) a
+    type QC a = forall eff. Eff (err :: Exception String, random :: Random, trace :: Trace | eff) a
 
-    data Result  where
-      Success :: Result 
-      Failed :: Prim.String -> Result 
+    data Result where
+      Success :: Result
+      Failed :: String -> Result
 
 
 ### Type Classes
@@ -52,13 +52,13 @@
 
 ### Values
 
-    (<?>) :: Prim.Boolean -> Prim.String -> Result
+    (<?>) :: Boolean -> String -> Result
 
-    quickCheck :: forall prop. (Testable prop) => prop -> QC {  }
+    quickCheck :: forall prop. (Testable prop) => prop -> QC Unit
 
-    quickCheck' :: forall prop. (Testable prop) => Prim.Number -> prop -> QC {  }
+    quickCheck' :: forall prop. (Testable prop) => Number -> prop -> QC Unit
 
-    quickCheckPure :: forall prop. (Testable prop) => Prim.Number -> Prim.Number -> prop -> [Result]
+    quickCheckPure :: forall prop. (Testable prop) => Number -> Number -> prop -> [Result]
 
     repeatable :: forall a b. (a -> Gen b) -> Gen (a -> b)
 
@@ -70,7 +70,7 @@
     data Gen a where
       Gen :: LCG -> { newSeed :: LCG, value :: a } -> Gen a
 
-    type LCG  = Prim.Number
+    type LCG  = Number
 
 
 ### Type Class Instances
@@ -90,22 +90,22 @@
 
     evalGen :: forall a. Gen a -> LCG -> a
 
-    float32ToInt32 :: Prim.Number -> Prim.Number
+    float32ToInt32 :: Number -> Number
 
-    lcgC :: Prim.Number
+    lcgC :: Number
 
-    lcgM :: Prim.Number
+    lcgM :: Number
 
-    lcgN :: Prim.Number
+    lcgN :: Number
 
-    lcgNext :: Prim.Number -> Prim.Number
+    lcgNext :: Number -> Number
 
-    lcgStep :: Gen Prim.Number
+    lcgStep :: Gen Number
 
-    perturbGen :: forall a. Prim.Number -> Gen a -> Gen a
+    perturbGen :: forall a. Number -> Gen a -> Gen a
 
-    randomSeed :: forall eff. Eff (random :: Random | eff) Prim.Number
+    randomSeed :: forall eff. Eff (random :: Random | eff) Number
 
     runGen :: forall a. Gen a -> LCG -> { newSeed :: LCG, value :: a }
 
-    uniform :: Gen Prim.Number
+    uniform :: Gen Number
