@@ -24,10 +24,10 @@ instance showResult :: Show Result where
 (<?>) false msg = Failed msg
 
 instance arbNumber :: Arbitrary Number where
-  arbitrary = uniform 
+  arbitrary = uniform
 
 instance coarbNumber :: CoArbitrary Number where
-  coarbitrary = perturbGen  
+  coarbitrary = perturbGen
 
 instance arbBoolean :: Arbitrary Boolean where
   arbitrary = do

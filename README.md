@@ -27,23 +27,23 @@
 
     instance arbArray :: (Arbitrary a) => Arbitrary [a]
 
-    instance arbBoolean :: Arbitrary Prim.Boolean
+    instance arbBoolean :: Arbitrary Boolean
 
     instance arbFunction :: (CoArbitrary a, Arbitrary b) => Arbitrary (a -> b)
 
-    instance arbNumber :: Arbitrary Prim.Number
+    instance arbNumber :: Arbitrary Number
 
     instance coarbArray :: (CoArbitrary a) => CoArbitrary [a]
 
-    instance coarbBoolean :: CoArbitrary Prim.Boolean
+    instance coarbBoolean :: CoArbitrary Boolean
 
     instance coarbFunction :: (Arbitrary a, CoArbitrary b) => CoArbitrary (a -> b)
 
-    instance coarbNumber :: CoArbitrary Prim.Number
+    instance coarbNumber :: CoArbitrary Number
 
     instance showResult :: Show Result
 
-    instance testableBoolean :: Testable Prim.Boolean
+    instance testableBoolean :: Testable Boolean
 
     instance testableFunction :: (Arbitrary t, Testable prop) => Testable (t -> prop)
 
@@ -67,7 +67,7 @@
 
 ### Types
 
-    data Gen a where
+    newtype Gen a where
       Gen :: LCG -> { newSeed :: LCG, value :: a } -> Gen a
 
     type LCG  = Number
@@ -88,9 +88,15 @@
 
 ### Values
 
+    choose :: forall a. Number -> Number -> Gen Number
+
     evalGen :: forall a. Gen a -> LCG -> a
 
     float32ToInt32 :: Number -> Number
+
+    frequency :: forall a. [{ gen :: Gen a, weight :: Number }] -> Maybe (Gen a)
+
+    generate :: forall a eff. Gen a -> Eff (random :: Random | eff) a
 
     lcgC :: Number
 
@@ -102,10 +108,20 @@
 
     lcgStep :: Gen Number
 
+    length :: forall a. [a] -> Number
+
+    oneOf :: forall a. [Gen a] -> Maybe (Gen a)
+
     perturbGen :: forall a. Number -> Gen a -> Gen a
 
     randomSeed :: forall eff. Eff (random :: Random | eff) Number
 
+    resized :: forall a. Number -> Gen a -> Gen a
+
     runGen :: forall a. Gen a -> LCG -> { newSeed :: LCG, value :: a }
+
+    sized :: forall a. (Number -> Gen a) -> Gen a
+
+    sumWeights :: forall r. [{ weight :: Number | r }] -> Number
 
     uniform :: Gen Number
