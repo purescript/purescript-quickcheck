@@ -88,7 +88,7 @@ quickCheckPure seed n prop = evalGen (go n) seed
     rest <- go (n - 1)
     return $ result : rest
 
-type QC a = forall eff. Eff (trace :: Trace, random :: Random, err :: Exception String | eff) a
+type QC a = forall eff. Eff (trace :: Trace, random :: Random, err :: Exception | eff) a
 
 quickCheck' :: forall prop. (Testable prop) => Number -> prop -> QC Unit
 quickCheck' n prop = do
@@ -102,7 +102,7 @@ quickCheck' n prop = do
 
   throwOnFirstFailure :: Number -> [Result] -> QC Unit
   throwOnFirstFailure _ [] = return unit
-  throwOnFirstFailure n (Failed msg : _) = throwException $ "Test " ++ show n ++ " failed: \n" ++ msg
+  throwOnFirstFailure n (Failed msg : _) = throwException $ error $ "Test " ++ show n ++ " failed: \n" ++ msg
   throwOnFirstFailure n (_ : rest) = throwOnFirstFailure (n + 1) rest
 
   countSuccesses :: [Result] -> Number

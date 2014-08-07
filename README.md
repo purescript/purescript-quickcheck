@@ -4,7 +4,7 @@
 
 ### Types
 
-    type QC a = forall eff. Eff (err :: Exception String, random :: Random, trace :: Trace | eff) a
+    type QC a = forall eff. Eff (err :: Exception, random :: Random, trace :: Trace | eff) a
 
     data Result where
       Success :: Result
@@ -27,23 +27,23 @@
 
     instance arbArray :: (Arbitrary a) => Arbitrary [a]
 
-    instance arbBoolean :: Arbitrary Prim.Boolean
+    instance arbBoolean :: Arbitrary Boolean
 
     instance arbFunction :: (CoArbitrary a, Arbitrary b) => Arbitrary (a -> b)
 
-    instance arbNumber :: Arbitrary Prim.Number
+    instance arbNumber :: Arbitrary Number
 
     instance coarbArray :: (CoArbitrary a) => CoArbitrary [a]
 
-    instance coarbBoolean :: CoArbitrary Prim.Boolean
+    instance coarbBoolean :: CoArbitrary Boolean
 
     instance coarbFunction :: (Arbitrary a, CoArbitrary b) => CoArbitrary (a -> b)
 
-    instance coarbNumber :: CoArbitrary Prim.Number
+    instance coarbNumber :: CoArbitrary Number
 
     instance showResult :: Show Result
 
-    instance testableBoolean :: Testable Prim.Boolean
+    instance testableBoolean :: Testable Boolean
 
     instance testableFunction :: (Arbitrary t, Testable prop) => Testable (t -> prop)
 
