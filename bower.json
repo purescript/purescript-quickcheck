@@ -14,7 +14,7 @@
   ],
   "dependencies": {
     "purescript-random": "*",
-    "purescript-exceptions": "*",
+    "purescript-exceptions": "0.2.0",
     "purescript-maybe": "~0.1.3"
   }
 }

@@ -4,7 +4,7 @@
 
 ### Types
 
-    type QC a = forall eff. Eff (err :: Exception String, random :: Random, trace :: Trace | eff) a
+    type QC a = forall eff. Eff (err :: Exception, random :: Random, trace :: Trace | eff) a
 
     data Result where
       Success :: Result
