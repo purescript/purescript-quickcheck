@@ -23,6 +23,13 @@ instance showResult :: Show Result where
 (<?>) true _ = Success
 (<?>) false msg = Failed msg
 
+(==>) :: forall prop. (Testable prop) => Boolean -> prop -> Gen Result
+(==>) true  prop = test prop
+(==>) false _    = pure Success
+
+forAll :: forall a prop. (Testable prop) => Gen a -> (a -> prop) -> Gen Result
+forAll gen f = gen >>= (f >>> test)
+
 instance arbNumber :: Arbitrary Number where
   arbitrary = uniform
 
@@ -73,6 +80,9 @@ instance testableResult :: Testable Result where
 instance testableBoolean :: Testable Boolean where
   test true = return Success
   test false = return $ Failed "Test returned false"
+
+instance testableGen :: (Testable prop) => Testable (Gen prop) where
+  test gen = gen >>= test
 
 instance testableFunction :: (Arbitrary t, Testable prop) => Testable (t -> prop) where
   test f = do

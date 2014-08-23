@@ -47,12 +47,20 @@
 
     instance testableFunction :: (Arbitrary t, Testable prop) => Testable (t -> prop)
 
+    instance testableGen :: (Testable prop) => Testable (Gen prop)
+
     instance testableResult :: Testable Result
 
 
 ### Values
 
     (<?>) :: Boolean -> String -> Result
+
+    (==>) :: forall prop. (Testable prop) => Boolean -> prop -> Gen Result
+
+    forAll :: forall a prop. (Testable prop) => Gen a -> (a -> prop) -> Gen Result
+
+    join :: forall a m. (Monad m) => m (m a) -> m a
 
     quickCheck :: forall prop. (Testable prop) => prop -> QC Unit
 
@@ -89,6 +97,8 @@
 ### Values
 
     choose :: forall a. Number -> Number -> Gen Number
+
+    elements :: forall a. [a] -> Maybe (Gen a)
 
     evalGen :: forall a. Gen a -> LCG -> a
 
