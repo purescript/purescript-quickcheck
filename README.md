@@ -47,12 +47,18 @@
 
     instance testableFunction :: (Arbitrary t, Testable prop) => Testable (t -> prop)
 
+    instance testableGen :: (Testable prop) => Testable (Gen prop)
+
     instance testableResult :: Testable Result
 
 
 ### Values
 
     (<?>) :: Boolean -> String -> Result
+
+    (==>) :: forall prop. (Testable prop) => Boolean -> prop -> Gen Result
+
+    forAll :: forall a prop. (Testable prop) => Gen a -> (a -> prop) -> Gen Result
 
     quickCheck :: forall prop. (Testable prop) => prop -> QC Unit
 
@@ -67,7 +73,7 @@
 
 ### Types
 
-    data Gen a where
+    newtype Gen a where
       Gen :: LCG -> { newSeed :: LCG, value :: a } -> Gen a
 
     type LCG  = Number
@@ -88,9 +94,17 @@
 
 ### Values
 
+    choose :: forall a. Number -> Number -> Gen Number
+
+    elements :: forall a. [a] -> Maybe (Gen a)
+
     evalGen :: forall a. Gen a -> LCG -> a
 
     float32ToInt32 :: Number -> Number
+
+    frequency :: forall a. [{ gen :: Gen a, weight :: Number }] -> Maybe (Gen a)
+
+    generate :: forall a eff. Gen a -> Eff (random :: Random | eff) a
 
     lcgC :: Number
 
@@ -102,10 +116,22 @@
 
     lcgStep :: Gen Number
 
+    length :: forall a. [a] -> Number
+
+    mathRandom :: Unit -> Number
+
+    oneOf :: forall a. [Gen a] -> Maybe (Gen a)
+
     perturbGen :: forall a. Number -> Gen a -> Gen a
 
     randomSeed :: forall eff. Eff (random :: Random | eff) Number
 
+    resized :: forall a. Number -> Gen a -> Gen a
+
     runGen :: forall a. Gen a -> LCG -> { newSeed :: LCG, value :: a }
+
+    sized :: forall a. (Number -> Gen a) -> Gen a
+
+    sumWeights :: forall r. [{ weight :: Number | r }] -> Number
 
     uniform :: Gen Number

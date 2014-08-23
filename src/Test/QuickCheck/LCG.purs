@@ -3,14 +3,18 @@ module Test.QuickCheck.LCG where
 import Control.Monad.Eff
 import Control.Monad.Eff.Random
 
+import Data.Maybe
+
+import Prelude.Unsafe
+
 type LCG = Number
 
-data Gen a = Gen (LCG -> { value :: a, newSeed :: LCG })
+newtype Gen a = Gen (LCG -> { value :: a, newSeed :: LCG })
 
 runGen :: forall a. Gen a -> LCG -> { value :: a, newSeed :: LCG }
 runGen (Gen f) = f
 
-evalGen :: forall a. Gen a -> LCG -> a 
+evalGen :: forall a. Gen a -> LCG -> a
 evalGen gen seed = (runGen gen seed).value
 
 foreign import randomSeed
@@ -18,12 +22,15 @@ foreign import randomSeed
   \  return Math.floor(Math.random() * (1 << 30));\
   \}" :: forall eff. Eff (random :: Random | eff) Number
 
+foreign import mathRandom
+  "var mathRandom = Math.random;" :: Unit -> Number
+
 --
 -- Magic Numbers
 --
 
 lcgM :: Number
-lcgM = 1103515245 
+lcgM = 1103515245
 
 lcgC :: Number
 lcgC = 12345
@@ -38,9 +45,9 @@ lcgStep :: Gen Number
 lcgStep = Gen (\l -> { value: l, newSeed: lcgNext l })
 
 uniform :: Gen Number
-uniform = (\n -> n / (1 `shl` 30)) <$> lcgStep 
+uniform = (\n -> n / (1 `shl` 30)) <$> lcgStep
 
-foreign import float32ToInt32 
+foreign import float32ToInt32
   "function float32ToInt32(n) {\
   \  var arr = new ArrayBuffer(4);\
   \  var fv = new Float32Array(arr);\
@@ -71,3 +78,46 @@ instance bindGen :: Bind Gen where
 
 instance monadGen :: Monad Gen
 
+sized :: forall a. (Number -> Gen a) -> Gen a
+sized f = do
+  n <- uniform
+  Gen \l -> runGen (f l) n
+sized f = Gen \l -> runGen (f l) l
+
+resized :: forall a. Number -> Gen a -> Gen a
+resized n gen = Gen \_ -> runGen gen n
+
+choose :: forall a. Number -> Number -> Gen Number
+choose low high = do
+  n <- uniform
+  pure $ n * (high - low) + low
+
+generate :: forall a eff. Gen a -> Eff (random :: Random | eff) a
+generate gen = randomSeed >>= (evalGen gen >>> pure)
+
+oneOf :: forall a. [Gen a] -> Maybe (Gen a)
+oneOf [] = Nothing
+oneOf gs = Just (choose 0 (length gs) >>= unsafeIndex gs)
+
+frequency :: forall a. [{weight :: Number, gen :: Gen a}] -> Maybe (Gen a)
+frequency [] = Nothing
+frequency xs = Just (choose 1 (sumWeights xs) >>= pick xs)
+  where
+    pick (x:xs) n | n <= x.weight = x.gen
+    pick (x:xs) n                 = pick xs (n - x.weight)
+
+elements :: forall a. [a] -> Maybe (Gen a)
+elements [] = Nothing
+elements xs = Just (unsafeIndex xs <$> choose 0 (length xs))
+
+-- Local definition of `Array` functions so we don't need to add a dependency.
+
+foreign import length
+  "function length(arr) {\
+  \  return arr.length;\
+  \}" :: forall a. [a] -> Number
+
+foreign import sumWeights
+  "function sumWeights(arr) {\
+  \  return arr.reduce(function(acc, x) { return x.weight + acc; }, 0);\
+  \}" :: forall r. [{weight :: Number | r}] -> Number
