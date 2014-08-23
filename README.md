@@ -60,8 +60,6 @@
 
     forAll :: forall a prop. (Testable prop) => Gen a -> (a -> prop) -> Gen Result
 
-    join :: forall a m. (Monad m) => m (m a) -> m a
-
     quickCheck :: forall prop. (Testable prop) => prop -> QC Unit
 
     quickCheck' :: forall prop. (Testable prop) => Number -> prop -> QC Unit
@@ -119,6 +117,8 @@
     lcgStep :: Gen Number
 
     length :: forall a. [a] -> Number
+
+    mathRandom :: Unit -> Number
 
     oneOf :: forall a. [Gen a] -> Maybe (Gen a)
 
