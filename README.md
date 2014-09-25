@@ -73,7 +73,5 @@
 
     quickCheckPure' :: forall prop. (Testable prop) => GenState -> Number -> prop -> [Result]
 
-    randomSeed :: forall eff. Eff (random :: Random | eff) Number
-
 
 

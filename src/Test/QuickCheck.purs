@@ -119,7 +119,7 @@ type QC a = forall eff. Eff (trace :: Trace, random :: Random, err :: Exception 
 
 quickCheck' :: forall prop. (Testable prop) => Number -> prop -> QC Unit
 quickCheck' n prop = do
-  seed <- randomSeed
+  seed <- random
   let results = quickCheckPure seed n prop
   let successes = countSuccesses results
   trace $ show successes ++ "/" ++ show n ++ " test(s) passed."
@@ -139,8 +139,3 @@ quickCheck' n prop = do
 
 quickCheck :: forall prop. (Testable prop) => prop -> QC Unit
 quickCheck prop = quickCheck' 100 prop
-
-foreign import randomSeed
-  "function randomSeed() {\
-  \  return Math.floor(Math.random() * (1 << 30));\
-  \}" :: forall eff. Eff (random :: Random | eff) Number
