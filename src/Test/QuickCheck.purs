@@ -4,8 +4,14 @@ import Debug.Trace
 import Control.Monad.Eff
 import Control.Monad.Eff.Random
 import Control.Monad.Eff.Exception
+import Data.Array
+import Math
+
+import qualified Data.String as S
 
 import Test.QuickCheck.LCG
+
+data AlphaNumString = AlphaNumString String
 
 class Arbitrary t where
   arbitrary :: Gen t
@@ -35,14 +41,31 @@ instance arbBoolean :: Arbitrary Boolean where
     return $ (n * 2) < 1
 
 instance coarbBoolean :: CoArbitrary Boolean where
-  coarbitrary true (Gen f) = Gen $ \l -> f (l + 1)
-  coarbitrary false (Gen f) = Gen $ \l -> f (l + 2)
+  coarbitrary true (Gen f) = Gen $ \s -> f $ s { newSeed = s.newSeed + 1 }
+  coarbitrary false (Gen f) = Gen $ \s -> f $ s { newSeed = s.newSeed + 2 }
+
+instance arbString :: Arbitrary String where
+  arbitrary = do
+    arrNum <- arbitrary
+    return $ (S.joinWith "") $ S.fromCharCode <<< ((*) 65535) <$> arrNum
+
+instance coarbString :: CoArbitrary String where
+  coarbitrary s = coarbitrary $ (S.charCodeAt 0 <$> S.split "" s)
+
+instance arbAlphaNumString :: Arbitrary AlphaNumString where
+  arbitrary = do
+    arrNum <- arbitrary
+    return $ AlphaNumString <<< (S.joinWith "") $ lookup <$> arrNum where
+      chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+      lookup x = S.charAt index chars where
+        index = round $ x * (S.length chars - 1)
+
+instance coarbAlphaNumString :: CoArbitrary AlphaNumString where
+  coarbitrary (AlphaNumString s) = coarbitrary s
 
 instance arbFunction :: (CoArbitrary a, Arbitrary b) => Arbitrary (a -> b) where
   arbitrary = repeatable (\a -> coarbitrary a arbitrary)
-
-repeatable :: forall a b. (a -> Gen b) -> Gen (a -> b)
-repeatable f = Gen $ \l -> { value: \a -> (runGen (f a) l).value, newSeed: l }
 
 instance coarbFunction :: (Arbitrary a, CoArbitrary b) => CoArbitrary (a -> b) where
   coarbitrary f gen = do
@@ -64,6 +87,9 @@ instance coarbArray :: (CoArbitrary a) => CoArbitrary [a] where
   coarbitrary [] = id
   coarbitrary (x : xs) = coarbitrary xs <<< coarbitrary x
 
+repeatable :: forall a b. (a -> Gen b) -> Gen (a -> b)
+repeatable f = Gen $ \s -> { value: \a -> (runGen (f a) s).value, state: s }
+
 class Testable prop where
   test :: prop -> Gen Result
 
@@ -80,7 +106,10 @@ instance testableFunction :: (Arbitrary t, Testable prop) => Testable (t -> prop
     test (f t)
 
 quickCheckPure :: forall prop. (Testable prop) => Number -> Number -> prop -> [Result]
-quickCheckPure seed n prop = evalGen (go n) seed
+quickCheckPure s = quickCheckPure' {newSeed: s, size: 10}
+
+quickCheckPure' :: forall prop. (Testable prop) => GenState -> Number -> prop -> [Result]
+quickCheckPure' st n prop = evalGen (go n) st 
   where
   go n | n <= 0 = return []
   go n = do

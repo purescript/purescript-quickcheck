@@ -4,14 +4,25 @@ import Control.Monad.Eff
 import Control.Monad.Eff.Random
 
 type LCG = Number
+type Size = Number
 
-data Gen a = Gen (LCG -> { value :: a, newSeed :: LCG })
+type GenState = { newSeed :: LCG, size :: Size }
 
-runGen :: forall a. Gen a -> LCG -> { value :: a, newSeed :: LCG }
+type GenOut a = { state :: GenState, value :: a }
+
+data Gen a = Gen (GenState -> GenOut a)
+
+sized :: forall a. (Number -> Gen a) -> Gen a
+sized f = Gen (\s -> runGen (f s.size) s)
+
+resize :: forall a. Number -> Gen a -> Gen a
+resize sz g = Gen (\s -> runGen g s { size = sz })
+
+runGen :: forall a. Gen a -> GenState -> GenOut a
 runGen (Gen f) = f
 
-evalGen :: forall a. Gen a -> LCG -> a 
-evalGen gen seed = (runGen gen seed).value
+evalGen :: forall a. Gen a -> GenState -> a 
+evalGen gen st = (runGen gen st).value
 
 foreign import randomSeed
   "function randomSeed() {\
@@ -35,7 +46,8 @@ lcgNext :: Number -> Number
 lcgNext n = (lcgM * n + lcgC) % lcgN
 
 lcgStep :: Gen Number
-lcgStep = Gen (\l -> { value: l, newSeed: lcgNext l })
+lcgStep = Gen f where
+  f s = { value: s.newSeed, state: s { newSeed = lcgNext s.newSeed } }
 
 uniform :: Gen Number
 uniform = (\n -> n / (1 `shl` 30)) <$> lcgStep 
@@ -50,24 +62,24 @@ foreign import float32ToInt32
   \}" :: Number -> Number
 
 perturbGen :: forall a. Number -> Gen a -> Gen a
-perturbGen n (Gen f) = Gen $ \l -> f (lcgNext (float32ToInt32 n) + l)
+perturbGen n (Gen f) = Gen $ \s -> f (s { newSeed = lcgNext (float32ToInt32 n) + s.newSeed })
 
 instance functorGen :: Functor Gen where
-  (<$>) f (Gen g) = Gen $ \l -> case g l of
-    { value = value, newSeed = newSeed } -> { value: f value, newSeed: newSeed }
+  (<$>) f (Gen g) = Gen $ \s -> case g s of
+    { value = value, state = state } -> { value: f value, state: state }
 
 instance applyGen :: Apply Gen where
-  (<*>) (Gen f) (Gen x) = Gen $ \l ->
-    case f l of
-      { value = f', newSeed = l' } -> case x l' of
-        { value = x', newSeed = l'' } -> { value: f' x', newSeed: l'' }
+  (<*>) (Gen f) (Gen x) = Gen $ \s ->
+    case f s of
+      { value = f', state = s' } -> case x s' of
+        { value = x', state = s'' } -> { value: f' x', state: s'' }
 
 instance applicativeGen :: Applicative Gen where
-  pure a = Gen (\l -> { value: a, newSeed: l })
+  pure a = Gen (\s -> { value: a, state: s })
 
 instance bindGen :: Bind Gen where
-  (>>=) (Gen f) g = Gen $ \l -> case f l of
-    { value = value, newSeed = newSeed } -> runGen (g value) newSeed
+  (>>=) (Gen f) g = Gen $ \s -> case f s of
+    { value = value, state = state } -> runGen (g value) state
 
 instance monadGen :: Monad Gen
 
