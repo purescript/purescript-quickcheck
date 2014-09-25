@@ -1,5 +1,6 @@
 {
   "name": "purescript-quickcheck",
+  "version": "0.0.2",
   "license": "MIT",
   "ignore": [
     "**/.*",
@@ -14,6 +15,9 @@
   ],
   "dependencies": {
     "purescript-random": "*",
-    "purescript-exceptions": "0.2.0"
+    "purescript-exceptions": "0.2.0",
+    "purescript-arrays": "*",
+    "purescript-strings": "*",
+    "purescript-math": "*"
   }
 }

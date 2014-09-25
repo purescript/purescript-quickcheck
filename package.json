@@ -1,8 +1,13 @@
 {
-  "private": true,
-  "dependencies": {
-    "grunt": "~0.4.4",
-    "grunt-purescript": "~0.5.1",
-    "grunt-contrib-clean": "~0.5.0"
+  "name":       "purescript-quickcheck",
+  "version":    "0.0.2",
+  "license":    "MIT",
+  "repository": "git@github.com:purescript-contrib/purescript-quickcheck.git",
+
+  "devDependencies": {
+    "gulp":             "^3.8.8",
+    "gulp-purescript":  "0.0.10",
+    "gulp-run":         "^1.6.4",
+    "run-sequence":     "^0.3.6"
   }
 }

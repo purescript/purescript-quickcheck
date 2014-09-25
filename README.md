@@ -4,6 +4,9 @@
 
 ### Types
 
+    newtype AlphaNumString where
+      AlphaNumString :: String -> AlphaNumString
+
     type QC a = forall eff. Eff (err :: Exception, random :: Random, trace :: Trace | eff) a
 
     data Result where
@@ -25,6 +28,8 @@
 
 ### Type Class Instances
 
+    instance arbAlphaNumString :: Arbitrary AlphaNumString
+
     instance arbArray :: (Arbitrary a) => Arbitrary [a]
 
     instance arbBoolean :: Arbitrary Boolean
@@ -33,6 +38,10 @@
 
     instance arbNumber :: Arbitrary Number
 
+    instance arbString :: Arbitrary String
+
+    instance coarbAlphaNumString :: CoArbitrary AlphaNumString
+
     instance coarbArray :: (CoArbitrary a) => CoArbitrary [a]
 
     instance coarbBoolean :: CoArbitrary Boolean
@@ -40,6 +49,8 @@
     instance coarbFunction :: (Arbitrary a, CoArbitrary b) => CoArbitrary (a -> b)
 
     instance coarbNumber :: CoArbitrary Number
+
+    instance coarbString :: CoArbitrary String
 
     instance showResult :: Show Result
 
@@ -60,52 +71,5 @@
 
     quickCheckPure :: forall prop. (Testable prop) => Number -> Number -> prop -> [Result]
 
-    repeatable :: forall a b. (a -> Gen b) -> Gen (a -> b)
 
 
-## Module Test.QuickCheck.LCG
-
-### Types
-
-    data Gen a where
-      Gen :: LCG -> { newSeed :: LCG, value :: a } -> Gen a
-
-    type LCG  = Number
-
-
-### Type Class Instances
-
-    instance applicativeGen :: Applicative Gen
-
-    instance applyGen :: Apply Gen
-
-    instance bindGen :: Bind Gen
-
-    instance functorGen :: Functor Gen
-
-    instance monadGen :: Monad Gen
-
-
-### Values
-
-    evalGen :: forall a. Gen a -> LCG -> a
-
-    float32ToInt32 :: Number -> Number
-
-    lcgC :: Number
-
-    lcgM :: Number
-
-    lcgN :: Number
-
-    lcgNext :: Number -> Number
-
-    lcgStep :: Gen Number
-
-    perturbGen :: forall a. Number -> Gen a -> Gen a
-
-    randomSeed :: forall eff. Eff (random :: Random | eff) Number
-
-    runGen :: forall a. Gen a -> LCG -> { newSeed :: LCG, value :: a }
-
-    uniform :: Gen Number

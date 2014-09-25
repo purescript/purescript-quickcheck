@@ -1,11 +1,18 @@
 module Test.QuickCheck where
 
 import Debug.Trace
+import Control.Bind
 import Control.Monad.Eff
 import Control.Monad.Eff.Random
 import Control.Monad.Eff.Exception
+import Data.Array
+import Math
+
+import qualified Data.String as S
 
 import Test.QuickCheck.LCG
+
+newtype AlphaNumString = AlphaNumString String
 
 class Arbitrary t where
   arbitrary :: Gen t
@@ -35,14 +42,31 @@ instance arbBoolean :: Arbitrary Boolean where
     return $ (n * 2) < 1
 
 instance coarbBoolean :: CoArbitrary Boolean where
-  coarbitrary true (Gen f) = Gen $ \l -> f (l + 1)
-  coarbitrary false (Gen f) = Gen $ \l -> f (l + 2)
+  coarbitrary true = perturbGen 1
+  coarbitrary false = perturbGen 2
+
+instance arbString :: Arbitrary String where
+  arbitrary = do
+    arrNum <- arbitrary
+    return $ (S.joinWith "") $ S.fromCharCode <<< ((*) 65535) <$> arrNum
+
+instance coarbString :: CoArbitrary String where
+  coarbitrary s = coarbitrary $ (S.charCodeAt 0 <$> S.split "" s)
+
+instance arbAlphaNumString :: Arbitrary AlphaNumString where
+  arbitrary = do
+    arrNum <- arbitrary
+    return $ AlphaNumString <<< (S.joinWith "") $ lookup <$> arrNum where
+      chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+      lookup x = S.charAt index chars where
+        index = round $ x * (S.length chars - 1)
+
+instance coarbAlphaNumString :: CoArbitrary AlphaNumString where
+  coarbitrary (AlphaNumString s) = coarbitrary s
 
 instance arbFunction :: (CoArbitrary a, Arbitrary b) => Arbitrary (a -> b) where
   arbitrary = repeatable (\a -> coarbitrary a arbitrary)
-
-repeatable :: forall a b. (a -> Gen b) -> Gen (a -> b)
-repeatable f = Gen $ \l -> { value: \a -> (runGen (f a) l).value, newSeed: l }
 
 instance coarbFunction :: (Arbitrary a, CoArbitrary b) => CoArbitrary (a -> b) where
   coarbitrary f gen = do
@@ -80,19 +104,20 @@ instance testableFunction :: (Arbitrary t, Testable prop) => Testable (t -> prop
     test (f t)
 
 quickCheckPure :: forall prop. (Testable prop) => Number -> Number -> prop -> [Result]
-quickCheckPure seed n prop = evalGen (go n) seed
-  where
-  go n | n <= 0 = return []
-  go n = do
-    result <- test prop
-    rest <- go (n - 1)
-    return $ result : rest
+quickCheckPure s = quickCheckPure' {newSeed: s, size: 10} where
+  quickCheckPure' st n prop = evalGen (go n) st 
+    where
+    go n | n <= 0 = return []
+    go n = do
+      result <- test prop
+      rest <- go (n - 1)
+      return $ result : rest
 
 type QC a = forall eff. Eff (trace :: Trace, random :: Random, err :: Exception | eff) a
 
 quickCheck' :: forall prop. (Testable prop) => Number -> prop -> QC Unit
 quickCheck' n prop = do
-  seed <- randomSeed
+  seed <- random
   let results = quickCheckPure seed n prop
   let successes = countSuccesses results
   trace $ show successes ++ "/" ++ show n ++ " test(s) passed."
