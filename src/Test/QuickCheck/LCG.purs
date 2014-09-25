@@ -1,4 +1,19 @@
-module Test.QuickCheck.LCG where
+module Test.QuickCheck.LCG
+  (
+    Gen(),
+    GenState(),
+    GenOut(),
+    Size(),
+    LCG(),
+    repeatable,
+    sized,
+    stateful,
+    resize,
+    runGen,
+    evalGen,
+    perturbGen,
+    uniform
+  ) where
 
 import Control.Monad.Eff
 import Control.Monad.Eff.Random
@@ -12,8 +27,14 @@ type GenOut a = { state :: GenState, value :: a }
 
 data Gen a = Gen (GenState -> GenOut a)
 
+repeatable :: forall a b. (a -> Gen b) -> Gen (a -> b)
+repeatable f = Gen $ \s -> { value: \a -> (runGen (f a) s).value, state: s }
+
 sized :: forall a. (Number -> Gen a) -> Gen a
-sized f = Gen (\s -> runGen (f s.size) s)
+sized f = stateful (\s -> f s.size)
+
+stateful :: forall a. (GenState -> Gen a) -> Gen a
+stateful f = Gen (\s -> runGen (f s) s)
 
 resize :: forall a. Number -> Gen a -> Gen a
 resize sz g = Gen (\s -> runGen g s { size = sz })
@@ -23,12 +44,6 @@ runGen (Gen f) = f
 
 evalGen :: forall a. Gen a -> GenState -> a 
 evalGen gen st = (runGen gen st).value
-
-foreign import randomSeed
-  "function randomSeed() {\
-  \  return Math.floor(Math.random() * (1 << 30));\
-  \}" :: forall eff. Eff (random :: Random | eff) Number
-
 --
 -- Magic Numbers
 --

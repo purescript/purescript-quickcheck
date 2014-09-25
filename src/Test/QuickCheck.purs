@@ -1,6 +1,7 @@
 module Test.QuickCheck where
 
 import Debug.Trace
+import Control.Bind
 import Control.Monad.Eff
 import Control.Monad.Eff.Random
 import Control.Monad.Eff.Exception
@@ -11,7 +12,7 @@ import qualified Data.String as S
 
 import Test.QuickCheck.LCG
 
-data AlphaNumString = AlphaNumString String
+newtype AlphaNumString = AlphaNumString String
 
 class Arbitrary t where
   arbitrary :: Gen t
@@ -41,8 +42,8 @@ instance arbBoolean :: Arbitrary Boolean where
     return $ (n * 2) < 1
 
 instance coarbBoolean :: CoArbitrary Boolean where
-  coarbitrary true (Gen f) = Gen $ \s -> f $ s { newSeed = s.newSeed + 1 }
-  coarbitrary false (Gen f) = Gen $ \s -> f $ s { newSeed = s.newSeed + 2 }
+  coarbitrary true = perturbGen 1
+  coarbitrary false = perturbGen 2
 
 instance arbString :: Arbitrary String where
   arbitrary = do
@@ -86,9 +87,6 @@ instance arbArray :: (Arbitrary a) => Arbitrary [a] where
 instance coarbArray :: (CoArbitrary a) => CoArbitrary [a] where
   coarbitrary [] = id
   coarbitrary (x : xs) = coarbitrary xs <<< coarbitrary x
-
-repeatable :: forall a b. (a -> Gen b) -> Gen (a -> b)
-repeatable f = Gen $ \s -> { value: \a -> (runGen (f a) s).value, state: s }
 
 class Testable prop where
   test :: prop -> Gen Result
@@ -141,3 +139,8 @@ quickCheck' n prop = do
 
 quickCheck :: forall prop. (Testable prop) => prop -> QC Unit
 quickCheck prop = quickCheck' 100 prop
+
+foreign import randomSeed
+  "function randomSeed() {\
+  \  return Math.floor(Math.random() * (1 << 30));\
+  \}" :: forall eff. Eff (random :: Random | eff) Number

@@ -4,7 +4,7 @@
 
 ### Types
 
-    data AlphaNumString where
+    newtype AlphaNumString where
       AlphaNumString :: String -> AlphaNumString
 
     type QC a = forall eff. Eff (err :: Exception, random :: Random, trace :: Trace | eff) a
@@ -73,7 +73,7 @@
 
     quickCheckPure' :: forall prop. (Testable prop) => GenState -> Number -> prop -> [Result]
 
-    repeatable :: forall a b. (a -> Gen b) -> Gen (a -> b)
+    randomSeed :: forall eff. Eff (random :: Random | eff) Number
 
 
 

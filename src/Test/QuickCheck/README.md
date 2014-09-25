@@ -4,8 +4,7 @@
 
 ### Types
 
-    data Gen a where
-      Gen :: GenState -> GenOut a -> Gen a
+    data Gen a
 
     type GenOut a = { value :: a, state :: GenState }
 
@@ -33,27 +32,17 @@
 
     evalGen :: forall a. Gen a -> GenState -> a
 
-    float32ToInt32 :: Number -> Number
-
-    lcgC :: Number
-
-    lcgM :: Number
-
-    lcgN :: Number
-
-    lcgNext :: Number -> Number
-
-    lcgStep :: Gen Number
-
     perturbGen :: forall a. Number -> Gen a -> Gen a
 
-    randomSeed :: forall eff. Eff (random :: Random | eff) Number
+    repeatable :: forall a b. (a -> Gen b) -> Gen (a -> b)
 
     resize :: forall a. Number -> Gen a -> Gen a
 
     runGen :: forall a. Gen a -> GenState -> GenOut a
 
     sized :: forall a. (Number -> Gen a) -> Gen a
+
+    stateful :: forall a. (GenState -> Gen a) -> Gen a
 
     uniform :: Gen Number
 
