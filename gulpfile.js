@@ -23,12 +23,12 @@ var paths = {
             src: 'src/Test/QuickCheck/*.purs'
         }
     },
-    test: 'test/**/*.purs'
+    test: 'examples/*.purs'
 };
 
 var options = {
     test: {
-        main: 'Test.Test.QuickCheck',
+        main: 'PreludeTests',
         output: 'test/test.js'
     }
 };
