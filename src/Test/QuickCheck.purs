@@ -104,16 +104,14 @@ instance testableFunction :: (Arbitrary t, Testable prop) => Testable (t -> prop
     test (f t)
 
 quickCheckPure :: forall prop. (Testable prop) => Number -> Number -> prop -> [Result]
-quickCheckPure s = quickCheckPure' {newSeed: s, size: 10}
-
-quickCheckPure' :: forall prop. (Testable prop) => GenState -> Number -> prop -> [Result]
-quickCheckPure' st n prop = evalGen (go n) st 
-  where
-  go n | n <= 0 = return []
-  go n = do
-    result <- test prop
-    rest <- go (n - 1)
-    return $ result : rest
+quickCheckPure s = quickCheckPure' {newSeed: s, size: 10} where
+  quickCheckPure' st n prop = evalGen (go n) st 
+    where
+    go n | n <= 0 = return []
+    go n = do
+      result <- test prop
+      rest <- go (n - 1)
+      return $ result : rest
 
 type QC a = forall eff. Eff (trace :: Trace, random :: Random, err :: Exception | eff) a
 
