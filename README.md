@@ -71,7 +71,5 @@
 
     quickCheckPure :: forall prop. (Testable prop) => Number -> Number -> prop -> [Result]
 
-    quickCheckPure' :: forall prop. (Testable prop) => GenState -> Number -> prop -> [Result]
-
 
 
