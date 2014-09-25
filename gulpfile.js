@@ -15,7 +15,7 @@ var paths = {
     dest: '',
     docs: {
         'Test.QuickCheck': {
-            dest: 'src/Test/README.md',
+            dest: 'README.md',
             src: 'src/Test/QuickCheck.purs'
         },
         'Test.QuickCheck.*': {
