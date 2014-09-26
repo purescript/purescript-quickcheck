@@ -34,11 +34,17 @@
 
     instance arbBoolean :: Arbitrary Boolean
 
+    instance arbEither :: (Arbitrary a, Arbitrary b) => Arbitrary (Either a b)
+
     instance arbFunction :: (CoArbitrary a, Arbitrary b) => Arbitrary (a -> b)
+
+    instance arbMaybe :: (Arbitrary a) => Arbitrary (Maybe a)
 
     instance arbNumber :: Arbitrary Number
 
     instance arbString :: Arbitrary String
+
+    instance arbTuple :: (Arbitrary a, Arbitrary b) => Arbitrary (Tuple a b)
 
     instance coarbAlphaNumString :: CoArbitrary AlphaNumString
 
@@ -46,11 +52,17 @@
 
     instance coarbBoolean :: CoArbitrary Boolean
 
+    instance coarbEither :: (CoArbitrary a, CoArbitrary b) => CoArbitrary (Either a b)
+
     instance coarbFunction :: (Arbitrary a, CoArbitrary b) => CoArbitrary (a -> b)
+
+    instance coarbMaybe :: (CoArbitrary a) => CoArbitrary (Maybe a)
 
     instance coarbNumber :: CoArbitrary Number
 
     instance coarbString :: CoArbitrary String
+
+    instance coarbTuple :: (CoArbitrary a, CoArbitrary b) => CoArbitrary (Tuple a b)
 
     instance showResult :: Show Result
 

@@ -36,11 +36,11 @@
 
     repeatable :: forall a b. (a -> Gen b) -> Gen (a -> b)
 
-    resize :: forall a. Number -> Gen a -> Gen a
+    resize :: forall a. Size -> Gen a -> Gen a
 
     runGen :: forall a. Gen a -> GenState -> GenOut a
 
-    sized :: forall a. (Number -> Gen a) -> Gen a
+    sized :: forall a. (Size -> Gen a) -> Gen a
 
     stateful :: forall a. (GenState -> Gen a) -> Gen a
 

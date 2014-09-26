@@ -14,10 +14,14 @@
     "package.json"
   ],
   "dependencies": {
-    "purescript-random": "*",
-    "purescript-exceptions": "0.2.0",
-    "purescript-arrays": "*",
-    "purescript-strings": "*",
-    "purescript-math": "*"
+    "purescript-random":      "*",
+    "purescript-exceptions":  "*",
+    "purescript-arrays":      "*",
+    "purescript-strings":     "*",
+    "purescript-math":        "*",
+    "purescript-tuples":      "*",
+    "purescript-either":      "*",
+    "purescript-maybe":       "*",
+    "purescript-foldable-traversable": "*"
   }
 }
