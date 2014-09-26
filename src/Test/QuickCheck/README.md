@@ -30,21 +30,39 @@
 
 ### Values
 
+    choose :: Number -> Number -> Gen Number
+
+    chooseInt :: Number -> Number -> Gen Number
+
+    elements :: forall a. a -> [a] -> Gen a
+
     evalGen :: forall a. Gen a -> GenState -> a
+
+    frequency :: forall a. Tuple Number (Gen a) -> [Tuple Number (Gen a)] -> Gen a
+
+    listOf :: forall a. Gen a -> Gen [a]
+
+    listOf1 :: forall a. Gen a -> Gen (Tuple a [a])
+
+    oneOf :: forall a. Gen a -> [Gen a] -> Gen a
 
     perturbGen :: forall a. Number -> Gen a -> Gen a
 
     repeatable :: forall a b. (a -> Gen b) -> Gen (a -> b)
 
-    resize :: forall a. Number -> Gen a -> Gen a
+    resize :: forall a. Size -> Gen a -> Gen a
 
     runGen :: forall a. Gen a -> GenState -> GenOut a
 
-    sized :: forall a. (Number -> Gen a) -> Gen a
+    sized :: forall a. (Size -> Gen a) -> Gen a
 
     stateful :: forall a. (GenState -> Gen a) -> Gen a
 
     uniform :: Gen Number
+
+    variant :: forall a. LCG -> Gen a -> Gen a
+
+    vectorOf :: forall a. Number -> Gen a -> Gen [a]
 
 
 
