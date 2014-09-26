@@ -108,13 +108,13 @@ runGen (Gen f) = f
 evalGen :: forall a. Gen a -> GenState -> a 
 evalGen gen st = (runGen gen st).value
 
-sample :: forall a. Size -> Gen a -> [a]
+sample :: forall r a. Size -> Gen a -> [a]
 sample sz g = evalGen (vectorOf sz g) { newSeed: 0, size: sz }
 
-showSample' :: forall a. (Show a) => Size -> Gen a -> Eff (trace :: Trace) Unit
+showSample' :: forall r a. (Show a) => Size -> Gen a -> Eff (trace :: Trace | r) Unit
 showSample' n g = print $ sample n g
 
-showSample :: forall a. (Show a) => Gen a -> Eff (trace :: Trace) Unit
+showSample :: forall r a. (Show a) => Gen a -> Eff (trace :: Trace | r) Unit
 showSample g = showSample' 10 g
 
 --
