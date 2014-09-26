@@ -55,7 +55,7 @@ choose a b = (*) (max - min) >>> (+) min <$> uniform where
   max = M.max a b
 
 chooseInt :: Number -> Number -> Gen Number
-chooseInt a b = M.round <$> choose a b
+chooseInt a b = M.floor <$> choose (M.ceil a) (M.floor b + 0.999999999)
 
 oneOf :: forall a. Gen a -> [Gen a] -> Gen a
 oneOf x xs = do
