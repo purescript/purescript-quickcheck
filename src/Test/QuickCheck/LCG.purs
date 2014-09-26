@@ -21,7 +21,9 @@ module Test.QuickCheck.LCG
     runGen,
     evalGen,
     perturbGen,
-    uniform
+    uniform,
+    showSample,
+    showSample'
   ) where
 
 import Control.Monad.Eff
