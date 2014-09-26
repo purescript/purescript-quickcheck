@@ -99,9 +99,6 @@ instance coarbFunction :: (Arbitrary a, CoArbitrary b) => CoArbitrary (a -> b) w
   coarbitrary f gen = do
     xs <- arbitrary
     coarbitrary (map f xs) gen
-    where
-    map _ [] = []
-    map f (x : xs) = f x : map f xs
 
 instance arbArray :: (Arbitrary a) => Arbitrary [a] where
   arbitrary = do
