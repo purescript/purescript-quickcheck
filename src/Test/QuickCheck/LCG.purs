@@ -117,7 +117,7 @@ showSample' :: forall r a. (Show a) => Size -> Gen a -> Eff (trace :: Trace | r)
 showSample' n g = print $ sample n g
 
 showSample :: forall r a. (Show a) => Gen a -> Eff (trace :: Trace | r) Unit
-showSample g = showSample' 10 g
+showSample = showSample' 10
 
 --
 -- Magic Numbers
