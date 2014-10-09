@@ -50,6 +50,14 @@ data Mega  = Mega {
   , vectorOf 
   -}  
 
+data DetABC = DetABC String
+
+runDetABC :: DetABC -> String
+runDetABC (DetABC s) = s
+
+instance arbDetABC :: Arbitrary DetABC where
+  arbitrary = DetABC <$> allInArray ["A", "B", "C"]
+
 data OneToTen = OneToTen Number
 
 runOneToTen :: OneToTen -> Number
@@ -101,13 +109,16 @@ verify_gen (Mega m) = fold [
   all (flip elem ["foo", "bar", "baz"]) m.elements    <?> "elements: "    ++ show m.elements,
   m.extend == ["5", "5", "5"]                         <?> "extend: "      ++ show m.extend,
   m.infinite == ["foo", "foo", "foo", "foo"]          <?> "infinite: "    ++ show m.infinite ]
-  
+
 main = do
   trace "Gen combinators"
   quickCheck $ verify_gen
 
   trace "foldGen"
   quickCheck $ (runTrampoline $ foldGen (\a b -> Just $ a + b) 1 mempty (allInArray [1, 2, 3])) == 7
+
+  trace "smallCheck"
+  smallCheck $ runDetABC >>> (flip elem ["A", "B", "C"])
 
   trace "Fair distribution of booleans"
   statCheck (1/2) $ (==) true
