@@ -16,12 +16,14 @@ module Test.QuickCheck.LCG
   , elements 
   , extend
   , foldGen 
+  , foldGen'
   , frequency 
   , infinite
   , oneOf 
   , perturbGen 
   , repeatable 
   , resize 
+  , runGen
   , sample 
   , sample' 
   , showSample
@@ -248,12 +250,18 @@ infinite :: forall f a. (Monad f) => GenT f a -> GenT f a
 infinite = liftMealy $ Mealy.loop
 
 -- | Folds over a generator to produce a value. Either the generator or the 
+-- | user-defined function may terminate the fold. Returns not just the value
+-- | created through folding, but also the successor generator.
+foldGen' :: forall f a b. (Monad f) => (b -> a -> Maybe b) -> b -> GenState -> GenT f a -> f (Tuple b (GenT f a))
+foldGen' f b s (GenT m) = loop s m b where
+  loop st m b = Mealy.stepMealy st m >>= g
+    where g Mealy.Halt                                        = pure $ Tuple b (GenT Mealy.halt)
+          g (Mealy.Emit (GenOut { value = a, state = st }) m) = let b' = f b a in maybe (pure $ Tuple b (GenT m)) (loop st m) b'
+
+-- | Folds over a generator to produce a value. Either the generator or the 
 -- | user-defined function may terminate the fold.
 foldGen :: forall f a b. (Monad f) => (b -> a -> Maybe b) -> b -> GenState -> GenT f a -> f b
-foldGen f b s (GenT m) = loop s m b where
-  loop st m b = Mealy.stepMealy st m >>= g
-    where g Mealy.Halt                                        = pure b
-          g (Mealy.Emit (GenOut { value = a, state = st }) m) = let b' = f b a in maybe (pure b) (loop st m) b'
+foldGen f b s g = fst <$> foldGen' f b s g
 
 unfoldGen :: forall f a b c. (Monad f) => (b -> a -> Tuple b (Maybe c)) -> b -> GenT f a -> GenT f c
 unfoldGen f b (GenT m) = GenT $ loop m b where
@@ -303,8 +311,7 @@ collectAll = foldGen f []
 
 -- | Samples a generator, producing the specified number of values.
 sample' :: forall f a. (Monad f) => Number -> GenState -> GenT f a -> f [a]
-sample' n st g = foldGen f [] st (extend n g)
-  where f v a = ifThenElse (A.length v < n) (Just $ v <> [a]) Nothing 
+sample' n st g = fst <$> runGen n st g
 
 -- | Samples a generator, producing the specified number of values. Uses 
 -- | default settings for the initial generator state.
@@ -318,6 +325,10 @@ showSample' n g = print $ runTrampoline $ sample n g
 -- | Shows a sample of values generated from the specified generator.
 showSample :: forall r a. (Show a) => Gen a -> Eff (trace :: Trace | r) Unit
 showSample = showSample' 10
+
+runGen :: forall f a. (Monad f) => Number -> GenState -> GenT f a -> f (Tuple [a] (GenT f a))
+runGen n st g = foldGen' f [] st (extend n g)
+  where f v a = ifThenElse (A.length v < n) (Just $ v <> [a]) Nothing
 
 instance semigroupGenState :: Semigroup GenState where
   (<>) (GenState a) (GenState b) = GenState { seed: perturbNum a.seed b.seed, size: b.size }
