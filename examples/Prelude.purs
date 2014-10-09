@@ -28,7 +28,8 @@ data Mega  = Mega {
   takeGen     :: [Number],
   elements    :: [String],
   extend      :: [String],
-  infinite    :: [String] }
+  infinite    :: [String],
+  perms       :: [[String]] }
 
 {- TODO: Remaining cases
   , frequency 
@@ -80,6 +81,7 @@ instance arbMega :: Arbitrary Mega where
     elements'   <- arrayOf $ elements "foo" ["bar", "baz"]
     extend'     <- collectAll mempty $ extend 3 (pure "5")
     infinite'   <- collectAll mempty $ takeGen 4 (infinite $ pure "foo")
+    perms'      <- collectAll mempty $ perms ["John", "D"]
     return $ Mega { 
       arrayOf:    arrayOf', 
       arrayOf1:   (case arrayOf1' of Tuple a as -> a : as), 
@@ -92,7 +94,8 @@ instance arbMega :: Arbitrary Mega where
       takeGen:    takeGen',
       elements:   elements',
       extend:     extend',
-      infinite:   infinite' }
+      infinite:   infinite',
+      perms:      perms' }
 
 verify_gen :: Mega -> Result
 verify_gen (Mega m) = fold [
@@ -108,7 +111,8 @@ verify_gen (Mega m) = fold [
   m.takeGen == [2, 1]                                 <?> "takeGen: "     ++ show m.takeGen,
   all (flip elem ["foo", "bar", "baz"]) m.elements    <?> "elements: "    ++ show m.elements,
   m.extend == ["5", "5", "5"]                         <?> "extend: "      ++ show m.extend,
-  m.infinite == ["foo", "foo", "foo", "foo"]          <?> "infinite: "    ++ show m.infinite ]
+  m.infinite == ["foo", "foo", "foo", "foo"]          <?> "infinite: "    ++ show m.infinite,
+  m.perms == ["John", "D"] : ["D", "John"] : []       <?> "perms: "       ++ show m.perms]
 
 main = do
   trace "Gen combinators"

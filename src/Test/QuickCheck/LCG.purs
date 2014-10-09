@@ -20,6 +20,7 @@ module Test.QuickCheck.LCG
   , frequency 
   , infinite
   , oneOf 
+  , perms
   , perturbGen 
   , repeatable 
   , resize 
@@ -33,7 +34,7 @@ module Test.QuickCheck.LCG
   , suchThat
   , suchThatMaybe
   , takeGen 
-  , unfoldGen
+  , transGen
   , uniform 
   , variant 
   , vectorOf 
@@ -57,6 +58,10 @@ import Control.Monad.Trampoline
 import Control.Arrow
 import Control.Monad
 import Control.Bind
+import Control.Plus
+import Control.Alt
+import Control.Alternative
+import Control.MonadPlus
 import qualified Math as M
 import qualified Data.Machine.Mealy as Mealy
 
@@ -189,7 +194,7 @@ arrayOf1 g = sized $ \n ->
 
 -- | Creates a generator that generates arrays of some specified size.
 vectorOf :: forall f a. (Monad f) => Number -> GenT f a -> GenT f [a]
-vectorOf n g = unfoldGen f [] (extend n g)
+vectorOf n g = transGen f [] (extend n g)
   where f b a = let b' = b <> [a] 
                 in  if A.length b' >= n then Tuple [] (Just b') else Tuple b' Nothing
 
@@ -250,7 +255,7 @@ infinite :: forall f a. (Monad f) => GenT f a -> GenT f a
 infinite = liftMealy $ Mealy.loop
 
 -- | Folds over a generator to produce a value. Either the generator or the 
--- | user-defined function may terminate the fold. Returns not just the value
+-- | user-defined function may halt the fold. Returns not just the value
 -- | created through folding, but also the successor generator.
 foldGen' :: forall f a b. (Monad f) => (b -> a -> Maybe b) -> b -> GenState -> GenT f a -> f (Tuple b (GenT f a))
 foldGen' f b s (GenT m) = loop s m b where
@@ -259,12 +264,15 @@ foldGen' f b s (GenT m) = loop s m b where
           g (Mealy.Emit (GenOut { value = a, state = st }) m) = let b' = f b a in maybe (pure $ Tuple b (GenT m)) (loop st m) b'
 
 -- | Folds over a generator to produce a value. Either the generator or the 
--- | user-defined function may terminate the fold.
+-- | user-defined function may halt the fold.
 foldGen :: forall f a b. (Monad f) => (b -> a -> Maybe b) -> b -> GenState -> GenT f a -> f b
 foldGen f b s g = fst <$> foldGen' f b s g
 
-unfoldGen :: forall f a b c. (Monad f) => (b -> a -> Tuple b (Maybe c)) -> b -> GenT f a -> GenT f c
-unfoldGen f b (GenT m) = GenT $ loop m b where
+-- | Transforms one gen into another, passing along user-supplied state.
+-- | Either the generator being transformed or the transforming function may
+-- | halt the transformation.
+transGen :: forall f a b c. (Monad f) => (b -> a -> Tuple b (Maybe c)) -> b -> GenT f a -> GenT f c
+transGen f b (GenT m) = GenT $ loop m b where
   loop m b = Mealy.mealy $ \st -> Mealy.stepMealy st m >>= g
     where g Mealy.Halt                                        = pure Mealy.Halt
           g (Mealy.Emit (GenOut { value = a, state = st }) m) = case f b a of 
@@ -276,17 +284,28 @@ unfoldGen f b (GenT m) = GenT $ loop m b where
 -- FIXME: workaround type inference unification bug
 ifThenElse p a b = if p then a else b
 
+-- | A deterministic generator that produces all possible permutations of 
+-- | the specified array.
+perms :: forall f a. (Monad f) => [a] -> GenT f [a]
+perms []        = pure $ []
+perms (x : xs)  = 
+  do  xs <- perms xs
+      let f n = let prefix = A.take n xs
+                    suffix = A.drop n xs
+                in  prefix <> [x] <> suffix
+      allInArray $ f <$> A.range 0 (A.length xs)
+
 -- | Filters a generator to produce only values satisfying the specified 
 -- | predicate.
 suchThat :: forall f a. (Monad f) => GenT f a -> (a -> Boolean) -> GenT f a
-suchThat g p = unfoldGen f unit g where
+suchThat g p = transGen f unit g where
   f _ a = Tuple unit $ ifThenElse (p a) (Just a) Nothing
 
 -- | Filters a generator to produce only values satisfying the specified 
 -- | predicate, but gives up and produces Nothing after the specified number
 -- | of attempts.
 suchThatMaybe :: forall f a. (Monad f) => Number -> GenT f a -> (a -> Boolean) -> GenT f (Maybe a)
-suchThatMaybe n g p = unfoldGen f 0 g where
+suchThatMaybe n g p = transGen f 0 g where
   f i a = ifThenElse (p a) (Tuple 0 (Just $ Just a)) (ifThenElse (i >= n) (Tuple 0 (Just $ Nothing)) (Tuple (i + 1) Nothing))
 
 -- | A deterministic generator that produces integers from the specified 
@@ -371,3 +390,13 @@ instance bindGenT :: (Monad f) => Bind (GenT f) where
                                unGen $ updateSeedGen (f (unGenOut a).value)
 
 instance monadGenT :: (Monad f) => Monad (GenT f)
+
+instance altGenT :: (Monad f) => Alt (GenT f) where
+  (<|>) (GenT x) (GenT y) = GenT $ x <|> y
+
+instance plusGenT :: (Monad f) => Plus (GenT f) where
+  empty = mempty
+
+instance alternativeGenT :: (Monad f) => Alternative (GenT f)
+
+instance monadPlusGenT :: (Monad f) => MonadPlus (GenT f)
