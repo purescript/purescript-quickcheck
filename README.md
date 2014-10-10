@@ -85,6 +85,10 @@
 
     instance coarbTuple :: (CoArbitrary a, CoArbitrary b) => CoArbitrary (Tuple a b)
 
+    instance monoidResult :: Monoid Result
+
+    instance semigroupResult :: Semigroup Result
+
     instance showResult :: Show Result
 
     instance testableBoolean :: Testable Boolean
@@ -102,11 +106,15 @@
 
     quickCheck' :: forall prop. (Testable prop) => Number -> prop -> QC Unit
 
-    quickCheckPure :: forall prop. (Testable prop) => Number -> Number -> prop -> [Result]
+    quickCheckPure :: forall prop. (Testable prop) => Number -> Seed -> prop -> [Result]
 
     smallCheck :: forall prop. (Testable prop) => prop -> QC Unit
 
     smallCheckPure :: forall prop. (Testable prop) => Number -> prop -> [Result]
+
+    statCheck :: forall prop. (Testable prop) => Number -> prop -> QC Unit
+
+    statCheckPure :: forall prop. (Testable prop) => Seed -> Number -> prop -> Result
 
 
 
