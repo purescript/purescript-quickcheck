@@ -1,7 +1,11 @@
 {
   "name": "purescript-quickcheck",
-  "version": "0.0.2",
+  "version": "0.1.6",
   "license": "MIT",
+  "authors": [
+    "John A. De Goes <john@degoes.net> (http://degoes.net)",
+    "Phil Freeman <freeman.phil@gmail.com>"
+  ],
   "ignore": [
     "**/.*",
     "bower_components",
@@ -14,14 +18,17 @@
     "package.json"
   ],
   "dependencies": {
-    "purescript-random":      "*",
-    "purescript-exceptions":  "*",
-    "purescript-arrays":      "*",
-    "purescript-strings":     "*",
-    "purescript-math":        "*",
-    "purescript-tuples":      "*",
-    "purescript-either":      "*",
-    "purescript-maybe":       "*",
+    "purescript-random":        "*",
+    "purescript-exceptions":    "*",
+    "purescript-transformers":  "*",
+    "purescript-free":          "0.1.3",
+    "purescript-machines":      "0.1.5",
+    "purescript-arrays":        "*",
+    "purescript-strings":       "*",
+    "purescript-math":          "*",
+    "purescript-tuples":        "*",
+    "purescript-either":        "*",
+    "purescript-maybe":         "*",
     "purescript-foldable-traversable": "*"
   }
 }

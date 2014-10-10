@@ -7,6 +7,15 @@
     newtype AlphaNumString where
       AlphaNumString :: String -> AlphaNumString
 
+    newtype Negative where
+      Negative :: Number -> Negative
+
+    newtype NonZero where
+      NonZero :: Number -> NonZero
+
+    newtype Positive where
+      Positive :: Number -> Positive
+
     type QC a = forall eff. Eff (err :: Exception, random :: Random, trace :: Trace | eff) a
 
     data Result where
@@ -40,7 +49,13 @@
 
     instance arbMaybe :: (Arbitrary a) => Arbitrary (Maybe a)
 
+    instance arbNegative :: Arbitrary Negative
+
+    instance arbNonZero :: Arbitrary NonZero
+
     instance arbNumber :: Arbitrary Number
+
+    instance arbPositive :: Arbitrary Positive
 
     instance arbString :: Arbitrary String
 
@@ -58,11 +73,21 @@
 
     instance coarbMaybe :: (CoArbitrary a) => CoArbitrary (Maybe a)
 
+    instance coarbNegative :: CoArbitrary Negative
+
+    instance coarbNonZero :: CoArbitrary NonZero
+
     instance coarbNumber :: CoArbitrary Number
+
+    instance coarbPositive :: CoArbitrary Positive
 
     instance coarbString :: CoArbitrary String
 
     instance coarbTuple :: (CoArbitrary a, CoArbitrary b) => CoArbitrary (Tuple a b)
+
+    instance monoidResult :: Monoid Result
+
+    instance semigroupResult :: Semigroup Result
 
     instance showResult :: Show Result
 
@@ -81,7 +106,15 @@
 
     quickCheck' :: forall prop. (Testable prop) => Number -> prop -> QC Unit
 
-    quickCheckPure :: forall prop. (Testable prop) => Number -> Number -> prop -> [Result]
+    quickCheckPure :: forall prop. (Testable prop) => Number -> Seed -> prop -> [Result]
+
+    smallCheck :: forall prop. (Testable prop) => prop -> QC Unit
+
+    smallCheckPure :: forall prop. (Testable prop) => Number -> prop -> [Result]
+
+    statCheck :: forall prop. (Testable prop) => Number -> prop -> QC Unit
+
+    statCheckPure :: forall prop. (Testable prop) => Seed -> Number -> prop -> Result
 
 
 

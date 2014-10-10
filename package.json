@@ -1,7 +1,12 @@
 {
   "name":       "purescript-quickcheck",
   "license":    "MIT",
+  "version":    "0.1.6",
   "repository": "git@github.com:purescript-contrib/purescript-quickcheck.git",
+  "contributors": [
+    "John A. De Goes <john@degoes.net> (http://degoes.net)",
+    "Phil Freeman <freeman.phil@gmail.com>"
+  ],
 
   "devDependencies": {
     "gulp":             "^3.8.8",
