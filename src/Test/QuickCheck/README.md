@@ -87,6 +87,8 @@
 
     infinite :: forall f a. (Monad f) => GenT f a -> GenT f a
 
+    interleave :: forall f a. (Monad f) => GenT f a -> GenT f a -> GenT f a
+
     oneOf :: forall f a. (Monad f) => GenT f a -> [GenT f a] -> GenT f a
 
     perms :: forall f a. (Monad f) => [a] -> GenT f [a]
@@ -124,6 +126,27 @@
     variant :: forall f a. (Monad f) => Seed -> GenT f a -> GenT f a
 
     vectorOf :: forall f a. (Monad f) => Number -> GenT f a -> GenT f [a]
+
+
+## Module Test.QuickCheck.Perturb
+
+### Type Classes
+
+    class Perturb a where
+      perturb :: Number -> a -> Gen a
+      dist :: a -> a -> Number
+
+
+### Type Class Instances
+
+    instance perturbArray :: (Perturb a) => Perturb [a]
+
+    instance perturbNumber :: Perturb Number
+
+    instance perturbTuple :: (Perturb a, Perturb b) => Perturb (Tuple a b)
+
+
+### Values
 
 
 

@@ -7,14 +7,23 @@ module Test.QuickCheck
   , NonZero(..)
   , Positive(..)
   , QC(..)
+  , arbitrary
+  , coarbitrary
   , quickCheck
   , quickCheck'
   , quickCheckPure
   , Result(..)
+  , runAlphaNumString
+  , runNegative
+  , runNonZero
+  , runPositive
+  , runSignum
+  , Signum(..)
   , smallCheck
   , smallCheckPure
   , statCheck
   , statCheckPure
+  , test
   , Testable
   ) where
 
@@ -52,6 +61,8 @@ newtype Positive = Positive Number
 newtype Negative = Negative Number
 
 newtype NonZero  = NonZero Number
+
+newtype Signum   = Signum Number
 
 type QC a = forall eff. Eff (trace :: Trace, random :: Random, err :: Exception | eff) a
 
@@ -127,8 +138,18 @@ countSuccesses = countSuccesses' 0
         countSuccesses' acc (Success : rest) = countSuccesses' (acc + 1) rest
         countSuccesses' acc (_       : rest) = countSuccesses' acc rest
 
-foreign import maxNumber "var maxNumber = Number.MAX_VALUE;" :: Number
-foreign import minNumber "var minNumber = Number.MIN_VALUE;" :: Number
+maxNumber :: Number
+maxNumber = 9007199254740992
+
+runAlphaNumString (AlphaNumString s) = s
+
+runSignum (Signum n) = n
+
+runPositive (Positive n) = n
+
+runNegative (Negative n) = n
+
+runNonZero (NonZero n) = n
 
 instance showResult :: Show Result where
   show Success      = "Success"
@@ -156,7 +177,7 @@ instance coarbPositive :: CoArbitrary Positive where
   coarbitrary (Positive n) = coarbitrary n
 
 instance arbNegative :: Arbitrary Negative where
-  arbitrary = Negative <$> ((*) minNumber) <$> uniform
+  arbitrary = Negative <$> ((*) (-maxNumber)) <$> uniform
 
 instance coarbNegative :: CoArbitrary Negative where
   coarbitrary (Negative n) = coarbitrary n
@@ -169,6 +190,13 @@ instance arbNonZero :: Arbitrary NonZero where
 
 instance coarbNonZero :: CoArbitrary NonZero where
   coarbitrary (NonZero n) = coarbitrary n
+
+instance arbSignum :: Arbitrary Signum where
+  arbitrary = do b <- arbitrary
+                 return $ Signum (if b then 1 else -1)
+
+instance coarbSignum :: CoArbitrary Signum where
+  coarbitrary (Signum n) = coarbitrary n
 
 instance arbBoolean :: Arbitrary Boolean where
   arbitrary = do

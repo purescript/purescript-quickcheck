@@ -19,6 +19,7 @@ module Test.QuickCheck.LCG
   , foldGen'
   , frequency 
   , infinite
+  , interleave
   , oneOf 
   , perms
   , perturbGen 
@@ -248,6 +249,10 @@ extend n (GenT m) = GenT $ loop 0 m
               f (Mealy.Emit s m) = pure $ Mealy.Emit s (loop (i + 1) m)
 
           in  Mealy.stepMealy st m >>= f
+
+-- | Fairly interleaves two generators.
+interleave :: forall f a. (Monad f) => GenT f a -> GenT f a -> GenT f a
+interleave (GenT g1) (GenT g2) = GenT $ Mealy.interleave g1 g2
 
 -- | Ensures that a given generator can produce an infinite number of values,
 -- | assuming it can produce at least one.
