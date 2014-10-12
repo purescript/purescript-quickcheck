@@ -22,6 +22,9 @@
       Success :: Result
       Failed :: String -> Result
 
+    newtype Signum where
+      Signum :: Number -> Signum
+
 
 ### Type Classes
 
@@ -57,6 +60,8 @@
 
     instance arbPositive :: Arbitrary Positive
 
+    instance arbSignum :: Arbitrary Signum
+
     instance arbString :: Arbitrary String
 
     instance arbTuple :: (Arbitrary a, Arbitrary b) => Arbitrary (Tuple a b)
@@ -80,6 +85,8 @@
     instance coarbNumber :: CoArbitrary Number
 
     instance coarbPositive :: CoArbitrary Positive
+
+    instance coarbSignum :: CoArbitrary Signum
 
     instance coarbString :: CoArbitrary String
 
