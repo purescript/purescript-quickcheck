@@ -216,9 +216,7 @@ instance coarbChar :: CoArbitrary Char where
   coarbitrary c = coarbitrary $ toCharCode c
 
 instance arbString :: Arbitrary String where
-  arbitrary = do
-    arr <- arbitrary
-    return $ S.fromCharArray arr
+  arbitrary = S.fromCharArray <$> arbitrary
 
 instance coarbString :: CoArbitrary String where
   coarbitrary s = coarbitrary $ (S.charCodeAt 0 <$> S.split "" s)
