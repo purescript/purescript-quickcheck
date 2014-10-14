@@ -230,7 +230,7 @@ instance arbAlphaNumString :: Arbitrary AlphaNumString where
       chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
       lookup x = S.charAt index chars where
-        index = floor $ x * (S.length chars)
+        index = Math.min (S.length chars - 1) $ floor (x * (S.length chars))
 
 instance coarbAlphaNumString :: CoArbitrary AlphaNumString where
   coarbitrary (AlphaNumString s) = coarbitrary s
