@@ -36,12 +36,14 @@ import Control.Monad.Eff.Exception
 import Data.Array
 import Data.Tuple
 import Data.Maybe
+import Data.Maybe.Unsafe
 import Data.Monoid
 import Data.Either
 import Data.Traversable
 import Math
 
 import qualified Data.String as S
+import Data.Char
 
 import Test.QuickCheck.LCG
 
@@ -207,10 +209,16 @@ instance coarbBoolean :: CoArbitrary Boolean where
   coarbitrary true  = perturbGen 1
   coarbitrary false = perturbGen 2
 
+instance arbChar :: Arbitrary Char where
+  arbitrary = fromCharCode <<< ((*) 65535) <$> uniform
+
+instance coarbChar :: CoArbitrary Char where
+  coarbitrary c = coarbitrary $ toCharCode c
+
 instance arbString :: Arbitrary String where
   arbitrary = do
-    arrNum <- arbitrary
-    return $ (S.joinWith "") $ S.fromCharCode <<< ((*) 65535) <$> arrNum
+    arr <- arbitrary
+    return $ S.fromCharArray arr
 
 instance coarbString :: CoArbitrary String where
   coarbitrary s = coarbitrary $ (S.charCodeAt 0 <$> S.split "" s)
@@ -218,11 +226,11 @@ instance coarbString :: CoArbitrary String where
 instance arbAlphaNumString :: Arbitrary AlphaNumString where
   arbitrary = do
     arrNum <- arbitrary
-    return $ AlphaNumString <<< (S.joinWith "") $ lookup <$> arrNum where
+    return $ fromJust $ (AlphaNumString <<< S.fromCharArray) <$> sequence (lookup <$> arrNum) where
       chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
       lookup x = S.charAt index chars where
-        index = round $ x * (S.length chars - 1)
+        index = floor $ x * (S.length chars)
 
 instance coarbAlphaNumString :: CoArbitrary AlphaNumString where
   coarbitrary (AlphaNumString s) = coarbitrary s
