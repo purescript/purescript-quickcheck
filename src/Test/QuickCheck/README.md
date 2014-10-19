@@ -115,6 +115,10 @@
 
     showSample' :: forall r a. (Show a) => Number -> Gen a -> Eff (trace :: Trace | r) Unit
 
+    shuffle :: forall f a. (Monad f) => GenT f a -> GenT f a
+
+    shuffle' :: forall f a. (Monad f) => Number -> GenT f a -> GenT f a
+
     sized :: forall f a. (Monad f) => (Size -> GenT f a) -> GenT f a
 
     stateful :: forall f a. (Monad f) => (GenState -> GenT f a) -> GenT f a
@@ -153,6 +157,8 @@
 ### Type Class Instances
 
     instance perturbArray :: (Perturb a) => Perturb [a]
+
+    instance perturbArrayEnum :: (Enum a, Arbitrary a) => Perturb [a]
 
     instance perturbEnumEither :: (Enum a, Enum b, Perturb b) => Perturb (Either a b)
 
