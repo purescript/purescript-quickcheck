@@ -256,7 +256,7 @@ instance coarbBoolean :: CoArbitrary Boolean where
   coarbitrary false = perturbGen 2
 
 instance arbChar :: Arbitrary Char where
-  arbitrary = fromCharCode <<< ((*) 65535) <$> uniform
+  arbitrary = charGen
 
 instance coarbChar :: CoArbitrary Char where
   coarbitrary c = coarbitrary $ toCharCode c
