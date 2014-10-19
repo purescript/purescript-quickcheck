@@ -5,6 +5,7 @@ import Data.Eq
 import Debug.Trace
 import Test.QuickCheck
 import Test.QuickCheck.LCG
+import Test.QuickCheck.Perturb
 import Control.Monad.Trampoline
 import Data.Monoid
 import Data.Tuple
@@ -29,7 +30,9 @@ data Mega  = Mega {
   elements    :: [String],
   extend      :: [String],
   infinite    :: [String],
-  perms       :: [[String]] }
+  perms       :: [[String]],
+  combos      :: [[String]],
+  chunked     :: [[String]] }
 
 {- TODO: Remaining cases
   , frequency 
@@ -82,6 +85,8 @@ instance arbMega :: Arbitrary Mega where
     extend'     <- collectAll mempty $ extend 3 (pure "5")
     infinite'   <- collectAll mempty $ takeGen 4 (infinite $ pure "foo")
     perms'      <- collectAll mempty $ perms ["John", "D"]
+    combos'     <- collectAll mempty $ nChooseK 2 ["foo", "bar", "baz"]
+    chunked'    <- collectAll mempty $ chunked 3 (pure "foo")
     return $ Mega { 
       arrayOf:    arrayOf', 
       arrayOf1:   (case arrayOf1' of Tuple a as -> a : as), 
@@ -95,7 +100,9 @@ instance arbMega :: Arbitrary Mega where
       elements:   elements',
       extend:     extend',
       infinite:   infinite',
-      perms:      perms' }
+      perms:      perms',
+      combos:     combos',
+      chunked:    chunked' }
 
 verify_gen :: Mega -> Result
 verify_gen (Mega m) = fold [
@@ -112,7 +119,10 @@ verify_gen (Mega m) = fold [
   all (flip elem ["foo", "bar", "baz"]) m.elements    <?> "elements: "    ++ show m.elements,
   m.extend == ["5", "5", "5"]                         <?> "extend: "      ++ show m.extend,
   m.infinite == ["foo", "foo", "foo", "foo"]          <?> "infinite: "    ++ show m.infinite,
-  m.perms == ["John", "D"] : ["D", "John"] : []       <?> "perms: "       ++ show m.perms]
+  m.perms == ["John", "D"] : ["D", "John"] : []       <?> "perms: "       ++ show m.perms,
+  m.combos == ["foo", "bar"] : ["foo", "baz"] : 
+              ["bar", "baz"] : []                     <?> "combos: "      ++ show m.combos,
+  m.chunked == ["foo", "foo", "foo"] : []             <?> "chunked: "     ++ show m.chunked]
 
 main = do
   trace "Gen combinators"
@@ -129,4 +139,10 @@ main = do
   
   trace "Fair distribution of ints"
   statCheck (1/11) $ runOneToTen >>> ((==) 1)
+
+  trace "search can find another example"
+  let found n = Math.abs (n - 36) <= 2
+  let v = runTrampoline $ sample 1 $ searchIn found 35.24
+  trace $ show v
+  assert $ maybe false found (v Array.!! 0)
 

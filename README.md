@@ -7,6 +7,9 @@
     newtype AlphaNumString where
       AlphaNumString :: String -> AlphaNumString
 
+    newtype LastEnum a where
+      LastEnum :: a -> LastEnum a
+
     newtype Negative where
       Negative :: Number -> Negative
 
@@ -50,7 +53,13 @@
 
     instance arbEither :: (Arbitrary a, Arbitrary b) => Arbitrary (Either a b)
 
+    instance arbEnumEither :: (Enum a, Arbitrary b) => Arbitrary (Either a b)
+
+    instance arbEnumTuple :: (Enum a, Arbitrary b) => Arbitrary (Tuple a b)
+
     instance arbFunction :: (CoArbitrary a, Arbitrary b) => Arbitrary (a -> b)
+
+    instance arbLastEnum :: (Enum a) => Arbitrary (LastEnum a)
 
     instance arbMaybe :: (Arbitrary a) => Arbitrary (Maybe a)
 
@@ -78,7 +87,13 @@
 
     instance coarbEither :: (CoArbitrary a, CoArbitrary b) => CoArbitrary (Either a b)
 
+    instance coarbEnumEither :: (Enum a, CoArbitrary b) => CoArbitrary (Either a b)
+
+    instance coarbEnumTuple :: (Enum a, CoArbitrary b) => CoArbitrary (Tuple a b)
+
     instance coarbFunction :: (Arbitrary a, CoArbitrary b) => CoArbitrary (a -> b)
+
+    instance coarbLastEnum :: (Enum a) => CoArbitrary (LastEnum a)
 
     instance coarbMaybe :: (CoArbitrary a) => CoArbitrary (Maybe a)
 
@@ -113,11 +128,15 @@
 
     (<?>) :: Boolean -> String -> Result
 
+    assert :: forall prop. (Testable prop) => prop -> QC Unit
+
     quickCheck :: forall prop. (Testable prop) => prop -> QC Unit
 
     quickCheck' :: forall prop. (Testable prop) => Number -> prop -> QC Unit
 
     quickCheckPure :: forall prop. (Testable prop) => Number -> Seed -> prop -> [Result]
+
+    runLastEnum :: forall a. LastEnum a -> a
 
     smallCheck :: forall prop. (Testable prop) => prop -> QC Unit
 

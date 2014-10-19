@@ -3,17 +3,20 @@ module Test.QuickCheck
   , AlphaNumString(..)
   , Arbitrary
   , CoArbitrary
+  , LastEnum(..)
   , Negative(..)
   , NonZero(..)
   , Positive(..)
   , QC(..)
   , arbitrary
+  , assert
   , coarbitrary
   , quickCheck
   , quickCheck'
   , quickCheckPure
   , Result(..)
   , runAlphaNumString
+  , runLastEnum
   , runNegative
   , runNonZero
   , runPositive
@@ -35,10 +38,12 @@ import Control.Monad.Eff.Random
 import Control.Monad.Eff.Exception
 import Data.Array
 import Data.Tuple
+import Data.Either
 import Data.Maybe
 import Data.Maybe.Unsafe
 import Data.Monoid
 import Data.Either
+import Data.Enum
 import Data.Traversable
 import Math
 
@@ -66,6 +71,8 @@ newtype NonZero  = NonZero Number
 
 newtype Signum   = Signum Number
 
+newtype LastEnum a = LastEnum a
+
 type QC a = forall eff. Eff (trace :: Trace, random :: Random, err :: Exception | eff) a
 
 data Result = Success | Failed String
@@ -80,43 +87,51 @@ quickCheckPure n s prop = runTrampoline $ sample' n (defState s) (test prop)
 quickCheck' :: forall prop. (Testable prop) => Number -> prop -> QC Unit
 quickCheck' n prop = check (quickCheckPure n) prop
 
+-- | Checks the proposition for 100 random values.
 quickCheck :: forall prop. (Testable prop) => prop -> QC Unit
 quickCheck prop = quickCheck' 100 prop
 
 smallCheckPure :: forall prop. (Testable prop) => Number -> prop -> [Result]
 smallCheckPure s prop = runTrampoline $ collectAll (defState s) (test prop)
 
+-- | Exhaustively checks the proposition for all possible values. Assumes the
+-- | generator is a finite generator.
 smallCheck :: forall prop. (Testable prop) => prop -> QC Unit
 smallCheck prop = check smallCheckPure prop
 
 statCheckPure :: forall prop. (Testable prop) => Seed -> Number -> prop -> Result
-statCheckPure s freq prop = try 100
-  where try x = let measure n = let results = quickCheckPure n s prop
-                                in  (countSuccesses results) / (length results)
+statCheckPure s freq prop = try 100 where
+  try x = let measure n = let results = quickCheckPure n s prop
+                          in  (countSuccesses results) / (length results)
 
-                    measure' 0 = []
-                    measure' n = measure' (n - 1) <> [measure (n * x)]
+              measure' 0 = []
+              measure' n = measure' (n - 1) <> [measure (n * x)]
 
-                    freqs = measure' 4
+              freqs = measure' 4
 
-                    dists = (Math.abs <<< (-) freq) <$> freqs 
+              dists = (Math.abs <<< (-) freq) <$> freqs 
 
-                    dirs  = zipWith (\a b -> a - b) (1 : dists) dists
+              dirs  = zipWith (\a b -> a - b) (1 : dists) dists
 
-                    fails = length $ filter ((>) 0) dirs
+              fails = length $ filter ((>) 0) dirs
 
-                    succs = filter ((<=) 0) dirs
+              succs = filter ((<=) 0) dirs
 
-                in  if fails > 1 then 
-                      if x < 1000000 then try (x * 10)
-                      else Failed $ "Divergence of statistical test: freqs = " ++ show freqs ++ ", dists = " ++ show dists ++ ", dirs = " ++ show dirs ++ ", fails: " ++ show fails
-                    else maybe (Failed "Error!") (\l -> if l > 0.5 then Failed $ "Final convergence distance too low: " ++ show l else Success) (last succs)
+          in  if fails > 1 then 
+                if x < 1000000 then try (x * 10)
+                else Failed $ "Divergence of statistical test: freqs = " ++ show freqs ++ ", dists = " ++ show dists ++ ", dirs = " ++ show dirs ++ ", fails: " ++ show fails
+              else maybe (Failed "Error!") (\l -> if l > 0.5 then Failed $ "Final convergence distance too low: " ++ show l else Success) (last succs)
 
-
+-- | Checks that the proposition has a certain probability of being true for 
+-- | arbitrary values.
 statCheck :: forall prop. (Testable prop) => Number -> prop -> QC Unit
 statCheck freq prop = do
   seed <- random
   trace <<< show $ statCheckPure seed freq prop
+
+-- | Checks that the specified proposition holds. Useful for unit tests.
+assert :: forall prop. (Testable prop) => prop -> QC Unit
+assert = quickCheck' 1
 
 defState :: Number -> GenState
 defState s = (GenState {seed: s, size: 10})
@@ -153,6 +168,9 @@ runNegative (Negative n) = n
 
 runNonZero (NonZero n) = n
 
+runLastEnum :: forall a. LastEnum a -> a
+runLastEnum (LastEnum a) = a
+
 instance showResult :: Show Result where
   show Success      = "Success"
   show (Failed msg) = "Failed: " ++ msg
@@ -161,7 +179,7 @@ instance semigroupResult :: Semigroup Result where
   (<>) Success Success          = Success
   (<>) (Failed msg) Success     = Failed msg
   (<>) Success (Failed msg)     = Failed msg
-  (<>) (Failed m1) (Failed m2)  = Failed (m1 <> m2)
+  (<>) (Failed m1) (Failed m2)  = Failed (m1 ++ "\n" ++ m2)
 
 instance monoidResult :: Monoid Result where
   mempty = Success
@@ -199,6 +217,34 @@ instance arbSignum :: Arbitrary Signum where
 
 instance coarbSignum :: CoArbitrary Signum where
   coarbitrary (Signum n) = coarbitrary n
+
+-- workaround due to lack of ScopedTypeVariables
+cardPerturb1 :: forall f a. (Enum a) => (Cardinality a -> f a) -> f a
+cardPerturb1 f = f cardinality
+
+instance arbLastEnum :: (Enum a) => Arbitrary (LastEnum a) where
+  arbitrary = LastEnum <$> cardPerturb1 f where
+    f (Cardinality sz) = fromJust <<< toEnum <$> chooseInt 0 (sz - 1)
+
+instance coarbLastEnum :: (Enum a) => CoArbitrary (LastEnum a) where
+  coarbitrary (LastEnum e) = coarbitrary (fromEnum e)
+
+instance arbEnumTuple :: (Enum a, Arbitrary b) => Arbitrary (Tuple a b) where
+  arbitrary = do a <- runLastEnum <$> arbitrary
+                 b <- arbitrary
+                 return $ Tuple a b
+
+instance coarbEnumTuple :: (Enum a, CoArbitrary b) => CoArbitrary (Tuple a b) where
+  coarbitrary (Tuple a b) = (coarbitrary $ LastEnum a) >>> coarbitrary b
+
+instance arbEnumEither :: (Enum a, Arbitrary b) => Arbitrary (Either a b) where
+  arbitrary = do w <- arbitrary
+                 e <- if w then Left <<< runLastEnum <$> arbitrary else Right <$> arbitrary
+                 return $ e
+
+instance coarbEnumEither :: (Enum a, CoArbitrary b) => CoArbitrary (Either a b) where
+  coarbitrary (Left a) = coarbitrary $ LastEnum a
+  coarbitrary (Right b) = coarbitrary b
 
 instance arbBoolean :: Arbitrary Boolean where
   arbitrary = do

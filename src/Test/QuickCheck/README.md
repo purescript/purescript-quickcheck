@@ -67,9 +67,13 @@
 
     arrayOf1 :: forall f a. (Monad f) => GenT f a -> GenT f (Tuple a [a])
 
+    charGen :: forall f. (Monad f) => GenT f Char
+
     choose :: forall f. (Monad f) => Number -> Number -> GenT f Number
 
     chooseInt :: forall f. (Monad f) => Number -> Number -> GenT f Number
+
+    chunked :: forall f a. (Monad f) => Number -> GenT f a -> GenT f [a]
 
     collectAll :: forall f a. (Monad f) => GenState -> GenT f a -> f [a]
 
@@ -88,6 +92,8 @@
     infinite :: forall f a. (Monad f) => GenT f a -> GenT f a
 
     interleave :: forall f a. (Monad f) => GenT f a -> GenT f a -> GenT f a
+
+    nChooseK :: forall f a. (Monad f) => Number -> [a] -> GenT f [a]
 
     oneOf :: forall f a. (Monad f) => GenT f a -> [GenT f a] -> GenT f a
 
@@ -130,23 +136,42 @@
 
 ## Module Test.QuickCheck.Perturb
 
+### Types
+
+    newtype Attempts where
+      Attempts :: Number -> Attempts
+
+
 ### Type Classes
 
     class Perturb a where
       perturb :: Number -> a -> Gen a
       dist :: a -> a -> Number
+      dims :: a -> Number
 
 
 ### Type Class Instances
 
     instance perturbArray :: (Perturb a) => Perturb [a]
 
+    instance perturbEnumEither :: (Enum a, Enum b, Perturb b) => Perturb (Either a b)
+
+    instance perturbEnumTuple :: (Enum a, Enum b, Perturb b) => Perturb (Tuple a b)
+
+    instance perturbLastEnum :: (Enum a, Arbitrary a) => Perturb (LastEnum a)
+
     instance perturbNumber :: Perturb Number
+
+    instance perturbString :: Perturb String
 
     instance perturbTuple :: (Perturb a, Perturb b) => Perturb (Tuple a b)
 
 
 ### Values
+
+    searchIn :: forall a. (Perturb a) => (a -> Boolean) -> a -> Gen a
+
+    searchIn' :: forall a. (Perturb a) => Attempts -> Number -> (a -> Boolean) -> a -> Gen a
 
 
 
