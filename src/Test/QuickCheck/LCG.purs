@@ -9,8 +9,10 @@ module Test.QuickCheck.LCG
   , allInRange
   , arrayOf 
   , arrayOf1 
+  , charGen
   , choose 
   , chooseInt 
+  , chunked
   , collectAll
   , dropGen 
   , elements 
@@ -20,6 +22,7 @@ module Test.QuickCheck.LCG
   , frequency 
   , infinite
   , interleave
+  , nChooseK
   , oneOf 
   , perms
   , perturbGen 
@@ -30,6 +33,8 @@ module Test.QuickCheck.LCG
   , sample' 
   , showSample
   , showSample' 
+  , shuffle
+  , shuffle'
   , sized 
   , stateful 
   , suchThat
@@ -46,6 +51,7 @@ import Control.Monad.Eff.Random
 import Debug.Trace
 import Data.Tuple
 import Data.Lazy
+import Data.Char
 import Data.Profunctor
 import Data.Monoid
 import Data.Monoid.Sum
@@ -147,6 +153,10 @@ sized f = stateful $ \s -> f (unGenState s).size
 -- | will be equal to the specified size.
 resize :: forall f a. (Monad f) => Size -> GenT f a -> GenT f a
 resize sz g = GenT $ lmap (stateM (\s -> s { size = sz })) (unGen g)
+
+-- | A generator for characters.
+charGen :: forall f. (Monad f) => GenT f Char
+charGen = fromCharCode <$> chooseInt 0 65535
 
 -- | Creates a generator that generates real numbers between the specified
 -- | inclusive range.
@@ -300,6 +310,13 @@ perms (x : xs)  =
                 in  prefix <> [x] <> suffix
       allInArray $ f <$> A.range 0 (A.length xs)
 
+-- | A deterministic generator that produces all possible combinations of
+-- | choosing exactly k elements from the specified array.
+nChooseK :: forall f a. (Monad f) => Number -> [a] -> GenT f [a]
+nChooseK 0 _      = pure []
+nChooseK _ []     = mempty
+nChooseK k (x:xs) = ((:) x <$> (nChooseK (k - 1) xs)) <> nChooseK k xs
+
 -- | Filters a generator to produce only values satisfying the specified 
 -- | predicate.
 suchThat :: forall f a. (Monad f) => GenT f a -> (a -> Boolean) -> GenT f a
@@ -340,7 +357,7 @@ sample' n st g = fst <$> runGen n st g
 -- | Samples a generator, producing the specified number of values. Uses 
 -- | default settings for the initial generator state.
 sample :: forall f a. (Monad f) => Number -> GenT f a -> f [a]
-sample n = sample' n (GenState { size: 10, seed: 0 })
+sample n = sample' n (GenState { size: 10, seed: 4545645874 })
 
 -- | Shows a sample of values generated from the specified generator.
 showSample' :: forall r a. (Show a) => Number -> Gen a -> Eff (trace :: Trace | r) Unit
@@ -350,9 +367,38 @@ showSample' n g = print $ runTrampoline $ sample n g
 showSample :: forall r a. (Show a) => Gen a -> Eff (trace :: Trace | r) Unit
 showSample = showSample' 10
 
+-- | Runs a generator to produce a specified number of values, returning both
+-- | an array containing the values and the successor Gen that can be used to
+-- | continue the generation process at a later time.
 runGen :: forall f a. (Monad f) => Number -> GenState -> GenT f a -> f (Tuple [a] (GenT f a))
 runGen n st g = foldGen' f [] st (extend n g)
   where f v a = ifThenElse (A.length v < n) (Just $ v <> [a]) Nothing
+
+-- | Creates a generator that produces chunks of values in the specified size.
+-- | Will extend the generator if necessary to produce a chunk of the specified
+-- | size, but will not turn a finite generator into an infinite generator.
+chunked :: forall f a. (Monad f) => Number -> GenT f a -> GenT f [a]
+chunked n g = transGen f [] (extend n g) where
+  f xs a = let xs' = a : xs
+           in  if A.length xs' >= n then Tuple [] (Just xs') else Tuple xs' Nothing
+
+-- | Creates a generator that mixes up the order of the specified generator.
+-- | This is achieved by chunking the generator with the specified size 
+-- | and then shuffling each chunk before continuing to the next.
+shuffle' :: forall f a. (Monad f) => Number -> GenT f a -> GenT f a
+shuffle' n g = 
+  do  chunks   <- chunked n g
+      shuffled <- shuffle0 [] chunks
+      allInArray shuffled
+
+  where shuffle0 acc [] = pure $ acc
+        shuffle0 acc xs = do i <- chooseInt 0 (A.length xs - 1)
+                             let acc' = acc <> (maybe [] (flip (:) []) (xs A.!! i))
+                             shuffle0 acc' (A.deleteAt i 1 xs)
+
+-- | Same as shuffle' but with default for the chunk size.
+shuffle :: forall f a. (Monad f) => GenT f a -> GenT f a
+shuffle = shuffle' 100
 
 instance semigroupGenState :: Semigroup GenState where
   (<>) (GenState a) (GenState b) = GenState { seed: perturbNum a.seed b.seed, size: b.size }
