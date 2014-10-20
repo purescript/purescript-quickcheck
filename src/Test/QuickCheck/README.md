@@ -160,9 +160,9 @@
 
     instance perturbArrayEnum :: (Enum a, Arbitrary a) => Perturb [a]
 
-    instance perturbEnumEither :: (Enum a, Enum b, Perturb b) => Perturb (Either a b)
+    instance perturbEnumEither :: (Enum a, Enum b, Perturb b) => Perturb (FairEither a b)
 
-    instance perturbEnumTuple :: (Enum a, Enum b, Perturb b) => Perturb (Tuple a b)
+    instance perturbFairTuple :: (Enum a, Enum b, Perturb b) => Perturb (FairTuple a b)
 
     instance perturbLastEnum :: (Enum a, Arbitrary a) => Perturb (LastEnum a)
 

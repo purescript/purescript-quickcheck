@@ -3,6 +3,8 @@ module Test.QuickCheck
   , AlphaNumString(..)
   , Arbitrary
   , CoArbitrary
+  , FairTuple(..)
+  , FairEither(..)
   , LastEnum(..)
   , Negative(..)
   , NonZero(..)
@@ -16,6 +18,8 @@ module Test.QuickCheck
   , quickCheckPure
   , Result(..)
   , runAlphaNumString
+  , runFairEither
+  , runFairTuple
   , runLastEnum
   , runNegative
   , runNonZero
@@ -42,7 +46,6 @@ import Data.Either
 import Data.Maybe
 import Data.Maybe.Unsafe
 import Data.Monoid
-import Data.Either
 import Data.Enum
 import Data.Traversable
 import Math
@@ -72,6 +75,10 @@ newtype NonZero  = NonZero Number
 newtype Signum   = Signum Number
 
 newtype LastEnum a = LastEnum a
+
+newtype FairEither a b = FairEither (Either a b)
+
+newtype FairTuple a b = FairTuple (Tuple a b)
 
 type QC a = forall eff. Eff (trace :: Trace, random :: Random, err :: Exception | eff) a
 
@@ -168,8 +175,19 @@ runNegative (Negative n) = n
 
 runNonZero (NonZero n) = n
 
+runFairEither (FairEither e) = e
+
+runFairTuple (FairTuple t) = t
+
 runLastEnum :: forall a. LastEnum a -> a
 runLastEnum (LastEnum a) = a
+
+instance eqResult :: Eq Result where
+  (==) Success Success = true
+  (==) (Failed m1) (Failed m2) = m1 == m2
+  (==) _ _ = false
+
+  (/=) a b = not (a == b)
 
 instance showResult :: Show Result where
   show Success      = "Success"
@@ -183,6 +201,56 @@ instance semigroupResult :: Semigroup Result where
 
 instance monoidResult :: Monoid Result where
   mempty = Success
+
+instance eqFairTuple :: (Eq a, Eq b) => Eq (FairTuple a b) where
+  (==) (FairTuple t1) (FairTuple t2) = t1 == t2
+
+  (/=) t1 t2 = not (t1 == t2)
+
+instance ordFairTuple :: (Ord a, Ord b) => Ord (FairTuple a b) where
+  compare (FairTuple t1) (FairTuple t2) = t1 `compare` t2
+
+instance showFairTuple :: (Show a, Show b) => Show (FairTuple a b) where
+  show (FairTuple t) = "FairTuple (" ++ show t ++ ")"
+
+instance semigroupFairTuple :: (Semigroup a, Semigroup b) => Semigroup (FairTuple a b) where
+  (<>) (FairTuple t1) (FairTuple t2) = FairTuple $ t1 <> t2
+
+instance monoidFairTuple :: (Monoid a, Monoid b) => Monoid (FairTuple a b) where
+  mempty = FairTuple $ Tuple mempty mempty
+
+instance enumFairTuple :: (Enum a, Enum b) => Enum (FairTuple a b) where
+  cardinality = fairTupleCardinality f where f (Cardinality sz1) (Cardinality sz2) = Cardinality (sz1 * sz2)
+
+  firstEnum = FairTuple firstEnum
+
+  lastEnum = FairTuple lastEnum
+
+  succ (FairTuple e) = FairTuple <$> succ e
+
+  pred (FairTuple e) = FairTuple <$> pred e
+
+instance eqFairEither :: (Eq a, Eq b) => Eq (FairEither a b) where
+  (==) (FairEither t1) (FairEither t2) = t1 == t2
+
+  (/=) t1 t2 = not (t1 == t2)
+
+instance ordFairEither :: (Ord a, Ord b) => Ord (FairEither a b) where
+  compare (FairEither t1) (FairEither t2) = t1 `compare` t2
+
+instance showFairEither :: (Show a, Show b) => Show (FairEither a b) where
+  show (FairEither t) = "FairEither (" ++ show t ++ ")"
+
+instance enumFairEither :: (Enum a, Enum b) => Enum (FairEither a b) where
+  cardinality = fairEitherCardinality f where f (Cardinality sz1) (Cardinality sz2) = Cardinality (sz1 + sz2)
+
+  firstEnum = FairEither firstEnum
+
+  lastEnum = FairEither lastEnum
+
+  succ (FairEither e) = FairEither <$> succ e
+
+  pred (FairEither e) = FairEither <$> pred e
 
 instance arbNumber :: Arbitrary Number where
   arbitrary = uniform 
@@ -218,10 +286,6 @@ instance arbSignum :: Arbitrary Signum where
 instance coarbSignum :: CoArbitrary Signum where
   coarbitrary (Signum n) = coarbitrary n
 
--- workaround due to lack of ScopedTypeVariables
-cardPerturb1 :: forall f a. (Enum a) => (Cardinality a -> f a) -> f a
-cardPerturb1 f = f cardinality
-
 instance arbLastEnum :: (Enum a) => Arbitrary (LastEnum a) where
   arbitrary = LastEnum <$> cardPerturb1 f where
     f (Cardinality sz) = fromJust <<< toEnum <$> chooseInt 0 (sz - 1)
@@ -229,22 +293,47 @@ instance arbLastEnum :: (Enum a) => Arbitrary (LastEnum a) where
 instance coarbLastEnum :: (Enum a) => CoArbitrary (LastEnum a) where
   coarbitrary (LastEnum e) = coarbitrary (fromEnum e)
 
-instance arbEnumTuple :: (Enum a, Arbitrary b) => Arbitrary (Tuple a b) where
+instance eqLastEnum :: (Eq a) => Eq (LastEnum a) where
+  (==) (LastEnum a) (LastEnum b) = a == b
+
+  (/=) a b = not (a == b)
+
+instance ordLastEnum :: (Ord a) => Ord (LastEnum a) where
+  compare (LastEnum a) (LastEnum b) = compare a b
+
+instance showLastEnum :: (Show a) => Show (LastEnum a) where
+  show (LastEnum a) = "LastEnum " ++ show a
+
+instance enumLastEnum :: (Enum a) => Enum (LastEnum a) where
+  cardinality = lastEnumCardinality f where f (Cardinality sz) = Cardinality sz
+
+  firstEnum = LastEnum firstEnum
+
+  lastEnum = LastEnum lastEnum
+
+  pred (LastEnum e) = LastEnum <$> pred e
+
+  succ (LastEnum e) = LastEnum <$> succ e
+
+instance arbFairTuple :: (Enum a, Enum b, Arbitrary b) => Arbitrary (FairTuple a b) where
   arbitrary = do a <- runLastEnum <$> arbitrary
                  b <- arbitrary
-                 return $ Tuple a b
+                 return <<< FairTuple $ Tuple a b
 
-instance coarbEnumTuple :: (Enum a, CoArbitrary b) => CoArbitrary (Tuple a b) where
-  coarbitrary (Tuple a b) = (coarbitrary $ LastEnum a) >>> coarbitrary b
+instance coarbFairTuple :: (Enum a, Enum b, CoArbitrary b) => CoArbitrary (FairTuple a b) where
+  coarbitrary (FairTuple (Tuple a b)) = (coarbitrary $ LastEnum a) >>> coarbitrary b
 
-instance arbEnumEither :: (Enum a, Arbitrary b) => Arbitrary (Either a b) where
-  arbitrary = do w <- arbitrary
-                 e <- if w then Left <<< runLastEnum <$> arbitrary else Right <$> arbitrary
-                 return $ e
+-- | A fair instance for eithers of enums. Ordinarily a compositional arbitrary for
+-- | enums would exhibit extreme bias towards leftmost elements.
+instance arbFairEither :: (Enum a, Enum b, Arbitrary b) => Arbitrary (FairEither a b) where
+  arbitrary = enumFairEitherArb f where
+    f (Cardinality sz1) (Cardinality sz2) = 
+      do  w <- chooseInt 0 (sz1 + sz2 - 1)
+          FairEither <$> if w < sz1 then Left <<< runLastEnum <$> arbitrary else Right <$> arbitrary
 
-instance coarbEnumEither :: (Enum a, CoArbitrary b) => CoArbitrary (Either a b) where
-  coarbitrary (Left a) = coarbitrary $ LastEnum a
-  coarbitrary (Right b) = coarbitrary b
+instance coarFairEither :: (Enum a, CoArbitrary b) => CoArbitrary (FairEither a b) where
+  coarbitrary (FairEither (Left a)) = coarbitrary $ LastEnum a
+  coarbitrary (FairEither (Right b)) = coarbitrary b
 
 instance arbBoolean :: Arbitrary Boolean where
   arbitrary = do
@@ -334,3 +423,22 @@ instance testableFunction :: (Arbitrary t, Testable prop) => Testable (t -> prop
   test f = do
     t <- arbitrary
     test (f t)
+
+-- ScopedTypeVariables
+cardPerturb1 :: forall f a. (Enum a) => (Cardinality a -> f a) -> f a
+cardPerturb1 f = f cardinality
+
+-- ScopedTypeVariables
+lastEnumCardinality :: forall a. (Enum a) => (Cardinality a -> Cardinality (LastEnum a)) -> Cardinality (LastEnum a)
+lastEnumCardinality f = f cardinality
+
+-- ScopedTypeVariables
+fairEitherCardinality :: forall a b. (Enum a, Enum b) => (Cardinality a -> Cardinality b -> Cardinality (FairEither a b)) -> Cardinality (FairEither a b)
+fairEitherCardinality f = f cardinality cardinality
+
+fairTupleCardinality :: forall a b. (Enum a, Enum b) => (Cardinality a -> Cardinality b -> Cardinality (FairTuple a b)) -> Cardinality (FairTuple a b)
+fairTupleCardinality f = f cardinality cardinality
+
+-- ScopedTypeVariables
+enumFairEitherArb :: forall a b. (Enum a, Enum b) => (Cardinality a -> Cardinality b -> Gen (FairEither a b)) -> Gen (FairEither a b)
+enumFairEitherArb f = f cardinality cardinality

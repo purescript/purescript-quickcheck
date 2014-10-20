@@ -100,11 +100,11 @@ module Test.QuickCheck.Perturb
 
     dims (Tuple a b) = dims a + dims b
 
-  instance perturbEnumTuple :: (Enum a, Enum b, Perturb b) => Perturb (Tuple a b) where
+  instance perturbFairTuple :: (Enum a, Enum b, Perturb b) => Perturb (FairTuple a b) where
     perturb 0 t = pure t
-    perturb d t = cardPerturb2 f where
+    perturb d (FairTuple t) = cardPerturb2 f where
       f (Cardinality sz1) (Cardinality sz2) = 
-        let ds = dims t
+        let ds = dims $ FairTuple t
             d1 = let f (Cardinality sz) a = if sz <= 0 then 0 else 1
                  in  (cardDims f (fst t))
             da = delta ds d
@@ -112,24 +112,24 @@ module Test.QuickCheck.Perturb
 
         in do left  <- if da < 1 / (2 * sz1) then pure (fst t) else fromJust <<< toEnum <$> chooseInt 0 (sz1 - 1)
               right <- perturb db (snd t)
-              return $ Tuple left right
+              return <<< FairTuple $ Tuple left right
 
-    dist (Tuple a1 b1) (Tuple a2 b2) = cardDist2 f a1 a2 b1 b2 where
+    dist (FairTuple (Tuple a1 b1)) (FairTuple (Tuple a2 b2)) = cardDist2 f a1 a2 b1 b2 where
       f (Cardinality sz1) (Cardinality sz2) a1 a2 b1 b2 = toDist [if a1 == a2 then 0 else 1 / (2 * sz1), dist b1 b2]
 
-    dims (Tuple a b) = 
+    dims (FairTuple (Tuple a b)) = 
       let f (Cardinality sz) a = if sz <= 0 then 0 else 1
       in  (cardDims f a) + dims b
 
   -- This instance must degrade to perturbing a single enum in the case the 
   -- cardinality of the second is 0. Which it does.
-  instance perturbEnumEither :: (Enum a, Enum b, Perturb b) => Perturb (Either a b) where
+  instance perturbEnumEither :: (Enum a, Enum b, Perturb b) => Perturb (FairEither a b) where
     perturb 0 e = pure e
     perturb d e = cardPerturb2E f where
       f (Cardinality sz1) (Cardinality sz2) = 
         let tot  = sz1 + sz2 
-            arbA = Left  <<< fromJust <<< toEnum
-            arbB = Right <<< fromJust <<< toEnum
+            arbA = FairEither <<< Left  <<< fromJust <<< toEnum
+            arbB = FairEither <<< Right <<< fromJust <<< toEnum
 
         in  if d < 1 / (2 * tot) then pure e
             else do which <- chooseInt 0 (tot - 1)
@@ -138,14 +138,16 @@ module Test.QuickCheck.Perturb
 
     dist e1 e2 = cardDist2E f e1 e2 where
       -- TODO: overlapping instances error for Either a b (???) in `e1 == e2`
-      f (Cardinality sz1) (Cardinality sz2) (Left  l1) (Left  l2) = if l1 == l2 then 0 else 1 / (2 * (sz1 + sz2))
-      f (Cardinality sz1) (Cardinality sz2) (Right r1) (Right r2) = if r1 == r2 then 0 else 1 / (2 * (sz1 + sz2))
+      f (Cardinality sz1) (Cardinality sz2) (FairEither (Left  l1)) (FairEither (Left  l2)) = 
+        if l1 == l2 then 0 else 1 / (2 * (sz1 + sz2))
+      f (Cardinality sz1) (Cardinality sz2) (FairEither (Right r1)) (FairEither (Right r2)) = 
+        if r1 == r2 then 0 else 1 / (2 * (sz1 + sz2))
       f (Cardinality sz1) (Cardinality sz2) _ _ = 1 / (2 * (sz1 + sz2))
 
     dims e = enumEitherDims f e where
       f (Cardinality sz1) (Cardinality sz2) e = case e of 
-        Left  l -> if sz1 <= 0 then 0 else 1
-        Right r -> dims r
+        FairEither (Left  l) -> if sz1 <= 0 then 0 else 1
+        FairEither (Right r) -> dims r
 
   instance perturbArrayEnum :: (Enum a, Arbitrary a) => Perturb [a] where
     perturb d [] = pure $ []
@@ -193,7 +195,7 @@ module Test.QuickCheck.Perturb
   ifThenElse p a b = if p then a else b
 
   -- ScopedTypeVariables
-  enumEitherDims :: forall a b. (Enum a, Enum b, Perturb b) => (Cardinality a -> Cardinality b -> Either a b -> Number) -> Either a b -> Number
+  enumEitherDims :: forall a b. (Enum a, Enum b, Perturb b) => (Cardinality a -> Cardinality b -> FairEither a b -> Number) -> FairEither a b -> Number
   enumEitherDims f = f cardinality cardinality
 
   -- ScopedTypeVariables
@@ -223,11 +225,11 @@ module Test.QuickCheck.Perturb
   cardPerturb1F a n (Cardinality sz) = if n < 1 / (2 * sz) then pure a else arbitrary
 
   -- ScopedTypeVariables
-  cardPerturb2 :: forall f a b. (Enum a, Enum b) => (Cardinality a -> Cardinality b -> Gen (Tuple a b)) -> Gen (Tuple a b)
+  cardPerturb2 :: forall f a b. (Enum a, Enum b) => (Cardinality a -> Cardinality b -> Gen (FairTuple a b)) -> Gen (FairTuple a b)
   cardPerturb2 f = f cardinality cardinality
 
   -- ScopedTypeVariables
-  cardPerturb2E :: forall a b. (Enum a, Enum b) => (Cardinality a -> Cardinality b -> Gen (Either a b)) -> Gen (Either a b)
+  cardPerturb2E :: forall a b. (Enum a, Enum b) => (Cardinality a -> Cardinality b -> Gen (FairEither a b)) -> Gen (FairEither a b)
   cardPerturb2E f = f cardinality cardinality
 
   -- ScopedTypeVariables
@@ -235,5 +237,5 @@ module Test.QuickCheck.Perturb
   cardDist2 f = f cardinality cardinality
 
   -- ScopedTypeVariables
-  cardDist2E :: forall a b. (Enum a, Enum b) => (Cardinality a -> Cardinality b -> Either a b -> Either a b -> Number) -> Either a b -> Either a b -> Number
+  cardDist2E :: forall a b. (Enum a, Enum b) => (Cardinality a -> Cardinality b -> FairEither a b -> FairEither a b -> Number) -> FairEither a b -> FairEither a b -> Number
   cardDist2E f = f cardinality cardinality
