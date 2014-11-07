@@ -15,7 +15,7 @@ import qualified Data.Char as S
 import qualified Data.String as S
 import qualified Data.String.Unsafe as SU
 
-import Test.QuickCheck.LCG
+import Test.QuickCheck.Gen
 
 newtype AlphaNumString = AlphaNumString String
 

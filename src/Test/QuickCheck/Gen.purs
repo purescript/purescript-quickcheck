@@ -1,4 +1,4 @@
-module Test.QuickCheck.LCG
+module Test.QuickCheck.Gen
   (
     Gen(),
     GenState(),
@@ -14,8 +14,8 @@ module Test.QuickCheck.LCG
     chooseInt,
     oneOf,
     frequency,
-    listOf,
-    listOf1,
+    arrayOf,
+    arrayOf1,
     vectorOf,
     elements,
     runGen,
@@ -84,13 +84,13 @@ frequency x xs = let
     n <- chooseInt 1 total
     pick n (snd x) xxs
 
-listOf :: forall a. Gen a -> Gen [a]
-listOf g = sized $ \n ->
+arrayOf :: forall a. Gen a -> Gen [a]
+arrayOf g = sized $ \n ->
   do k <- chooseInt 0 n
      vectorOf k g
 
-listOf1 :: forall a. Gen a -> Gen (Tuple a [a])
-listOf1 g = sized $ \n ->
+arrayOf1 :: forall a. Gen a -> Gen (Tuple a [a])
+arrayOf1 g = sized $ \n ->
   do k  <- chooseInt 0 n
      x  <- g
      xs <- vectorOf (k - 1) g

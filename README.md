@@ -84,7 +84,7 @@
     quickCheckPure :: forall prop. (Testable prop) => Number -> Number -> prop -> [Result]
 
 
-## Module Test.QuickCheck.LCG
+## Module Test.QuickCheck.Gen
 
 ### Types
 
@@ -114,6 +114,10 @@
 
 ### Values
 
+    arrayOf :: forall a. Gen a -> Gen [a]
+
+    arrayOf1 :: forall a. Gen a -> Gen (Tuple a [a])
+
     choose :: Number -> Number -> Gen Number
 
     chooseInt :: Number -> Number -> Gen Number
@@ -123,10 +127,6 @@
     evalGen :: forall a. Gen a -> GenState -> a
 
     frequency :: forall a. Tuple Number (Gen a) -> [Tuple Number (Gen a)] -> Gen a
-
-    listOf :: forall a. Gen a -> Gen [a]
-
-    listOf1 :: forall a. Gen a -> Gen (Tuple a [a])
 
     oneOf :: forall a. Gen a -> [Gen a] -> Gen a
 
