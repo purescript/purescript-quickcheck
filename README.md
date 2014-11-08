@@ -7,23 +7,11 @@
     newtype AlphaNumString where
       AlphaNumString :: String -> AlphaNumString
 
-    newtype Negative where
-      Negative :: Number -> Negative
-
-    newtype NonZero where
-      NonZero :: Number -> NonZero
-
-    newtype Positive where
-      Positive :: Number -> Positive
-
     type QC a = forall eff. Eff (err :: Exception, random :: Random, trace :: Trace | eff) a
 
     data Result where
       Success :: Result
       Failed :: String -> Result
-
-    newtype Signum where
-      Signum :: Number -> Signum
 
 
 ### Type Classes
@@ -46,7 +34,7 @@
 
     instance arbBoolean :: Arbitrary Boolean
 
-    instance arbChar :: Arbitrary Char
+    instance arbChar :: Arbitrary S.Char
 
     instance arbEither :: (Arbitrary a, Arbitrary b) => Arbitrary (Either a b)
 
@@ -54,15 +42,7 @@
 
     instance arbMaybe :: (Arbitrary a) => Arbitrary (Maybe a)
 
-    instance arbNegative :: Arbitrary Negative
-
-    instance arbNonZero :: Arbitrary NonZero
-
     instance arbNumber :: Arbitrary Number
-
-    instance arbPositive :: Arbitrary Positive
-
-    instance arbSignum :: Arbitrary Signum
 
     instance arbString :: Arbitrary String
 
@@ -74,7 +54,7 @@
 
     instance coarbBoolean :: CoArbitrary Boolean
 
-    instance coarbChar :: CoArbitrary Char
+    instance coarbChar :: CoArbitrary S.Char
 
     instance coarbEither :: (CoArbitrary a, CoArbitrary b) => CoArbitrary (Either a b)
 
@@ -82,23 +62,11 @@
 
     instance coarbMaybe :: (CoArbitrary a) => CoArbitrary (Maybe a)
 
-    instance coarbNegative :: CoArbitrary Negative
-
-    instance coarbNonZero :: CoArbitrary NonZero
-
     instance coarbNumber :: CoArbitrary Number
-
-    instance coarbPositive :: CoArbitrary Positive
-
-    instance coarbSignum :: CoArbitrary Signum
 
     instance coarbString :: CoArbitrary String
 
     instance coarbTuple :: (CoArbitrary a, CoArbitrary b) => CoArbitrary (Tuple a b)
-
-    instance monoidResult :: Monoid Result
-
-    instance semigroupResult :: Semigroup Result
 
     instance showResult :: Show Result
 
@@ -117,15 +85,73 @@
 
     quickCheck' :: forall prop. (Testable prop) => Number -> prop -> QC Unit
 
-    quickCheckPure :: forall prop. (Testable prop) => Number -> Seed -> prop -> [Result]
-
-    smallCheck :: forall prop. (Testable prop) => prop -> QC Unit
-
-    smallCheckPure :: forall prop. (Testable prop) => Number -> prop -> [Result]
-
-    statCheck :: forall prop. (Testable prop) => Number -> prop -> QC Unit
-
-    statCheckPure :: forall prop. (Testable prop) => Seed -> Number -> prop -> Result
+    quickCheckPure :: forall prop. (Testable prop) => Number -> Number -> prop -> [Result]
 
 
+## Module Test.QuickCheck.Gen
 
+### Types
+
+    data Gen a
+
+    type GenOut a = { value :: a, state :: GenState }
+
+    type GenState = { size :: Size, newSeed :: LCG }
+
+    type LCG = Number
+
+    type Size = Number
+
+
+### Type Class Instances
+
+    instance applicativeGen :: Applicative Gen
+
+    instance applyGen :: Apply Gen
+
+    instance bindGen :: Bind Gen
+
+    instance functorGen :: Functor Gen
+
+    instance monadGen :: Monad Gen
+
+
+### Values
+
+    arrayOf :: forall a. Gen a -> Gen [a]
+
+    arrayOf1 :: forall a. Gen a -> Gen (Tuple a [a])
+
+    choose :: Number -> Number -> Gen Number
+
+    chooseInt :: Number -> Number -> Gen Number
+
+    elements :: forall a. a -> [a] -> Gen a
+
+    evalGen :: forall a. Gen a -> GenState -> a
+
+    frequency :: forall a. Tuple Number (Gen a) -> [Tuple Number (Gen a)] -> Gen a
+
+    oneOf :: forall a. Gen a -> [Gen a] -> Gen a
+
+    perturbGen :: forall a. Number -> Gen a -> Gen a
+
+    repeatable :: forall a b. (a -> Gen b) -> Gen (a -> b)
+
+    resize :: forall a. Size -> Gen a -> Gen a
+
+    runGen :: forall a. Gen a -> GenState -> GenOut a
+
+    showSample :: forall r a. (Show a) => Gen a -> Eff (trace :: Trace | r) Unit
+
+    showSample' :: forall r a. (Show a) => Size -> Gen a -> Eff (trace :: Trace | r) Unit
+
+    sized :: forall a. (Size -> Gen a) -> Gen a
+
+    stateful :: forall a. (GenState -> Gen a) -> Gen a
+
+    uniform :: Gen Number
+
+    variant :: forall a. LCG -> Gen a -> Gen a
+
+    vectorOf :: forall a. Number -> Gen a -> Gen [a]
