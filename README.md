@@ -34,6 +34,8 @@
 
     instance arbBoolean :: Arbitrary Boolean
 
+    instance arbChar :: Arbitrary S.Char
+
     instance arbEither :: (Arbitrary a, Arbitrary b) => Arbitrary (Either a b)
 
     instance arbFunction :: (CoArbitrary a, Arbitrary b) => Arbitrary (a -> b)
@@ -51,6 +53,8 @@
     instance coarbArray :: (CoArbitrary a) => CoArbitrary [a]
 
     instance coarbBoolean :: CoArbitrary Boolean
+
+    instance coarbChar :: CoArbitrary S.Char
 
     instance coarbEither :: (CoArbitrary a, CoArbitrary b) => CoArbitrary (Either a b)
 

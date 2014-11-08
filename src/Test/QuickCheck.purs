@@ -35,6 +35,12 @@ instance showResult :: Show Result where
 (<?>) true _ = Success
 (<?>) false msg = Failed msg
 
+instance arbChar :: Arbitrary S.Char where
+  arbitrary = S.fromCharCode <<< ((*) 65535) <$> uniform
+
+instance coarbChar :: CoArbitrary S.Char where
+  coarbitrary c = coarbitrary $ S.toCharCode c
+
 instance arbNumber :: Arbitrary Number where
   arbitrary = uniform 
 
@@ -51,9 +57,7 @@ instance coarbBoolean :: CoArbitrary Boolean where
   coarbitrary false = perturbGen 2
 
 instance arbString :: Arbitrary String where
-  arbitrary = do
-    arrNum <- arbitrary
-    return $ S.fromCharArray $ S.fromCharCode <<< ((*) 65535) <$> arrNum
+  arbitrary = S.fromCharArray <$> arbitrary
 
 instance coarbString :: CoArbitrary String where
   coarbitrary s = coarbitrary $ (S.charCodeAt 0 <$> S.split "" s)
