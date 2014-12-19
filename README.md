@@ -79,7 +79,11 @@
 
 ### Values
 
+    (/==) :: forall a b. (Eq a, Show a) => a -> a -> Result
+
     (<?>) :: Boolean -> String -> Result
+
+    (===) :: forall a b. (Eq a, Show a) => a -> a -> Result
 
     quickCheck :: forall prop. (Testable prop) => prop -> QC Unit
 

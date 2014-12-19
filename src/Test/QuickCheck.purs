@@ -167,3 +167,15 @@ quickCheck' n prop = do
 
 quickCheck :: forall prop. (Testable prop) => prop -> QC Unit
 quickCheck prop = quickCheck' 100 prop
+
+-- | Self-documenting equality assertion
+(===) :: forall a b. (Eq a, Show a) => a -> a -> Result
+(===) a b = a == b <?> msg
+  where
+    msg = show a ++ " /= " ++ show b
+
+-- | Self-documenting inequality assertion
+(/==) :: forall a b. (Eq a, Show a) => a -> a -> Result
+(/==) a b = a /= b <?> msg
+  where
+    msg = show a ++ " == " ++ show b
