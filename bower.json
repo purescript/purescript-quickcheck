@@ -25,6 +25,6 @@
     "purescript-tuples":        "~0.2.3",
     "purescript-either":        "~0.1.4",
     "purescript-maybe":         "~0.2.1",
-    "purescript-foldable-traversable": "~0.1.4"
+    "purescript-foldable-traversable": "~0.2.1"
   }
 }
