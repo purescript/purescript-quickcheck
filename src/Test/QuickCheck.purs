@@ -17,8 +17,6 @@ import qualified Data.String.Unsafe as SU
 
 import Test.QuickCheck.Gen
 
-newtype AlphaNumString = AlphaNumString String
-
 class Arbitrary t where
   arbitrary :: Gen t
 
@@ -42,10 +40,10 @@ instance coarbChar :: CoArbitrary S.Char where
   coarbitrary c = coarbitrary $ S.toCharCode c
 
 instance arbNumber :: Arbitrary Number where
-  arbitrary = uniform 
+  arbitrary = uniform
 
 instance coarbNumber :: CoArbitrary Number where
-  coarbitrary = perturbGen  
+  coarbitrary = perturbGen
 
 instance arbBoolean :: Arbitrary Boolean where
   arbitrary = do
@@ -61,6 +59,8 @@ instance arbString :: Arbitrary String where
 
 instance coarbString :: CoArbitrary String where
   coarbitrary s = coarbitrary $ (S.charCodeAt 0 <$> S.split "" s)
+
+newtype AlphaNumString = AlphaNumString String
 
 instance arbAlphaNumString :: Arbitrary AlphaNumString where
   arbitrary = do
@@ -135,7 +135,7 @@ instance testableFunction :: (Arbitrary t, Testable prop) => Testable (t -> prop
 
 quickCheckPure :: forall prop. (Testable prop) => Number -> Number -> prop -> [Result]
 quickCheckPure s = quickCheckPure' {newSeed: s, size: 10} where
-  quickCheckPure' st n prop = evalGen (go n) st 
+  quickCheckPure' st n prop = evalGen (go n) st
     where
     go n | n <= 0 = return []
     go n = do
