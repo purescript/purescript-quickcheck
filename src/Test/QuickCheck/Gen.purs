@@ -33,7 +33,7 @@ import Data.Maybe
 import Data.Tuple
 import Data.Foldable
 import Data.Traversable
-import Data.Monoid.Sum
+import Data.Monoid.Additive
 import qualified Data.Array as A
 import qualified Math as M
 
@@ -77,7 +77,7 @@ oneOf x xs = do
 frequency :: forall a. Tuple Number (Gen a) -> [Tuple Number (Gen a)] -> Gen a
 frequency x xs = let
     xxs   = x : xs
-    total = runSum $ fold (((Sum <<< fst) <$> xxs) :: [Sum])
+    total = runAdditive $ fold (((Additive <<< fst) <$> xxs) :: [Additive Number])
     pick n d [] = d
     pick n d ((Tuple k x) : xs) = if n <= k then x else pick (n - k) d xs
   in do
@@ -107,7 +107,7 @@ elements x xs = do
 runGen :: forall a. Gen a -> GenState -> GenOut a
 runGen (Gen f) = f
 
-evalGen :: forall a. Gen a -> GenState -> a 
+evalGen :: forall a. Gen a -> GenState -> a
 evalGen gen st = (runGen gen st).value
 
 sample :: forall r a. Size -> Gen a -> [a]
@@ -124,7 +124,7 @@ showSample = showSample' 10
 --
 
 lcgM :: Number
-lcgM = 1103515245 
+lcgM = 1103515245
 
 lcgC :: Number
 lcgC = 12345
@@ -140,9 +140,9 @@ lcgStep = Gen f where
   f s = { value: s.newSeed, state: s { newSeed = lcgNext s.newSeed } }
 
 uniform :: Gen Number
-uniform = (\n -> n / (1 `shl` 30)) <$> lcgStep 
+uniform = (\n -> n / (1 `shl` 30)) <$> lcgStep
 
-foreign import float32ToInt32 
+foreign import float32ToInt32
   "function float32ToInt32(n) {\
   \  var arr = new ArrayBuffer(4);\
   \  var fv = new Float32Array(arr);\
