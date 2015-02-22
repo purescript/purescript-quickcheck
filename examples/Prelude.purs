@@ -1,7 +1,7 @@
 module Main where
 
 import Control.Monad.Eff
-import Data.Eq
+-- import Data.Eq
 import Debug.Trace
 import Test.QuickCheck
 
@@ -24,7 +24,7 @@ main = do
   Debug.Trace.trace "Precedence of && and ||:"
   quickCheck $ \a b c -> ((a :: Boolean && b) || c) == ((a || c) && (b || c))
   
-  Debug.Trace.trace "Test Eq instance for Ref:"
-  quickCheck $ \a -> (Ref a :: Ref Number) == Ref a
-  quickCheck $ \a -> not $ (Ref a :: Ref Number /= Ref a)
+--  Debug.Trace.trace "Test Eq instance for Ref:"
+--  quickCheck $ \a -> (Ref a :: Ref Number) == Ref a
+--  quickCheck $ \a -> not $ (Ref a :: Ref Number /= Ref a)
 
