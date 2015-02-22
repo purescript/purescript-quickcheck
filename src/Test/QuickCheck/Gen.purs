@@ -86,7 +86,7 @@ frequency x xs = let
 
 arrayOf :: forall a. Gen a -> Gen [a]
 arrayOf g = sized $ \n ->
-  do k <- chooseInt 0 n
+  do k <- chooseInt (n/2.0) n
      vectorOf k g
 
 arrayOf1 :: forall a. Gen a -> Gen (Tuple a [a])
@@ -97,7 +97,9 @@ arrayOf1 g = sized $ \n ->
      return $ Tuple x xs
 
 vectorOf :: forall a. Number -> Gen a -> Gen [a]
-vectorOf k g = sequence $ const g <$> (A.range 1 k)
+vectorOf k g = if k == 0
+                  then return []
+                  else sequence $ const g <$> (A.range 1 k)
 
 elements :: forall a. a -> [a] -> Gen a
 elements x xs = do

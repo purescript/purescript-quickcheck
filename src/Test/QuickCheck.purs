@@ -107,9 +107,7 @@ instance coarbFunction :: (Arbitrary a, CoArbitrary b) => CoArbitrary (a -> b) w
     coarbitrary (map f xs) gen
 
 instance arbArray :: (Arbitrary a) => Arbitrary [a] where
-  arbitrary = sized $ \n ->
-      do k <- chooseInt 0 n
-         vectorOf k arbitrary
+  arbitrary = arrayOf arbitrary
 
 instance coarbArray :: (CoArbitrary a) => CoArbitrary [a] where
   coarbitrary [] = id
