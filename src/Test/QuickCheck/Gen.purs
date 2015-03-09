@@ -1,29 +1,28 @@
 module Test.QuickCheck.Gen
-  (
-    Gen(),
-    GenState(),
-    GenOut(),
-    Size(),
-    LCG(),
-    repeatable,
-    stateful,
-    variant,
-    sized,
-    resize,
-    choose,
-    chooseInt,
-    oneOf,
-    frequency,
-    arrayOf,
-    arrayOf1,
-    vectorOf,
-    elements,
-    runGen,
-    evalGen,
-    perturbGen,
-    uniform,
-    showSample,
-    showSample'
+  ( Gen()
+  , GenState()
+  , GenOut()
+  , Size()
+  , LCG()
+  , repeatable
+  , stateful
+  , variant
+  , sized
+  , resize
+  , choose
+  , chooseInt
+  , oneOf
+  , frequency
+  , arrayOf
+  , arrayOf1
+  , vectorOf
+  , elements
+  , runGen
+  , evalGen
+  , perturbGen
+  , uniform
+  , showSample
+  , showSample'
   ) where
 
 import Control.Monad.Eff
