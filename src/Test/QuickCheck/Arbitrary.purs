@@ -5,6 +5,7 @@ module Test.QuickCheck.Arbitrary
 
 import Data.Function (Fn2(), runFn2)
 import Test.QuickCheck.Gen (Gen(), uniform, perturbGen, repeatable)
+import Math (round)
 
 class Arbitrary t where
   arbitrary :: Gen t
@@ -30,10 +31,10 @@ instance coarbNumber :: Coarbitrary Number where
 instance arbString :: Arbitrary String where
   arbitrary = do
     arrNum <- arbitrary
-    return $ fromCharArray $ fromCharCode <<< (* 65535) <$> arrNum
+    return $ fromCharArray $ runFn2 map (fromCharCode <<< (* 65535)) arrNum
 
 instance coarbString :: Coarbitrary String where
-  coarbitrary s = coarbitrary $ (charCode <$> split s)
+  coarbitrary s = coarbitrary (runFn2 map charCode $ split s)
 
 instance arbArray :: (Arbitrary a) => Arbitrary [a] where
   arbitrary = do
@@ -53,14 +54,14 @@ instance arbFunction :: (Coarbitrary a, Arbitrary b) => Arbitrary (a -> b) where
 instance coarbFunction :: (Arbitrary a, Coarbitrary b) => Coarbitrary (a -> b) where
   coarbitrary f gen = do
     xs <- arbitrary
-    coarbitrary (map f xs) gen
+    coarbitrary (runFn2 map f xs) gen
 
 newtype AlphaNumString = AlphaNumString String
 
 instance arbAlphaNumString :: Arbitrary AlphaNumString where
   arbitrary = do
     arrNum <- arbitrary
-    return $ AlphaNumString <<< fromCharArray $ lookup <$> arrNum
+    return $ AlphaNumString $ fromCharArray $ runFn2 map lookup arrNum
       where
       chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
       lookup x = runFn2 charAt index chars
@@ -69,11 +70,6 @@ instance arbAlphaNumString :: Arbitrary AlphaNumString where
 
 instance coarbAlphaNumString :: Coarbitrary AlphaNumString where
   coarbitrary (AlphaNumString s) = coarbitrary s
-
-foreign import round
-  """
-  var round = Math.round;
-  """ :: Number -> Number
 
 foreign import length
   """
@@ -117,5 +113,9 @@ foreign import split
   }
   """ :: String -> [String]
 
-map :: forall a b. (a -> b) -> [a] -> [b]
-map = (<$>)
+foreign import map
+  """
+  function map(f, xs) {
+    return xs.map(f);
+  }
+  """ :: forall a b. Fn2 (a -> b) [a] [b]

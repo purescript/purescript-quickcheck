@@ -196,97 +196,6 @@ data Gen a
 ```
 
 
-#### `repeatable`
-
-``` purescript
-repeatable :: forall a b. (a -> Gen b) -> Gen (a -> b)
-```
-
-
-#### `stateful`
-
-``` purescript
-stateful :: forall a. (GenState -> Gen a) -> Gen a
-```
-
-
-#### `variant`
-
-``` purescript
-variant :: forall a. LCG -> Gen a -> Gen a
-```
-
-
-#### `sized`
-
-``` purescript
-sized :: forall a. (Size -> Gen a) -> Gen a
-```
-
-
-#### `resize`
-
-``` purescript
-resize :: forall a. Size -> Gen a -> Gen a
-```
-
-
-#### `choose`
-
-``` purescript
-choose :: Number -> Number -> Gen Number
-```
-
-
-#### `chooseInt`
-
-``` purescript
-chooseInt :: Number -> Number -> Gen Number
-```
-
-
-#### `oneOf`
-
-``` purescript
-oneOf :: forall a. Gen a -> [Gen a] -> Gen a
-```
-
-
-#### `frequency`
-
-``` purescript
-frequency :: forall a. Tuple Number (Gen a) -> [Tuple Number (Gen a)] -> Gen a
-```
-
-
-#### `arrayOf`
-
-``` purescript
-arrayOf :: forall a. Gen a -> Gen [a]
-```
-
-
-#### `arrayOf1`
-
-``` purescript
-arrayOf1 :: forall a. Gen a -> Gen (Tuple a [a])
-```
-
-
-#### `vectorOf`
-
-``` purescript
-vectorOf :: forall a. Number -> Gen a -> Gen [a]
-```
-
-
-#### `elements`
-
-``` purescript
-elements :: forall a. a -> [a] -> Gen a
-```
-
-
 #### `runGen`
 
 ``` purescript
@@ -301,17 +210,17 @@ evalGen :: forall a. Gen a -> GenState -> a
 ```
 
 
-#### `showSample'`
+#### `repeatable`
 
 ``` purescript
-showSample' :: forall r a. (Show a) => Size -> Gen a -> Eff (trace :: Trace | r) Unit
+repeatable :: forall a b. (a -> Gen b) -> Gen (a -> b)
 ```
 
 
-#### `showSample`
+#### `stateful`
 
 ``` purescript
-showSample :: forall r a. (Show a) => Gen a -> Eff (trace :: Trace | r) Unit
+stateful :: forall a. (GenState -> Gen a) -> Gen a
 ```
 
 
