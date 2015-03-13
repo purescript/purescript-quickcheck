@@ -2,233 +2,17 @@
 
 ## Module Test.QuickCheck
 
-#### `Arbitrary`
-
-``` purescript
-class Arbitrary t where
-  arbitrary :: Gen t
-```
-
-
-#### `CoArbitrary`
-
-``` purescript
-class CoArbitrary t where
-  coarbitrary :: forall r. t -> Gen r -> Gen r
-```
-
-
-#### `Result`
-
-``` purescript
-data Result
-  = Success 
-  | Failed String
-```
-
-
-#### `showResult`
-
-``` purescript
-instance showResult :: Show Result
-```
-
-
-#### `(<?>)`
-
-``` purescript
-(<?>) :: Boolean -> String -> Result
-```
-
-
-#### `arbChar`
-
-``` purescript
-instance arbChar :: Arbitrary S.Char
-```
-
-
-#### `coarbChar`
-
-``` purescript
-instance coarbChar :: CoArbitrary S.Char
-```
-
-
-#### `arbNumber`
-
-``` purescript
-instance arbNumber :: Arbitrary Number
-```
-
-
-#### `coarbNumber`
-
-``` purescript
-instance coarbNumber :: CoArbitrary Number
-```
-
-
-#### `arbBoolean`
-
-``` purescript
-instance arbBoolean :: Arbitrary Boolean
-```
-
-
-#### `coarbBoolean`
-
-``` purescript
-instance coarbBoolean :: CoArbitrary Boolean
-```
-
-
-#### `arbString`
-
-``` purescript
-instance arbString :: Arbitrary String
-```
-
-
-#### `coarbString`
-
-``` purescript
-instance coarbString :: CoArbitrary String
-```
-
-
-#### `AlphaNumString`
-
-``` purescript
-newtype AlphaNumString
-  = AlphaNumString String
-```
-
-
-#### `arbAlphaNumString`
-
-``` purescript
-instance arbAlphaNumString :: Arbitrary AlphaNumString
-```
-
-
-#### `coarbAlphaNumString`
-
-``` purescript
-instance coarbAlphaNumString :: CoArbitrary AlphaNumString
-```
-
-
-#### `arbTuple`
-
-``` purescript
-instance arbTuple :: (Arbitrary a, Arbitrary b) => Arbitrary (Tuple a b)
-```
-
-
-#### `coarbTuple`
-
-``` purescript
-instance coarbTuple :: (CoArbitrary a, CoArbitrary b) => CoArbitrary (Tuple a b)
-```
-
-
-#### `arbEither`
-
-``` purescript
-instance arbEither :: (Arbitrary a, Arbitrary b) => Arbitrary (Either a b)
-```
-
-
-#### `coarbEither`
-
-``` purescript
-instance coarbEither :: (CoArbitrary a, CoArbitrary b) => CoArbitrary (Either a b)
-```
-
-
-#### `arbMaybe`
-
-``` purescript
-instance arbMaybe :: (Arbitrary a) => Arbitrary (Maybe a)
-```
-
-
-#### `coarbMaybe`
-
-``` purescript
-instance coarbMaybe :: (CoArbitrary a) => CoArbitrary (Maybe a)
-```
-
-
-#### `arbFunction`
-
-``` purescript
-instance arbFunction :: (CoArbitrary a, Arbitrary b) => Arbitrary (a -> b)
-```
-
-
-#### `coarbFunction`
-
-``` purescript
-instance coarbFunction :: (Arbitrary a, CoArbitrary b) => CoArbitrary (a -> b)
-```
-
-
-#### `arbArray`
-
-``` purescript
-instance arbArray :: (Arbitrary a) => Arbitrary [a]
-```
-
-
-#### `coarbArray`
-
-``` purescript
-instance coarbArray :: (CoArbitrary a) => CoArbitrary [a]
-```
-
-
-#### `Testable`
-
-``` purescript
-class Testable prop where
-  test :: prop -> Gen Result
-```
-
-
-#### `testableResult`
-
-``` purescript
-instance testableResult :: Testable Result
-```
-
-
-#### `testableBoolean`
-
-``` purescript
-instance testableBoolean :: Testable Boolean
-```
-
-
-#### `testableFunction`
-
-``` purescript
-instance testableFunction :: (Arbitrary t, Testable prop) => Testable (t -> prop)
-```
-
-
-#### `quickCheckPure`
-
-``` purescript
-quickCheckPure :: forall prop. (Testable prop) => Number -> Number -> prop -> [Result]
-```
-
-
 #### `QC`
 
 ``` purescript
 type QC a = forall eff. Eff (err :: Exception, random :: Random, trace :: Trace | eff) a
+```
+
+
+#### `quickCheck`
+
+``` purescript
+quickCheck :: forall prop. (Testable prop) => prop -> QC Unit
 ```
 
 
@@ -239,12 +23,21 @@ quickCheck' :: forall prop. (Testable prop) => Number -> prop -> QC Unit
 ```
 
 
-#### `quickCheck`
+#### `quickCheckPure`
 
 ``` purescript
-quickCheck :: forall prop. (Testable prop) => prop -> QC Unit
+quickCheckPure :: forall prop. (Testable prop) => Number -> Number -> prop -> [Result]
 ```
 
+
+#### `(<?>)`
+
+``` purescript
+(<?>) :: Boolean -> String -> Result
+```
+
+Creates a `Result` based on a boolean with a potential failure message for
+when the boolean is `false`.
 
 #### `(===)`
 
@@ -261,6 +54,109 @@ Self-documenting equality assertion
 ```
 
 Self-documenting inequality assertion
+
+
+## Module Test.QuickCheck.Arbitrary
+
+#### `Arbitrary`
+
+``` purescript
+class Arbitrary t where
+  arbitrary :: Gen t
+```
+
+
+#### `Coarbitrary`
+
+``` purescript
+class Coarbitrary t where
+  coarbitrary :: forall r. t -> Gen r -> Gen r
+```
+
+
+#### `arbBoolean`
+
+``` purescript
+instance arbBoolean :: Arbitrary Boolean
+```
+
+
+#### `coarbBoolean`
+
+``` purescript
+instance coarbBoolean :: Coarbitrary Boolean
+```
+
+
+#### `arbNumber`
+
+``` purescript
+instance arbNumber :: Arbitrary Number
+```
+
+
+#### `coarbNumber`
+
+``` purescript
+instance coarbNumber :: Coarbitrary Number
+```
+
+
+#### `arbString`
+
+``` purescript
+instance arbString :: Arbitrary String
+```
+
+
+#### `coarbString`
+
+``` purescript
+instance coarbString :: Coarbitrary String
+```
+
+
+#### `arbArray`
+
+``` purescript
+instance arbArray :: (Arbitrary a) => Arbitrary [a]
+```
+
+
+#### `coarbArray`
+
+``` purescript
+instance coarbArray :: (Coarbitrary a) => Coarbitrary [a]
+```
+
+
+#### `arbFunction`
+
+``` purescript
+instance arbFunction :: (Coarbitrary a, Arbitrary b) => Arbitrary (a -> b)
+```
+
+
+#### `coarbFunction`
+
+``` purescript
+instance coarbFunction :: (Arbitrary a, Coarbitrary b) => Coarbitrary (a -> b)
+```
+
+
+#### `arbAlphaNumString`
+
+``` purescript
+instance arbAlphaNumString :: Arbitrary AlphaNumString
+```
+
+
+#### `coarbAlphaNumString`
+
+``` purescript
+instance coarbAlphaNumString :: Coarbitrary AlphaNumString
+```
+
 
 
 ## Module Test.QuickCheck.Gen
@@ -300,97 +196,6 @@ data Gen a
 ```
 
 
-#### `repeatable`
-
-``` purescript
-repeatable :: forall a b. (a -> Gen b) -> Gen (a -> b)
-```
-
-
-#### `stateful`
-
-``` purescript
-stateful :: forall a. (GenState -> Gen a) -> Gen a
-```
-
-
-#### `variant`
-
-``` purescript
-variant :: forall a. LCG -> Gen a -> Gen a
-```
-
-
-#### `sized`
-
-``` purescript
-sized :: forall a. (Size -> Gen a) -> Gen a
-```
-
-
-#### `resize`
-
-``` purescript
-resize :: forall a. Size -> Gen a -> Gen a
-```
-
-
-#### `choose`
-
-``` purescript
-choose :: Number -> Number -> Gen Number
-```
-
-
-#### `chooseInt`
-
-``` purescript
-chooseInt :: Number -> Number -> Gen Number
-```
-
-
-#### `oneOf`
-
-``` purescript
-oneOf :: forall a. Gen a -> [Gen a] -> Gen a
-```
-
-
-#### `frequency`
-
-``` purescript
-frequency :: forall a. Tuple Number (Gen a) -> [Tuple Number (Gen a)] -> Gen a
-```
-
-
-#### `arrayOf`
-
-``` purescript
-arrayOf :: forall a. Gen a -> Gen [a]
-```
-
-
-#### `arrayOf1`
-
-``` purescript
-arrayOf1 :: forall a. Gen a -> Gen (Tuple a [a])
-```
-
-
-#### `vectorOf`
-
-``` purescript
-vectorOf :: forall a. Number -> Gen a -> Gen [a]
-```
-
-
-#### `elements`
-
-``` purescript
-elements :: forall a. a -> [a] -> Gen a
-```
-
-
 #### `runGen`
 
 ``` purescript
@@ -405,17 +210,17 @@ evalGen :: forall a. Gen a -> GenState -> a
 ```
 
 
-#### `showSample'`
+#### `repeatable`
 
 ``` purescript
-showSample' :: forall r a. (Show a) => Size -> Gen a -> Eff (trace :: Trace | r) Unit
+repeatable :: forall a b. (a -> Gen b) -> Gen (a -> b)
 ```
 
 
-#### `showSample`
+#### `stateful`
 
 ``` purescript
-showSample :: forall r a. (Show a) => Gen a -> Eff (trace :: Trace | r) Unit
+stateful :: forall a. (GenState -> Gen a) -> Gen a
 ```
 
 
@@ -465,4 +270,52 @@ instance bindGen :: Bind Gen
 
 ``` purescript
 instance monadGen :: Monad Gen
+```
+
+
+
+## Module Test.QuickCheck.Testable
+
+#### `Result`
+
+``` purescript
+data Result
+  = Success 
+  | Failed String
+```
+
+
+#### `showResult`
+
+``` purescript
+instance showResult :: Show Result
+```
+
+
+#### `Testable`
+
+``` purescript
+class Testable prop where
+  test :: prop -> Gen Result
+```
+
+
+#### `testableResult`
+
+``` purescript
+instance testableResult :: Testable Result
+```
+
+
+#### `testableBoolean`
+
+``` purescript
+instance testableBoolean :: Testable Boolean
+```
+
+
+#### `testableFunction`
+
+``` purescript
+instance testableFunction :: (Arbitrary t, Testable prop) => Testable (t -> prop)
 ```
