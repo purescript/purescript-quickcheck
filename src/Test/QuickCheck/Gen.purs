@@ -36,6 +36,7 @@ import Data.Traversable
 import Data.Monoid.Additive
 import qualified Data.Array as A
 import qualified Math as M
+import Extensions
 
 type LCG = Number
 type Size = Number
@@ -85,19 +86,20 @@ frequency x xs = let
     pick n (snd x) xxs
 
 arrayOf :: forall a. Gen a -> Gen [a]
-arrayOf g = sized $ \n ->
+arrayOf g = sized $ \n -> unsafeTrace ("arrayOf sized: " ++ show n) $
   do k <- chooseInt (n/2.0) n
-     vectorOf k g
+     unsafeTrace ("arrayOf k: " ++ show k) $
+      vectorOf k g
 
 arrayOf1 :: forall a. Gen a -> Gen (Tuple a [a])
 arrayOf1 g = sized $ \n ->
-  do k  <- chooseInt 0 n
+  do k  <- chooseInt (n/2.0) n
      x  <- g
-     xs <- vectorOf (k - 1) g
+     xs <- vectorOf k g
      return $ Tuple x xs
 
 vectorOf :: forall a. Number -> Gen a -> Gen [a]
-vectorOf k g = if k == 0
+vectorOf k g = if k < 1
                   then return []
                   else sequence $ const g <$> (A.range 1 k)
 
