@@ -86,14 +86,13 @@ frequency x xs = let
     pick n (snd x) xxs
 
 arrayOf :: forall a. Gen a -> Gen [a]
-arrayOf g = sized $ \n -> unsafeTrace ("arrayOf sized: " ++ show n) $
-  do k <- chooseInt (n/2.0) n
-     unsafeTrace ("arrayOf k: " ++ show k) $
-      vectorOf k g
+arrayOf g = sized $ \n -> 
+  do k <- chooseInt 0 n
+     vectorOf k g
 
 arrayOf1 :: forall a. Gen a -> Gen (Tuple a [a])
 arrayOf1 g = sized $ \n ->
-  do k  <- chooseInt (n/2.0) n
+  do k  <- chooseInt 0 n
      x  <- g
      xs <- vectorOf k g
      return $ Tuple x xs
