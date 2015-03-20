@@ -39,6 +39,7 @@ import Data.Traversable
 import Data.Monoid.Additive
 import qualified Data.Array as A
 import qualified Math as M
+import Extensions
 
 -- | A seed for the random number generator
 type LCG = Number
@@ -110,7 +111,7 @@ frequency x xs = let
 
 -- | Create a random generator which generates an array of random values.
 arrayOf :: forall a. Gen a -> Gen [a]
-arrayOf g = sized $ \n ->
+arrayOf g = sized $ \n -> 
   do k <- chooseInt 0 n
      vectorOf k g
 
@@ -119,12 +120,14 @@ arrayOf1 :: forall a. Gen a -> Gen (Tuple a [a])
 arrayOf1 g = sized $ \n ->
   do k  <- chooseInt 0 n
      x  <- g
-     xs <- vectorOf (k - 1) g
+     xs <- vectorOf k g
      return $ Tuple x xs
 
 -- | Create a random generator which generates a vector of random values of a specified size.
 vectorOf :: forall a. Number -> Gen a -> Gen [a]
-vectorOf k g = sequence $ const g <$> (A.range 1 k)
+vectorOf k g = if k < 1
+                  then return []
+                  else sequence $ const g <$> (A.range 1 k)
 
 -- | Create a random generator which selects a value from a non-empty collection with
 -- | uniform probability.

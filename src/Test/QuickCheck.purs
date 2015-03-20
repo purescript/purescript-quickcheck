@@ -149,12 +149,7 @@ instance coarbFunction :: (Arbitrary a, CoArbitrary b) => CoArbitrary (a -> b) w
     coarbitrary (map f xs) gen
 
 instance arbArray :: (Arbitrary a) => Arbitrary [a] where
-  arbitrary = do
-    b <- arbitrary
-    if b then return [] else do
-      a <- arbitrary
-      as <- arbitrary
-      return (a : as)
+  arbitrary = arrayOf arbitrary
 
 instance coarbArray :: (CoArbitrary a) => CoArbitrary [a] where
   coarbitrary [] = id
@@ -187,13 +182,13 @@ instance testableFunction :: (Arbitrary t, Testable prop) => Testable (t -> prop
 -- | The second argument is the number of tests to run.
 quickCheckPure :: forall prop. (Testable prop) => Number -> Number -> prop -> [Result]
 quickCheckPure s = quickCheckPure' {newSeed: s, size: 10} where
-  quickCheckPure' st n prop = evalGen (go n) st
+  quickCheckPure' st numTests prop = go numTests st []
     where
-    go n | n <= 0 = return []
-    go n = do
-      result <- test prop
-      rest <- go (n - 1)
-      return $ result : rest
+    go n st accu | n <= 0 = accu
+    go n st accu =
+      let newSize = 10 + (numTests - n)
+          result = evalGen (test prop) (st{size = newSize})
+      in go (n - 1) st (result : accu)
 
 -- | A type synonym which represents the effects used by the `quickCheck` function.
 type QC a = forall eff. Eff (trace :: Trace, random :: Random, err :: Exception | eff) a
