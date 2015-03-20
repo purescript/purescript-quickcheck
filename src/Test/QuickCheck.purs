@@ -1,3 +1,21 @@
+-- | This module is a partial port of the Haskell QuickCheck library.
+-- |
+-- | QuickCheck provides a way to write _property-based_ tests.
+-- |
+-- | The `Arbitrary` and `CoArbitrary` type classes allow us to create
+-- | random data with which we can run our tests. This module provides
+-- | instances of both classes for PureScript's core data structures,
+-- | as well as functions for writing new instances.
+-- |
+-- | Test suites can use the `quickCheck` and `quickCheckPure` functions
+-- | to test properties.
+-- |
+-- | For example:
+-- |
+-- | ```purescript
+-- | main = quickCheck \n -> n + 1 > n
+-- | ```
+
 module Test.QuickCheck where
 
 import Debug.Trace
@@ -17,18 +35,40 @@ import qualified Data.String.Unsafe as SU
 
 import Test.QuickCheck.Gen
 
+-- | The `Arbitrary` class represents those types whose values can be 
+-- | _randomly-generated_.
+-- | 
+-- | `arbitrary` uses the `Gen` monad to express a random generator for
+-- | the type `t`. Combinators in the `Test.QuickCheck.Gen` 
+-- | module can be used to construct random generators.
 class Arbitrary t where
   arbitrary :: Gen t
 
+-- | The `CoArbitrary` class represents types which appear on the left of
+-- | an `Arbitrary` function arrow.
+-- |
+-- | To construct an `Arbitrary` instance for the type `a -> b`, we need to
+-- | use the input of type `a` to _perturb_ a random generator for `b`. This
+-- | is the role of the `coarbitrary` function.
+-- |
+-- | `CoArbitrary` instances can be written using the `perturbGen` function.
 class CoArbitrary t where
   coarbitrary :: forall r. t -> Gen r -> Gen r
 
+-- | The result of a test: success or failure (with an error message).
 data Result = Success | Failed String
 
 instance showResult :: Show Result where
   show Success = "Success"
   show (Failed msg) = "Failed: " ++ msg
 
+-- | This operator attaches an error message to a failed test.
+-- |
+-- | For example:
+-- |
+-- | ```purescript
+-- | test x = myProperty x <?> ("myProperty did not hold for " <> show x)
+-- | ```
 (<?>) :: Boolean -> String -> Result
 (<?>) true _ = Success
 (<?>) false msg = Failed msg
@@ -60,6 +100,8 @@ instance arbString :: Arbitrary String where
 instance coarbString :: CoArbitrary String where
   coarbitrary s = coarbitrary $ (S.charCodeAt 0 <$> S.split "" s)
 
+-- | A newtype for `String` whose `Arbitrary` instance generated random 
+-- | alphanumeric strings.
 newtype AlphaNumString = AlphaNumString String
 
 instance arbAlphaNumString :: Arbitrary AlphaNumString where
@@ -118,6 +160,12 @@ instance coarbArray :: (CoArbitrary a) => CoArbitrary [a] where
   coarbitrary [] = id
   coarbitrary (x : xs) = coarbitrary xs <<< coarbitrary x
 
+-- | The `Testable` class represents _testable properties_.
+-- |
+-- | A testable property is a function of zero or more `Arbitrary` arguments,
+-- | returning a `Boolean` or `Result`.
+-- |
+-- | Testable properties can be passed to the `quickCheck` function.
 class Testable prop where
   test :: prop -> Gen Result
 
@@ -133,6 +181,10 @@ instance testableFunction :: (Arbitrary t, Testable prop) => Testable (t -> prop
     t <- arbitrary
     test (f t)
 
+-- | Test a property, returning all test results as an array.
+-- |
+-- | The first argument is the _random seed_ to be passed to the random generator.
+-- | The second argument is the number of tests to run.
 quickCheckPure :: forall prop. (Testable prop) => Number -> Number -> prop -> [Result]
 quickCheckPure s = quickCheckPure' {newSeed: s, size: 10} where
   quickCheckPure' st n prop = evalGen (go n) st
@@ -143,8 +195,11 @@ quickCheckPure s = quickCheckPure' {newSeed: s, size: 10} where
       rest <- go (n - 1)
       return $ result : rest
 
+-- | A type synonym which represents the effects used by the `quickCheck` function.
 type QC a = forall eff. Eff (trace :: Trace, random :: Random, err :: Exception | eff) a
 
+-- | A variant of the `quickCheck` function which accepts an extra parameter
+-- | representing the number of tests which should be run.
 quickCheck' :: forall prop. (Testable prop) => Number -> prop -> QC Unit
 quickCheck' n prop = do
   seed <- random
@@ -165,6 +220,10 @@ quickCheck' n prop = do
   countSuccesses (Success : rest) = 1 + countSuccesses rest
   countSuccesses (_ : rest) = countSuccesses rest
 
+-- | Test a property.
+-- |
+-- | This function generates a new random seed, runs 100 tests and
+-- | prints the test results to the console.
 quickCheck :: forall prop. (Testable prop) => prop -> QC Unit
 quickCheck prop = quickCheck' 100 prop
 
