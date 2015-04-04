@@ -108,11 +108,11 @@ instance coarbUnit :: CoArbitrary Unit where
 
 instance arbOrdering :: Arbitrary Ordering where
   arbitrary = do
-    n <- (3 *) <$> uniform
+    n <- chooseInt 1 3
     return $ case n of
-      _ | n < 1 -> LT
-        | n < 2 -> EQ
-        | otherwise -> GT
+      1 -> LT
+      2 -> EQ
+      3 -> GT
 
 instance coarbOrdering :: CoArbitrary Ordering where
   coarbitrary LT = perturbGen 1
