@@ -35,11 +35,11 @@ import qualified Data.String.Unsafe as SU
 
 import Test.QuickCheck.Gen
 
--- | The `Arbitrary` class represents those types whose values can be 
+-- | The `Arbitrary` class represents those types whose values can be
 -- | _randomly-generated_.
--- | 
+-- |
 -- | `arbitrary` uses the `Gen` monad to express a random generator for
--- | the type `t`. Combinators in the `Test.QuickCheck.Gen` 
+-- | the type `t`. Combinators in the `Test.QuickCheck.Gen`
 -- | module can be used to construct random generators.
 class Arbitrary t where
   arbitrary :: Gen t
@@ -100,7 +100,26 @@ instance arbString :: Arbitrary String where
 instance coarbString :: CoArbitrary String where
   coarbitrary s = coarbitrary $ (S.charCodeAt 0 <$> S.split "" s)
 
--- | A newtype for `String` whose `Arbitrary` instance generated random 
+instance arbUnit :: Arbitrary Unit where
+  arbitrary = return unit
+
+instance coarbUnit :: CoArbitrary Unit where
+  coarbitrary _ = perturbGen 1
+
+instance arbOrdering :: Arbitrary Ordering where
+  arbitrary = do
+    n <- (3 *) <$> uniform
+    return $ case n of
+      _ | n < 1 -> LT
+        | n < 2 -> EQ
+        | otherwise -> GT
+
+instance coarbOrdering :: CoArbitrary Ordering where
+  coarbitrary LT = perturbGen 1
+  coarbitrary EQ = perturbGen 2
+  coarbitrary GT = perturbGen 3
+
+-- | A newtype for `String` whose `Arbitrary` instance generated random
 -- | alphanumeric strings.
 newtype AlphaNumString = AlphaNumString String
 

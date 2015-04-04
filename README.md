@@ -28,11 +28,11 @@ class Arbitrary t where
   arbitrary :: Gen t
 ```
 
-The `Arbitrary` class represents those types whose values can be 
+The `Arbitrary` class represents those types whose values can be
 _randomly-generated_.
 
 `arbitrary` uses the `Gen` monad to express a random generator for
-the type `t`. Combinators in the `Test.QuickCheck.Gen` 
+the type `t`. Combinators in the `Test.QuickCheck.Gen`
 module can be used to construct random generators.
 
 #### `CoArbitrary`
@@ -138,6 +138,34 @@ instance coarbString :: CoArbitrary String
 ```
 
 
+#### `arbUnit`
+
+``` purescript
+instance arbUnit :: Arbitrary Unit
+```
+
+
+#### `coarbUnit`
+
+``` purescript
+instance coarbUnit :: CoArbitrary Unit
+```
+
+
+#### `arbOrdering`
+
+``` purescript
+instance arbOrdering :: Arbitrary Ordering
+```
+
+
+#### `coarbOrdering`
+
+``` purescript
+instance coarbOrdering :: CoArbitrary Ordering
+```
+
+
 #### `AlphaNumString`
 
 ``` purescript
@@ -145,7 +173,7 @@ newtype AlphaNumString
   = AlphaNumString String
 ```
 
-A newtype for `String` whose `Arbitrary` instance generated random 
+A newtype for `String` whose `Arbitrary` instance generated random
 alphanumeric strings.
 
 #### `arbAlphaNumString`
