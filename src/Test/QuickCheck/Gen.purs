@@ -1,43 +1,41 @@
--- | This module defines the random generator monad used by the `Test.QuickCheck` 
+-- | This module defines the random generator monad used by the `Test.QuickCheck`
 -- | module, as well as helper functions for constructing random generators.
-
 module Test.QuickCheck.Gen
-  (
-    Gen(),
-    GenState(),
-    GenOut(),
-    Size(),
-    LCG(),
-    repeatable,
-    stateful,
-    variant,
-    sized,
-    resize,
-    choose,
-    chooseInt,
-    oneOf,
-    frequency,
-    arrayOf,
-    arrayOf1,
-    vectorOf,
-    elements,
-    runGen,
-    evalGen,
-    perturbGen,
-    uniform,
-    showSample,
-    showSample'
+  ( Gen()
+  , GenState()
+  , GenOut()
+  , Size()
+  , LCG()
+  , repeatable
+  , stateful
+  , variant
+  , sized
+  , resize
+  , choose
+  , chooseInt
+  , oneOf
+  , frequency
+  , arrayOf
+  , arrayOf1
+  , vectorOf
+  , elements
+  , runGen
+  , evalGen
+  , perturbGen
+  , uniform
+  , showSample
+  , showSample'
   ) where
 
-import Control.Monad.Eff
-import Control.Monad.Eff.Random
-import Debug.Trace
-import Data.Maybe
-import Data.Tuple
-import Data.Foldable
-import Data.Traversable
-import Data.Monoid.Additive
-import qualified Data.Array as A
+import Control.Monad.Eff (Eff())
+import Control.Monad.Eff.Random (Random(), random)
+import Data.Array ((!!), length, range)
+import Data.Foldable (fold)
+import Data.Maybe (fromMaybe)
+import Data.Monoid.Additive (Additive(..), runAdditive)
+import Data.Traversable (sequence)
+import Data.Tuple (Tuple(..), fst, snd)
+import Debug.Trace (Trace(), print)
 import qualified Math as M
 
 -- | A seed for the random number generator
@@ -93,8 +91,8 @@ chooseInt a b = M.floor <$> choose (M.ceil a) (M.floor b + 0.999999999)
 -- | a non-empty collection of random generators with uniform probability.
 oneOf :: forall a. Gen a -> [Gen a] -> Gen a
 oneOf x xs = do
-  n <- chooseInt 0 (A.length xs)
-  if n == 0 then x else fromMaybe x (xs A.!! (n - 1))
+  n <- chooseInt 0 (length xs)
+  if n == 0 then x else fromMaybe x (xs !! (n - 1))
 
 -- | Create a random generator which selects and executes a random generator from
 -- | a non-empty, weighted collection of random generators.
@@ -124,14 +122,14 @@ arrayOf1 g = sized $ \n ->
 
 -- | Create a random generator which generates a vector of random values of a specified size.
 vectorOf :: forall a. Number -> Gen a -> Gen [a]
-vectorOf k g = sequence $ const g <$> (A.range 1 k)
+vectorOf k g = sequence $ const g <$> (range 1 k)
 
 -- | Create a random generator which selects a value from a non-empty collection with
 -- | uniform probability.
 elements :: forall a. a -> [a] -> Gen a
 elements x xs = do
-  n <- chooseInt 0 (A.length xs)
-  pure if n == 0 then x else fromMaybe x (xs A.!! (n - 1))
+  n <- chooseInt 0 (length xs)
+  pure if n == 0 then x else fromMaybe x (xs !! (n - 1))
 
 -- | Run a random generator
 runGen :: forall a. Gen a -> GenState -> GenOut a

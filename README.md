@@ -21,244 +21,44 @@ For example:
 main = quickCheck \n -> n + 1 > n
 ```
 
-#### `Arbitrary`
+#### `QC`
 
 ``` purescript
-class Arbitrary t where
-  arbitrary :: Gen t
+type QC a = forall eff. Eff (err :: Exception, random :: Random, trace :: Trace | eff) a
 ```
 
-The `Arbitrary` class represents those types whose values can be
-_randomly-generated_.
+A type synonym which represents the effects used by the `quickCheck` function.
 
-`arbitrary` uses the `Gen` monad to express a random generator for
-the type `t`. Combinators in the `Test.QuickCheck.Gen`
-module can be used to construct random generators.
-
-#### `CoArbitrary`
+#### `quickCheck`
 
 ``` purescript
-class CoArbitrary t where
-  coarbitrary :: forall r. t -> Gen r -> Gen r
+quickCheck :: forall prop. (Testable prop) => prop -> QC Unit
 ```
 
-The `CoArbitrary` class represents types which appear on the left of
-an `Arbitrary` function arrow.
+Test a property.
 
-To construct an `Arbitrary` instance for the type `a -> b`, we need to
-use the input of type `a` to _perturb_ a random generator for `b`. This
-is the role of the `coarbitrary` function.
+This function generates a new random seed, runs 100 tests and
+prints the test results to the console.
 
-`CoArbitrary` instances can be written using the `perturbGen` function.
-
-#### `Result`
+#### `quickCheck'`
 
 ``` purescript
-data Result
-  = Success 
-  | Failed String
+quickCheck' :: forall prop. (Testable prop) => Number -> prop -> QC Unit
 ```
 
-The result of a test: success or failure (with an error message).
+A variant of the `quickCheck` function which accepts an extra parameter
+representing the number of tests which should be run.
 
-#### `showResult`
+#### `quickCheckPure`
 
 ``` purescript
-instance showResult :: Show Result
+quickCheckPure :: forall prop. (Testable prop) => Number -> Number -> prop -> [Result]
 ```
 
+Test a property, returning all test results as an array.
 
-#### `(<?>)`
-
-``` purescript
-(<?>) :: Boolean -> String -> Result
-```
-
-This operator attaches an error message to a failed test.
-
-For example:
-
-```purescript
-test x = myProperty x <?> ("myProperty did not hold for " <> show x)
-```
-
-#### `arbChar`
-
-``` purescript
-instance arbChar :: Arbitrary S.Char
-```
-
-
-#### `coarbChar`
-
-``` purescript
-instance coarbChar :: CoArbitrary S.Char
-```
-
-
-#### `arbNumber`
-
-``` purescript
-instance arbNumber :: Arbitrary Number
-```
-
-
-#### `coarbNumber`
-
-``` purescript
-instance coarbNumber :: CoArbitrary Number
-```
-
-
-#### `arbBoolean`
-
-``` purescript
-instance arbBoolean :: Arbitrary Boolean
-```
-
-
-#### `coarbBoolean`
-
-``` purescript
-instance coarbBoolean :: CoArbitrary Boolean
-```
-
-
-#### `arbString`
-
-``` purescript
-instance arbString :: Arbitrary String
-```
-
-
-#### `coarbString`
-
-``` purescript
-instance coarbString :: CoArbitrary String
-```
-
-
-#### `arbUnit`
-
-``` purescript
-instance arbUnit :: Arbitrary Unit
-```
-
-
-#### `coarbUnit`
-
-``` purescript
-instance coarbUnit :: CoArbitrary Unit
-```
-
-
-#### `arbOrdering`
-
-``` purescript
-instance arbOrdering :: Arbitrary Ordering
-```
-
-
-#### `coarbOrdering`
-
-``` purescript
-instance coarbOrdering :: CoArbitrary Ordering
-```
-
-
-#### `AlphaNumString`
-
-``` purescript
-newtype AlphaNumString
-  = AlphaNumString String
-```
-
-A newtype for `String` whose `Arbitrary` instance generated random
-alphanumeric strings.
-
-#### `arbAlphaNumString`
-
-``` purescript
-instance arbAlphaNumString :: Arbitrary AlphaNumString
-```
-
-
-#### `coarbAlphaNumString`
-
-``` purescript
-instance coarbAlphaNumString :: CoArbitrary AlphaNumString
-```
-
-
-#### `arbTuple`
-
-``` purescript
-instance arbTuple :: (Arbitrary a, Arbitrary b) => Arbitrary (Tuple a b)
-```
-
-
-#### `coarbTuple`
-
-``` purescript
-instance coarbTuple :: (CoArbitrary a, CoArbitrary b) => CoArbitrary (Tuple a b)
-```
-
-
-#### `arbEither`
-
-``` purescript
-instance arbEither :: (Arbitrary a, Arbitrary b) => Arbitrary (Either a b)
-```
-
-
-#### `coarbEither`
-
-``` purescript
-instance coarbEither :: (CoArbitrary a, CoArbitrary b) => CoArbitrary (Either a b)
-```
-
-
-#### `arbMaybe`
-
-``` purescript
-instance arbMaybe :: (Arbitrary a) => Arbitrary (Maybe a)
-```
-
-
-#### `coarbMaybe`
-
-``` purescript
-instance coarbMaybe :: (CoArbitrary a) => CoArbitrary (Maybe a)
-```
-
-
-#### `arbFunction`
-
-``` purescript
-instance arbFunction :: (CoArbitrary a, Arbitrary b) => Arbitrary (a -> b)
-```
-
-
-#### `coarbFunction`
-
-``` purescript
-instance coarbFunction :: (Arbitrary a, CoArbitrary b) => CoArbitrary (a -> b)
-```
-
-
-#### `arbArray`
-
-``` purescript
-instance arbArray :: (Arbitrary a) => Arbitrary [a]
-```
-
-
-#### `coarbArray`
-
-``` purescript
-instance coarbArray :: (CoArbitrary a) => CoArbitrary [a]
-```
-
+The first argument is the _random seed_ to be passed to the random generator.
+The second argument is the number of tests to run.
 
 #### `Testable`
 
@@ -295,44 +95,36 @@ instance testableFunction :: (Arbitrary t, Testable prop) => Testable (t -> prop
 ```
 
 
-#### `quickCheckPure`
+#### `Result`
 
 ``` purescript
-quickCheckPure :: forall prop. (Testable prop) => Number -> Number -> prop -> [Result]
+data Result
+  = Success 
+  | Failed String
 ```
 
-Test a property, returning all test results as an array.
+The result of a test: success or failure (with an error message).
 
-The first argument is the _random seed_ to be passed to the random generator.
-The second argument is the number of tests to run.
-
-#### `QC`
+#### `showResult`
 
 ``` purescript
-type QC a = forall eff. Eff (err :: Exception, random :: Random, trace :: Trace | eff) a
+instance showResult :: Show Result
 ```
 
-A type synonym which represents the effects used by the `quickCheck` function.
 
-#### `quickCheck'`
+#### `(<?>)`
 
 ``` purescript
-quickCheck' :: forall prop. (Testable prop) => Number -> prop -> QC Unit
+(<?>) :: Boolean -> String -> Result
 ```
 
-A variant of the `quickCheck` function which accepts an extra parameter
-representing the number of tests which should be run.
+This operator attaches an error message to a failed test.
 
-#### `quickCheck`
+For example:
 
-``` purescript
-quickCheck :: forall prop. (Testable prop) => prop -> QC Unit
+```purescript
+test x = myProperty x <?> ("myProperty did not hold for " <> show x)
 ```
-
-Test a property.
-
-This function generates a new random seed, runs 100 tests and
-prints the test results to the console.
 
 #### `(===)`
 
@@ -351,10 +143,306 @@ Self-documenting equality assertion
 Self-documenting inequality assertion
 
 
+## Module Test.QuickCheck.Arbitrary
+
+#### `Arbitrary`
+
+``` purescript
+class Arbitrary t where
+  arbitrary :: Gen t
+```
+
+The `Arbitrary` class represents those types whose values can be
+_randomly-generated_.
+
+`arbitrary` uses the `Gen` monad to express a random generator for
+the type `t`. Combinators in the `Test.QuickCheck.Gen`
+module can be used to construct random generators.
+
+#### `CoArbitrary`
+
+``` purescript
+class CoArbitrary t where
+  coarbitrary :: forall r. t -> Gen r -> Gen r
+```
+
+The `CoArbitrary` class represents types which appear on the left of
+an `Arbitrary` function arrow.
+
+To construct an `Arbitrary` instance for the type `a -> b`, we need to
+use the input of type `a` to _perturb_ a random generator for `b`. This
+is the role of the `coarbitrary` function.
+
+`CoArbitrary` instances can be written using the `perturbGen` function.
+
+#### `arbBoolean`
+
+``` purescript
+instance arbBoolean :: Arbitrary Boolean
+```
+
+
+#### `coarbBoolean`
+
+``` purescript
+instance coarbBoolean :: CoArbitrary Boolean
+```
+
+
+#### `arbNumber`
+
+``` purescript
+instance arbNumber :: Arbitrary Number
+```
+
+
+#### `coarbNumber`
+
+``` purescript
+instance coarbNumber :: CoArbitrary Number
+```
+
+
+#### `arbString`
+
+``` purescript
+instance arbString :: Arbitrary String
+```
+
+
+#### `coarbString`
+
+``` purescript
+instance coarbString :: CoArbitrary String
+```
+
+
+#### `arbChar`
+
+``` purescript
+instance arbChar :: Arbitrary Char
+```
+
+
+#### `coarbChar`
+
+``` purescript
+instance coarbChar :: CoArbitrary Char
+```
+
+
+#### `arbUnit`
+
+``` purescript
+instance arbUnit :: Arbitrary Unit
+```
+
+
+#### `coarbUnit`
+
+``` purescript
+instance coarbUnit :: CoArbitrary Unit
+```
+
+
+#### `arbOrdering`
+
+``` purescript
+instance arbOrdering :: Arbitrary Ordering
+```
+
+
+#### `coarbOrdering`
+
+``` purescript
+instance coarbOrdering :: CoArbitrary Ordering
+```
+
+
+#### `arbArray`
+
+``` purescript
+instance arbArray :: (Arbitrary a) => Arbitrary [a]
+```
+
+
+#### `coarbArray`
+
+``` purescript
+instance coarbArray :: (CoArbitrary a) => CoArbitrary [a]
+```
+
+
+#### `arbFunction`
+
+``` purescript
+instance arbFunction :: (CoArbitrary a, Arbitrary b) => Arbitrary (a -> b)
+```
+
+
+#### `coarbFunction`
+
+``` purescript
+instance coarbFunction :: (Arbitrary a, CoArbitrary b) => CoArbitrary (a -> b)
+```
+
+
+#### `arbTuple`
+
+``` purescript
+instance arbTuple :: (Arbitrary a, Arbitrary b) => Arbitrary (Tuple a b)
+```
+
+
+#### `coarbTuple`
+
+``` purescript
+instance coarbTuple :: (CoArbitrary a, CoArbitrary b) => CoArbitrary (Tuple a b)
+```
+
+
+#### `arbMaybe`
+
+``` purescript
+instance arbMaybe :: (Arbitrary a) => Arbitrary (Maybe a)
+```
+
+
+#### `coarbMaybe`
+
+``` purescript
+instance coarbMaybe :: (CoArbitrary a) => CoArbitrary (Maybe a)
+```
+
+
+#### `arbEither`
+
+``` purescript
+instance arbEither :: (Arbitrary a, Arbitrary b) => Arbitrary (Either a b)
+```
+
+
+#### `coarbEither`
+
+``` purescript
+instance coarbEither :: (CoArbitrary a, CoArbitrary b) => CoArbitrary (Either a b)
+```
+
+
+
+## Module Test.QuickCheck.Data.AlphaNumString
+
+#### `AlphaNumString`
+
+``` purescript
+newtype AlphaNumString
+  = AlphaNumString String
+```
+
+A newtype for `String` whose `Arbitrary` instance generated random
+alphanumeric strings.
+
+#### `arbAlphaNumString`
+
+``` purescript
+instance arbAlphaNumString :: Arbitrary AlphaNumString
+```
+
+
+#### `coarbAlphaNumString`
+
+``` purescript
+instance coarbAlphaNumString :: CoArbitrary AlphaNumString
+```
+
+
+
+## Module Test.QuickCheck.Data.ApproxNumber
+
+#### `ApproxNumber`
+
+``` purescript
+newtype ApproxNumber
+  = ApproxNumber Number
+```
+
+A newtype for `Number` whose `Eq` instance uses an epsilon value to allow
+for precision erros when comparing.
+
+#### `(=~=)`
+
+``` purescript
+(=~=) :: Number -> Number -> Boolean
+```
+
+#### `arbitraryApproxNumber`
+
+``` purescript
+instance arbitraryApproxNumber :: Arbitrary ApproxNumber
+```
+
+
+#### `coarbitraryApproxNumber`
+
+``` purescript
+instance coarbitraryApproxNumber :: CoArbitrary ApproxNumber
+```
+
+
+#### `eqApproxNumber`
+
+``` purescript
+instance eqApproxNumber :: Eq ApproxNumber
+```
+
+
+#### `ordApproxNumber`
+
+``` purescript
+instance ordApproxNumber :: Ord ApproxNumber
+```
+
+
+#### `semiringApproxNumber`
+
+``` purescript
+instance semiringApproxNumber :: Semiring ApproxNumber
+```
+
+
+#### `moduloSemiringApproxNumber`
+
+``` purescript
+instance moduloSemiringApproxNumber :: ModuloSemiring ApproxNumber
+```
+
+
+#### `ringApproxNumber`
+
+``` purescript
+instance ringApproxNumber :: Ring ApproxNumber
+```
+
+
+#### `divisionRingApproxNumber`
+
+``` purescript
+instance divisionRingApproxNumber :: DivisionRing ApproxNumber
+```
+
+
+#### `numApproxNumber`
+
+``` purescript
+instance numApproxNumber :: Num ApproxNumber
+```
+
+
+
 ## Module Test.QuickCheck.Gen
 
 
-This module defines the random generator monad used by the `Test.QuickCheck` 
+This module defines the random generator monad used by the `Test.QuickCheck`
 module, as well as helper functions for constructing random generators.
 
 #### `LCG`
