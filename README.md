@@ -60,23 +60,6 @@ Test a property, returning all test results as an array.
 The first argument is the _random seed_ to be passed to the random generator.
 The second argument is the number of tests to run.
 
-#### `Result`
-
-``` purescript
-data Result
-  = Success 
-  | Failed String
-```
-
-The result of a test: success or failure (with an error message).
-
-#### `showResult`
-
-``` purescript
-instance showResult :: Show Result
-```
-
-
 #### `Testable`
 
 ``` purescript
@@ -109,6 +92,23 @@ instance testableBoolean :: Testable Boolean
 
 ``` purescript
 instance testableFunction :: (Arbitrary t, Testable prop) => Testable (t -> prop)
+```
+
+
+#### `Result`
+
+``` purescript
+data Result
+  = Success 
+  | Failed String
+```
+
+The result of a test: success or failure (with an error message).
+
+#### `showResult`
+
+``` purescript
+instance showResult :: Show Result
 ```
 
 

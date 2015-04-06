@@ -70,13 +70,6 @@ quickCheckPure s = quickCheckPure' {newSeed: s, size: 10} where
       rest <- go (n - 1)
       return $ result : rest
 
--- | The result of a test: success or failure (with an error message).
-data Result = Success | Failed String
-
-instance showResult :: Show Result where
-  show Success = "Success"
-  show (Failed msg) = "Failed: " ++ msg
-
 -- | The `Testable` class represents _testable properties_.
 -- |
 -- | A testable property is a function of zero or more `Arbitrary` arguments,
@@ -97,6 +90,13 @@ instance testableFunction :: (Arbitrary t, Testable prop) => Testable (t -> prop
   test f = do
     t <- arbitrary
     test (f t)
+
+-- | The result of a test: success or failure (with an error message).
+data Result = Success | Failed String
+
+instance showResult :: Show Result where
+  show Success = "Success"
+  show (Failed msg) = "Failed: " ++ msg
 
 -- | This operator attaches an error message to a failed test.
 -- |
