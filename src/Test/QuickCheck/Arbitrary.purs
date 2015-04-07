@@ -6,7 +6,7 @@ import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
 import Data.String (charCodeAt, fromCharArray, split)
 import Data.Tuple (Tuple(..))
-import Data.Int (fromNumber, toNumber)
+import Data.Int (Int(), fromNumber, toNumber)
 import Test.QuickCheck.Gen
 
 -- | The `Arbitrary` class represents those types whose values can be
@@ -41,8 +41,14 @@ instance coarbBoolean :: CoArbitrary Boolean where
 instance arbNumber :: Arbitrary Number where
   arbitrary = uniform
 
+instance arbInt :: Arbitrary Int where
+  arbitrary = chooseInt (fromNumber (-1000000)) (fromNumber 1000000)
+
 instance coarbNumber :: CoArbitrary Number where
   coarbitrary = perturbGen
+
+instance coarbInt :: CoArbitrary Int where
+  coarbitrary = perturbGen <<< toNumber
 
 instance arbString :: Arbitrary String where
   arbitrary = fromCharArray <$> arbitrary

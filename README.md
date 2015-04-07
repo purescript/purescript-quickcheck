@@ -196,10 +196,24 @@ instance arbNumber :: Arbitrary Number
 ```
 
 
+#### `arbInt`
+
+``` purescript
+instance arbInt :: Arbitrary Int
+```
+
+
 #### `coarbNumber`
 
 ``` purescript
 instance coarbNumber :: CoArbitrary Number
+```
+
+
+#### `coarbInt`
+
+``` purescript
+instance coarbInt :: CoArbitrary Int
 ```
 
 
