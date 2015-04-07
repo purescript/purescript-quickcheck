@@ -6,6 +6,7 @@ import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
 import Data.String (charCodeAt, fromCharArray, split)
 import Data.Tuple (Tuple(..))
+import Data.Int (fromNumber, toNumber)
 import Test.QuickCheck.Gen
 
 -- | The `Arbitrary` class represents those types whose values can be
@@ -63,8 +64,8 @@ instance coarbUnit :: CoArbitrary Unit where
 
 instance arbOrdering :: Arbitrary Ordering where
   arbitrary = do
-    n <- chooseInt 1 3
-    return $ case n of
+    n <- chooseInt (fromNumber 1) (fromNumber 3)
+    return $ case toNumber n of
       1 -> LT
       2 -> EQ
       3 -> GT

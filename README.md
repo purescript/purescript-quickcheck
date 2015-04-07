@@ -43,7 +43,7 @@ prints the test results to the console.
 #### `quickCheck'`
 
 ``` purescript
-quickCheck' :: forall prop. (Testable prop) => Number -> prop -> QC Unit
+quickCheck' :: forall prop. (Testable prop) => Int -> prop -> QC Unit
 ```
 
 A variant of the `quickCheck` function which accepts an extra parameter
@@ -52,7 +52,7 @@ representing the number of tests which should be run.
 #### `quickCheckPure`
 
 ``` purescript
-quickCheckPure :: forall prop. (Testable prop) => Number -> Number -> prop -> [Result]
+quickCheckPure :: forall prop. (Testable prop) => Int -> Int -> prop -> [Result]
 ```
 
 Test a property, returning all test results as an array.
@@ -448,7 +448,7 @@ module, as well as helper functions for constructing random generators.
 #### `LCG`
 
 ``` purescript
-type LCG = Number
+type LCG = Int
 ```
 
 A seed for the random number generator
@@ -456,7 +456,7 @@ A seed for the random number generator
 #### `Size`
 
 ``` purescript
-type Size = Number
+type Size = Int
 ```
 
 Tests are parameterized by the `Size` of the randomly-generated data,
@@ -540,7 +540,7 @@ with uniform probability.
 #### `chooseInt`
 
 ``` purescript
-chooseInt :: Number -> Number -> Gen Number
+chooseInt :: Int -> Int -> Gen Int
 ```
 
 Create a random generator which chooses an integer from a range.
@@ -582,7 +582,7 @@ Create a random generator which generates a non-empty array of random values.
 #### `vectorOf`
 
 ``` purescript
-vectorOf :: forall a. Number -> Gen a -> Gen [a]
+vectorOf :: forall a. Int -> Gen a -> Gen [a]
 ```
 
 Create a random generator which generates a vector of random values of a specified size.
