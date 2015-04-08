@@ -17,6 +17,7 @@
 -- | ```
 module Test.QuickCheck where
 
+import Control.Monad (replicateM)
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Exception (Exception(), throwException, error)
 import Control.Monad.Eff.Random (Random(), random)
@@ -62,14 +63,7 @@ quickCheck' n prop = do
 -- | The first argument is the _random seed_ to be passed to the random generator.
 -- | The second argument is the number of tests to run.
 quickCheckPure :: forall prop. (Testable prop) => Int -> Int -> prop -> [Result]
-quickCheckPure s = quickCheckPure' { newSeed: s, size: fromNumber 10 } where
-  quickCheckPure' st n prop = evalGen (go n) st
-    where
-    go n | n <= zero = return []
-    go n = do
-      result <- test prop
-      rest <- go (n - one)
-      return $ result : rest
+quickCheckPure s n prop = evalGen (replicateM n (test prop)) { newSeed: s, size: fromNumber 10 }
 
 -- | The `Testable` class represents _testable properties_.
 -- |
@@ -88,9 +82,7 @@ instance testableBoolean :: Testable Boolean where
   test false = return $ Failed "Test returned false"
 
 instance testableFunction :: (Arbitrary t, Testable prop) => Testable (t -> prop) where
-  test f = do
-    t <- arbitrary
-    test (f t)
+  test f = arbitrary >>= test <<< f
 
 -- | The result of a test: success or failure (with an error message).
 data Result = Success | Failed String
@@ -112,12 +104,8 @@ instance showResult :: Show Result where
 
 -- | Self-documenting equality assertion
 (===) :: forall a b. (Eq a, Show a) => a -> a -> Result
-(===) a b = a == b <?> msg
-  where
-    msg = show a ++ " /= " ++ show b
+(===) a b = a == b <?> show a ++ " /= " ++ show b
 
 -- | Self-documenting inequality assertion
 (/==) :: forall a b. (Eq a, Show a) => a -> a -> Result
-(/==) a b = a /= b <?> msg
-  where
-    msg = show a ++ " == " ++ show b
+(/==) a b = a /= b <?> show a ++ " == " ++ show b
