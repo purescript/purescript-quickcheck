@@ -1,5 +1,6 @@
 module Test.QuickCheck.Data.AlphaNumString where
 
+import Data.Int (fromNumber, toNumber)
 import Data.String (fromCharArray, length)
 import Data.String.Unsafe (charAt)
 import Math (round)
@@ -12,11 +13,12 @@ newtype AlphaNumString = AlphaNumString String
 instance arbAlphaNumString :: Arbitrary AlphaNumString where
   arbitrary = do
     arrNum <- arbitrary
-    return $ AlphaNumString <<< fromCharArray $ lookup <$> arrNum where
-      chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    return $ AlphaNumString <<< fromCharArray $ lookup <$> arrNum
+    where
+    chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    lookup x = let index = fromNumber $ x * (toNumber (length chars) - 1)
+               in charAt index chars
 
-      lookup x = charAt index chars where
-        index = round $ x * (length chars - 1)
 
 instance coarbAlphaNumString :: CoArbitrary AlphaNumString where
   coarbitrary (AlphaNumString s) = coarbitrary s

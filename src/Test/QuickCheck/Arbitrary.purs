@@ -54,10 +54,10 @@ instance arbString :: Arbitrary String where
   arbitrary = fromCharArray <$> arbitrary
 
 instance coarbString :: CoArbitrary String where
-  coarbitrary s = coarbitrary $ (charCodeAt 0 <$> split "" s)
+  coarbitrary s = coarbitrary $ (charCodeAt zero <$> split "" s)
 
 instance arbChar :: Arbitrary Char where
-  arbitrary = fromCharCode <<< ((*) 65535) <$> uniform
+  arbitrary = fromCharCode <<< fromNumber <<< (* 65535) <$> uniform
 
 instance coarbChar :: CoArbitrary Char where
   coarbitrary c = coarbitrary $ toCharCode c
