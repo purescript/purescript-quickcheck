@@ -15,7 +15,7 @@ newtype ApproxNumber = ApproxNumber Number
 instance arbitraryApproxNumber :: Arbitrary ApproxNumber where
   arbitrary = ApproxNumber <$> arbitrary
 
-instance coarbitraryApproxNumber :: CoArbitrary ApproxNumber where
+instance coarbitraryApproxNumber :: Coarbitrary ApproxNumber where
   coarbitrary (ApproxNumber n) = coarbitrary n
 
 instance eqApproxNumber :: Eq ApproxNumber where

@@ -22,7 +22,7 @@ instance arbAlphaNumString :: Arbitrary AlphaNumString
 #### `coarbAlphaNumString`
 
 ``` purescript
-instance coarbAlphaNumString :: CoArbitrary AlphaNumString
+instance coarbAlphaNumString :: Coarbitrary AlphaNumString
 ```
 
 

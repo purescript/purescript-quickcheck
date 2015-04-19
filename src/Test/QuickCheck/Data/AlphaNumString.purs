@@ -22,5 +22,5 @@ instance arbAlphaNumString :: Arbitrary AlphaNumString where
                in charAt index chars
 
 
-instance coarbAlphaNumString :: CoArbitrary AlphaNumString where
+instance coarbAlphaNumString :: Coarbitrary AlphaNumString where
   coarbitrary (AlphaNumString s) = coarbitrary s

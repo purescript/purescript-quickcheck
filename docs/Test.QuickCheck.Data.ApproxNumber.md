@@ -28,7 +28,7 @@ instance arbitraryApproxNumber :: Arbitrary ApproxNumber
 #### `coarbitraryApproxNumber`
 
 ``` purescript
-instance coarbitraryApproxNumber :: CoArbitrary ApproxNumber
+instance coarbitraryApproxNumber :: Coarbitrary ApproxNumber
 ```
 
 

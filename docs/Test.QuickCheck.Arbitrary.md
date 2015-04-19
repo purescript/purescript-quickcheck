@@ -16,21 +16,21 @@ _randomly-generated_.
 the type `t`. Combinators in the `Test.QuickCheck.Gen`
 module can be used to construct random generators.
 
-#### `CoArbitrary`
+#### `Coarbitrary`
 
 ``` purescript
-class CoArbitrary t where
+class Coarbitrary t where
   coarbitrary :: forall r. t -> Gen r -> Gen r
 ```
 
-The `CoArbitrary` class represents types which appear on the left of
+The `Coarbitrary` class represents types which appear on the left of
 an `Arbitrary` function arrow.
 
 To construct an `Arbitrary` instance for the type `a -> b`, we need to
 use the input of type `a` to _perturb_ a random generator for `b`. This
 is the role of the `coarbitrary` function.
 
-`CoArbitrary` instances can be written using the `perturbGen` function.
+`Coarbitrary` instances can be written using the `perturbGen` function.
 
 #### `arbBoolean`
 
@@ -42,7 +42,7 @@ instance arbBoolean :: Arbitrary Boolean
 #### `coarbBoolean`
 
 ``` purescript
-instance coarbBoolean :: CoArbitrary Boolean
+instance coarbBoolean :: Coarbitrary Boolean
 ```
 
 
@@ -56,7 +56,7 @@ instance arbNumber :: Arbitrary Number
 #### `coarbNumber`
 
 ``` purescript
-instance coarbNumber :: CoArbitrary Number
+instance coarbNumber :: Coarbitrary Number
 ```
 
 
@@ -70,7 +70,7 @@ instance arbInt :: Arbitrary Int
 #### `coarbInt`
 
 ``` purescript
-instance coarbInt :: CoArbitrary Int
+instance coarbInt :: Coarbitrary Int
 ```
 
 
@@ -84,7 +84,7 @@ instance arbString :: Arbitrary String
 #### `coarbString`
 
 ``` purescript
-instance coarbString :: CoArbitrary String
+instance coarbString :: Coarbitrary String
 ```
 
 
@@ -98,7 +98,7 @@ instance arbChar :: Arbitrary Char
 #### `coarbChar`
 
 ``` purescript
-instance coarbChar :: CoArbitrary Char
+instance coarbChar :: Coarbitrary Char
 ```
 
 
@@ -112,7 +112,7 @@ instance arbUnit :: Arbitrary Unit
 #### `coarbUnit`
 
 ``` purescript
-instance coarbUnit :: CoArbitrary Unit
+instance coarbUnit :: Coarbitrary Unit
 ```
 
 
@@ -126,7 +126,7 @@ instance arbOrdering :: Arbitrary Ordering
 #### `coarbOrdering`
 
 ``` purescript
-instance coarbOrdering :: CoArbitrary Ordering
+instance coarbOrdering :: Coarbitrary Ordering
 ```
 
 
@@ -140,21 +140,21 @@ instance arbArray :: (Arbitrary a) => Arbitrary [a]
 #### `coarbArray`
 
 ``` purescript
-instance coarbArray :: (CoArbitrary a) => CoArbitrary [a]
+instance coarbArray :: (Coarbitrary a) => Coarbitrary [a]
 ```
 
 
 #### `arbFunction`
 
 ``` purescript
-instance arbFunction :: (CoArbitrary a, Arbitrary b) => Arbitrary (a -> b)
+instance arbFunction :: (Coarbitrary a, Arbitrary b) => Arbitrary (a -> b)
 ```
 
 
 #### `coarbFunction`
 
 ``` purescript
-instance coarbFunction :: (Arbitrary a, CoArbitrary b) => CoArbitrary (a -> b)
+instance coarbFunction :: (Arbitrary a, Coarbitrary b) => Coarbitrary (a -> b)
 ```
 
 
@@ -168,7 +168,7 @@ instance arbTuple :: (Arbitrary a, Arbitrary b) => Arbitrary (Tuple a b)
 #### `coarbTuple`
 
 ``` purescript
-instance coarbTuple :: (CoArbitrary a, CoArbitrary b) => CoArbitrary (Tuple a b)
+instance coarbTuple :: (Coarbitrary a, Coarbitrary b) => Coarbitrary (Tuple a b)
 ```
 
 
@@ -182,7 +182,7 @@ instance arbMaybe :: (Arbitrary a) => Arbitrary (Maybe a)
 #### `coarbMaybe`
 
 ``` purescript
-instance coarbMaybe :: (CoArbitrary a) => CoArbitrary (Maybe a)
+instance coarbMaybe :: (Coarbitrary a) => Coarbitrary (Maybe a)
 ```
 
 
@@ -196,7 +196,7 @@ instance arbEither :: (Arbitrary a, Arbitrary b) => Arbitrary (Either a b)
 #### `coarbEither`
 
 ``` purescript
-instance coarbEither :: (CoArbitrary a, CoArbitrary b) => CoArbitrary (Either a b)
+instance coarbEither :: (Coarbitrary a, Coarbitrary b) => Coarbitrary (Either a b)
 ```
 
 
