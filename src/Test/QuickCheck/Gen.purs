@@ -5,7 +5,6 @@ module Test.QuickCheck.Gen
   , GenState()
   , GenOut()
   , Size()
-  , LCG()
   , repeatable
   , stateful
   , variant
@@ -27,26 +26,24 @@ module Test.QuickCheck.Gen
   , showSample'
   ) where
 
+import Console (CONSOLE(), print)
 import Control.Monad.Eff (Eff())
-import Control.Monad.Eff.Random (Random(), random)
 import Data.Array ((!!), length, range)
 import Data.Foldable (fold)
+import Data.Int (Int(), fromNumber, toNumber)
 import Data.Maybe (fromMaybe)
 import Data.Monoid.Additive (Additive(..), runAdditive)
 import Data.Traversable (sequence)
 import Data.Tuple (Tuple(..), fst, snd)
-import Debug.Trace (Trace(), print)
+import Test.QuickCheck.LCG
 import qualified Math as M
-
--- | A seed for the random number generator
-type LCG = Number
 
 -- | Tests are parameterized by the `Size` of the randomly-generated data,
 -- | the meaning of which depends on the particular generator used.
-type Size = Number
+type Size = Int
 
 -- | The state of the random generator monad
-type GenState = { newSeed :: LCG, size :: Size }
+type GenState = { newSeed :: Seed, size :: Size }
 
 -- | The output of the random generator monad
 type GenOut a = { state :: GenState, value :: a }
@@ -65,7 +62,7 @@ stateful :: forall a. (GenState -> Gen a) -> Gen a
 stateful f = Gen (\s -> runGen (f s) s)
 
 -- | Modify a random generator by setting a new random seed.
-variant :: forall a. LCG -> Gen a -> Gen a
+variant :: forall a. Seed -> Gen a -> Gen a
 variant n g = Gen $ \s -> runGen g s { newSeed = n }
 
 -- | Create a random generator which depends on the size parameter.
@@ -84,15 +81,15 @@ choose a b = (*) (max - min) >>> (+) min <$> uniform where
   max = M.max a b
 
 -- | Create a random generator which chooses an integer from a range.
-chooseInt :: Number -> Number -> Gen Number
-chooseInt a b = M.floor <$> choose (M.ceil a) (M.floor b + 0.999999999)
+chooseInt :: Int -> Int -> Gen Int
+chooseInt a b = fromNumber <$> choose (toNumber a) (toNumber b + 0.999999999)
 
 -- | Create a random generator which selects and executes a random generator from
 -- | a non-empty collection of random generators with uniform probability.
 oneOf :: forall a. Gen a -> [Gen a] -> Gen a
 oneOf x xs = do
-  n <- chooseInt 0 (length xs)
-  if n == 0 then x else fromMaybe x (xs !! (n - 1))
+  n <- chooseInt zero (length xs)
+  if n < one then x else fromMaybe x (xs !! (n - one))
 
 -- | Create a random generator which selects and executes a random generator from
 -- | a non-empty, weighted collection of random generators.
@@ -103,33 +100,33 @@ frequency x xs = let
     pick n d [] = d
     pick n d ((Tuple k x) : xs) = if n <= k then x else pick (n - k) d xs
   in do
-    n <- chooseInt 1 total
+    n <- choose 0 total
     pick n (snd x) xxs
 
 -- | Create a random generator which generates an array of random values.
 arrayOf :: forall a. Gen a -> Gen [a]
 arrayOf g = sized $ \n ->
-  do k <- chooseInt 0 n
+  do k <- chooseInt zero n
      vectorOf k g
 
 -- | Create a random generator which generates a non-empty array of random values.
 arrayOf1 :: forall a. Gen a -> Gen (Tuple a [a])
 arrayOf1 g = sized $ \n ->
-  do k  <- chooseInt 0 n
-     x  <- g
-     xs <- vectorOf (k - 1) g
+  do k <- chooseInt zero n
+     x <- g
+     xs <- vectorOf (k - one) g
      return $ Tuple x xs
 
 -- | Create a random generator which generates a vector of random values of a specified size.
-vectorOf :: forall a. Number -> Gen a -> Gen [a]
-vectorOf k g = sequence $ const g <$> (range 1 k)
+vectorOf :: forall a. Int -> Gen a -> Gen [a]
+vectorOf k g = sequence $ const g <$> range one k
 
 -- | Create a random generator which selects a value from a non-empty collection with
 -- | uniform probability.
 elements :: forall a. a -> [a] -> Gen a
 elements x xs = do
-  n <- chooseInt 0 (length xs)
-  pure if n == 0 then x else fromMaybe x (xs !! (n - 1))
+  n <- chooseInt zero (length xs)
+  pure if n == zero then x else fromMaybe x (xs !! (n - one))
 
 -- | Run a random generator
 runGen :: forall a. Gen a -> GenState -> GenOut a
@@ -141,40 +138,24 @@ evalGen gen st = (runGen gen st).value
 
 -- | Sample a random generator
 sample :: forall r a. Size -> Gen a -> [a]
-sample sz g = evalGen (vectorOf sz g) { newSeed: 0, size: sz }
+sample sz g = evalGen (vectorOf sz g) { newSeed: zero, size: sz }
 
 -- | Print a random sample to the console
-showSample' :: forall r a. (Show a) => Size -> Gen a -> Eff (trace :: Trace | r) Unit
+showSample' :: forall r a. (Show a) => Size -> Gen a -> Eff (console :: CONSOLE | r) Unit
 showSample' n g = print $ sample n g
 
 -- | Print a random sample of 10 values to the console
-showSample :: forall r a. (Show a) => Gen a -> Eff (trace :: Trace | r) Unit
-showSample = showSample' 10
-
--- | A magic constant for the linear congruential generator
-lcgM :: Number
-lcgM = 1103515245
-
--- | A magic constant for the linear congruential generator
-lcgC :: Number
-lcgC = 12345
-
--- | A magic constant for the linear congruential generator
-lcgN :: Number
-lcgN = 1 `shl` 30
-
--- | Step the linear congruential generator
-lcgNext :: Number -> Number
-lcgNext n = (lcgM * n + lcgC) % lcgN
+showSample :: forall r a. (Show a) => Gen a -> Eff (console :: CONSOLE | r) Unit
+showSample = showSample' (fromNumber 10)
 
 -- | A random generator which simply outputs the current seed
-lcgStep :: Gen Number
+lcgStep :: Gen Int
 lcgStep = Gen f where
   f s = { value: s.newSeed, state: s { newSeed = lcgNext s.newSeed } }
 
 -- | A random generator which approximates a uniform random variable on `[0, 1]`
 uniform :: Gen Number
-uniform = (\n -> n / (1 `shl` 30)) <$> lcgStep
+uniform = (\n -> toNumber n / toNumber lcgN) <$> lcgStep
 
 foreign import float32ToInt32
   "function float32ToInt32(n) {\
@@ -183,7 +164,7 @@ foreign import float32ToInt32
   \  var iv = new Int32Array(arr);\
   \  fv[0] = n;\
   \  return iv[0];\
-  \}" :: Number -> Number
+  \}" :: Number -> Int
 
 -- | Perturb a random generator by modifying the current seed
 perturbGen :: forall a. Number -> Gen a -> Gen a

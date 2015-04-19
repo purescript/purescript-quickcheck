@@ -6,6 +6,7 @@ import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
 import Data.String (charCodeAt, fromCharArray, split)
 import Data.Tuple (Tuple(..))
+import Data.Int (Int(), fromNumber, toNumber)
 import Test.QuickCheck.Gen
 
 -- | The `Arbitrary` class represents those types whose values can be
@@ -43,14 +44,20 @@ instance arbNumber :: Arbitrary Number where
 instance coarbNumber :: CoArbitrary Number where
   coarbitrary = perturbGen
 
+instance arbInt :: Arbitrary Int where
+  arbitrary = chooseInt (fromNumber (-1000000)) (fromNumber 1000000)
+
+instance coarbInt :: CoArbitrary Int where
+  coarbitrary = perturbGen <<< toNumber
+
 instance arbString :: Arbitrary String where
   arbitrary = fromCharArray <$> arbitrary
 
 instance coarbString :: CoArbitrary String where
-  coarbitrary s = coarbitrary $ (charCodeAt 0 <$> split "" s)
+  coarbitrary s = coarbitrary $ (charCodeAt zero <$> split "" s)
 
 instance arbChar :: Arbitrary Char where
-  arbitrary = fromCharCode <<< ((*) 65535) <$> uniform
+  arbitrary = fromCharCode <<< fromNumber <<< (* 65535) <$> uniform
 
 instance coarbChar :: CoArbitrary Char where
   coarbitrary c = coarbitrary $ toCharCode c
@@ -63,8 +70,8 @@ instance coarbUnit :: CoArbitrary Unit where
 
 instance arbOrdering :: Arbitrary Ordering where
   arbitrary = do
-    n <- chooseInt 1 3
-    return $ case n of
+    n <- chooseInt (fromNumber 1) (fromNumber 3)
+    return $ case toNumber n of
       1 -> LT
       2 -> EQ
       3 -> GT
@@ -117,4 +124,3 @@ instance arbEither :: (Arbitrary a, Arbitrary b) => Arbitrary (Either a b) where
 instance coarbEither :: (CoArbitrary a, CoArbitrary b) => CoArbitrary (Either a b) where
   coarbitrary (Left a)  = coarbitrary a
   coarbitrary (Right b) = coarbitrary b
-

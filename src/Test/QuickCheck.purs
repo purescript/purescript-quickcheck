@@ -17,58 +17,54 @@
 -- | ```
 module Test.QuickCheck where
 
+import Console (CONSOLE(), log)
+import Control.Monad (replicateM)
 import Control.Monad.Eff (Eff())
-import Control.Monad.Eff.Exception (Exception(), throwException, error)
-import Control.Monad.Eff.Random (Random(), random)
-import Debug.Trace (Trace(), trace)
+import Control.Monad.Eff.Exception (EXCEPTION(), throwException, error)
+import Control.Monad.Eff.Random (RANDOM(), random)
+import Data.Int (Int(), fromNumber, toNumber)
 import Test.QuickCheck.Arbitrary
 import Test.QuickCheck.Gen
+import Test.QuickCheck.LCG
 
 -- | A type synonym which represents the effects used by the `quickCheck` function.
-type QC a = forall eff. Eff (trace :: Trace, random :: Random, err :: Exception | eff) a
+type QC a = forall eff. Eff (console :: CONSOLE, random :: RANDOM, err :: EXCEPTION | eff) a
 
 -- | Test a property.
 -- |
 -- | This function generates a new random seed, runs 100 tests and
 -- | prints the test results to the console.
 quickCheck :: forall prop. (Testable prop) => prop -> QC Unit
-quickCheck prop = quickCheck' 100 prop
+quickCheck prop = quickCheck' (fromNumber 100) prop
 
 -- | A variant of the `quickCheck` function which accepts an extra parameter
 -- | representing the number of tests which should be run.
-quickCheck' :: forall prop. (Testable prop) => Number -> prop -> QC Unit
+quickCheck' :: forall prop. (Testable prop) => Int -> prop -> QC Unit
 quickCheck' n prop = do
-  seed <- random
+  seed <- randomSeed
   let results = quickCheckPure seed n prop
   let successes = countSuccesses results
-  trace $ show successes ++ "/" ++ show n ++ " test(s) passed."
-  throwOnFirstFailure 1 results
+  log $ show (toNumber successes) ++ "/" ++ show (toNumber n) ++ " test(s) passed."
+  throwOnFirstFailure one results
 
   where
 
-  throwOnFirstFailure :: Number -> [Result] -> QC Unit
+  throwOnFirstFailure :: Int -> [Result] -> QC Unit
   throwOnFirstFailure _ [] = return unit
-  throwOnFirstFailure n (Failed msg : _) = throwException $ error $ "Test " ++ show n ++ " failed: \n" ++ msg
-  throwOnFirstFailure n (_ : rest) = throwOnFirstFailure (n + 1) rest
+  throwOnFirstFailure n (Failed msg : _) = throwException $ error $ "Test " ++ show (toNumber n) ++ " failed: \n" ++ msg
+  throwOnFirstFailure n (_ : rest) = throwOnFirstFailure (n + one) rest
 
-  countSuccesses :: [Result] -> Number
-  countSuccesses [] = 0
-  countSuccesses (Success : rest) = 1 + countSuccesses rest
+  countSuccesses :: [Result] -> Int
+  countSuccesses [] = zero
+  countSuccesses (Success : rest) = one + countSuccesses rest
   countSuccesses (_ : rest) = countSuccesses rest
 
 -- | Test a property, returning all test results as an array.
 -- |
 -- | The first argument is the _random seed_ to be passed to the random generator.
 -- | The second argument is the number of tests to run.
-quickCheckPure :: forall prop. (Testable prop) => Number -> Number -> prop -> [Result]
-quickCheckPure s = quickCheckPure' {newSeed: s, size: 10} where
-  quickCheckPure' st n prop = evalGen (go n) st
-    where
-    go n | n <= 0 = return []
-    go n = do
-      result <- test prop
-      rest <- go (n - 1)
-      return $ result : rest
+quickCheckPure :: forall prop. (Testable prop) => Int -> Int -> prop -> [Result]
+quickCheckPure s n prop = evalGen (replicateM n (test prop)) { newSeed: s, size: fromNumber 10 }
 
 -- | The `Testable` class represents _testable properties_.
 -- |
@@ -87,9 +83,7 @@ instance testableBoolean :: Testable Boolean where
   test false = return $ Failed "Test returned false"
 
 instance testableFunction :: (Arbitrary t, Testable prop) => Testable (t -> prop) where
-  test f = do
-    t <- arbitrary
-    test (f t)
+  test f = arbitrary >>= test <<< f
 
 -- | The result of a test: success or failure (with an error message).
 data Result = Success | Failed String
@@ -111,12 +105,8 @@ instance showResult :: Show Result where
 
 -- | Self-documenting equality assertion
 (===) :: forall a b. (Eq a, Show a) => a -> a -> Result
-(===) a b = a == b <?> msg
-  where
-    msg = show a ++ " /= " ++ show b
+(===) a b = a == b <?> show a ++ " /= " ++ show b
 
 -- | Self-documenting inequality assertion
 (/==) :: forall a b. (Eq a, Show a) => a -> a -> Result
-(/==) a b = a /= b <?> msg
-  where
-    msg = show a ++ " == " ++ show b
+(/==) a b = a /= b <?> show a ++ " == " ++ show b
