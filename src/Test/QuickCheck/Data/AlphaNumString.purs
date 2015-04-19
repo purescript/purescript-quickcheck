@@ -10,6 +10,8 @@ import Test.QuickCheck.Arbitrary
 -- | alphanumeric strings.
 newtype AlphaNumString = AlphaNumString String
 
+runAlphaNumString (AlphaNumString s) = s
+
 instance arbAlphaNumString :: Arbitrary AlphaNumString where
   arbitrary = do
     arrNum <- arbitrary

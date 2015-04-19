@@ -41,11 +41,11 @@ instance coarbBoolean :: CoArbitrary Boolean where
 instance arbNumber :: Arbitrary Number where
   arbitrary = uniform
 
-instance arbInt :: Arbitrary Int where
-  arbitrary = chooseInt (fromNumber (-1000000)) (fromNumber 1000000)
-
 instance coarbNumber :: CoArbitrary Number where
   coarbitrary = perturbGen
+
+instance arbInt :: Arbitrary Int where
+  arbitrary = chooseInt (fromNumber (-1000000)) (fromNumber 1000000)
 
 instance coarbInt :: CoArbitrary Int where
   coarbitrary = perturbGen <<< toNumber
@@ -124,4 +124,3 @@ instance arbEither :: (Arbitrary a, Arbitrary b) => Arbitrary (Either a b) where
 instance coarbEither :: (CoArbitrary a, CoArbitrary b) => CoArbitrary (Either a b) where
   coarbitrary (Left a)  = coarbitrary a
   coarbitrary (Right b) = coarbitrary b
-

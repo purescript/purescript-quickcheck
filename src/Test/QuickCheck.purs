@@ -17,17 +17,18 @@
 -- | ```
 module Test.QuickCheck where
 
+import Console (CONSOLE(), log)
 import Control.Monad (replicateM)
 import Control.Monad.Eff (Eff())
-import Control.Monad.Eff.Exception (Exception(), throwException, error)
-import Control.Monad.Eff.Random (Random(), random)
+import Control.Monad.Eff.Exception (EXCEPTION(), throwException, error)
+import Control.Monad.Eff.Random (RANDOM(), random)
 import Data.Int (Int(), fromNumber, toNumber)
-import Debug.Trace (Trace(), trace)
 import Test.QuickCheck.Arbitrary
 import Test.QuickCheck.Gen
+import Test.QuickCheck.LCG
 
 -- | A type synonym which represents the effects used by the `quickCheck` function.
-type QC a = forall eff. Eff (trace :: Trace, random :: Random, err :: Exception | eff) a
+type QC a = forall eff. Eff (console :: CONSOLE, random :: RANDOM, err :: EXCEPTION | eff) a
 
 -- | Test a property.
 -- |
@@ -40,10 +41,10 @@ quickCheck prop = quickCheck' (fromNumber 100) prop
 -- | representing the number of tests which should be run.
 quickCheck' :: forall prop. (Testable prop) => Int -> prop -> QC Unit
 quickCheck' n prop = do
-  seed <- fromNumber <<< (1073741824 *) <$> random
+  seed <- randomSeed
   let results = quickCheckPure seed n prop
   let successes = countSuccesses results
-  trace $ show (toNumber successes) ++ "/" ++ show (toNumber n) ++ " test(s) passed."
+  log $ show (toNumber successes) ++ "/" ++ show (toNumber n) ++ " test(s) passed."
   throwOnFirstFailure one results
 
   where
