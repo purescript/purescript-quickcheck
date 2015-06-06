@@ -1,12 +1,15 @@
 module Test.QuickCheck.Arbitrary where
 
-import Data.Array (map)
-import Data.Char (Char(), toCharCode, fromCharCode)
+import Prelude
+
+import Data.Array ((:))
+import Data.Char (toCharCode, fromCharCode)
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
 import Data.String (charCodeAt, fromCharArray, split)
 import Data.Tuple (Tuple(..))
-import Data.Int (Int(), fromNumber, toNumber)
+import Data.Int (fromNumber, toNumber)
+import Data.Foldable (foldl)
 import Test.QuickCheck.Gen
 
 -- | The `Arbitrary` class represents those types whose values can be
@@ -32,11 +35,11 @@ class Coarbitrary t where
 instance arbBoolean :: Arbitrary Boolean where
   arbitrary = do
     n <- uniform
-    return $ (n * 2) < 1
+    return $ (n * 2.0) < 1.0
 
 instance coarbBoolean :: Coarbitrary Boolean where
-  coarbitrary true = perturbGen 1
-  coarbitrary false = perturbGen 2
+  coarbitrary true = perturbGen 1.0
+  coarbitrary false = perturbGen 2.0
 
 instance arbNumber :: Arbitrary Number where
   arbitrary = uniform
@@ -45,7 +48,7 @@ instance coarbNumber :: Coarbitrary Number where
   coarbitrary = perturbGen
 
 instance arbInt :: Arbitrary Int where
-  arbitrary = chooseInt (fromNumber (-1000000)) (fromNumber 1000000)
+  arbitrary = chooseInt (-1000000) 1000000
 
 instance coarbInt :: Coarbitrary Int where
   coarbitrary = perturbGen <<< toNumber
@@ -57,7 +60,7 @@ instance coarbString :: Coarbitrary String where
   coarbitrary s = coarbitrary $ (charCodeAt zero <$> split "" s)
 
 instance arbChar :: Arbitrary Char where
-  arbitrary = fromCharCode <<< fromNumber <<< (* 65535) <$> uniform
+  arbitrary = fromCharCode <$> chooseInt 0 65536
 
 instance coarbChar :: Coarbitrary Char where
   coarbitrary c = coarbitrary $ toCharCode c
@@ -66,22 +69,17 @@ instance arbUnit :: Arbitrary Unit where
   arbitrary = return unit
 
 instance coarbUnit :: Coarbitrary Unit where
-  coarbitrary _ = perturbGen 1
+  coarbitrary _ = perturbGen 1.0
 
 instance arbOrdering :: Arbitrary Ordering where
-  arbitrary = do
-    n <- chooseInt (fromNumber 1) (fromNumber 3)
-    return $ case toNumber n of
-      1 -> LT
-      2 -> EQ
-      3 -> GT
+  arbitrary = oneOf (pure LT) [pure EQ, pure GT]
 
 instance coarbOrdering :: Coarbitrary Ordering where
-  coarbitrary LT = perturbGen 1
-  coarbitrary EQ = perturbGen 2
-  coarbitrary GT = perturbGen 3
+  coarbitrary LT = perturbGen 1.0
+  coarbitrary EQ = perturbGen 2.0
+  coarbitrary GT = perturbGen 3.0
 
-instance arbArray :: (Arbitrary a) => Arbitrary [a] where
+instance arbArray :: (Arbitrary a) => Arbitrary (Array a) where
   arbitrary = do
     b <- arbitrary
     if b then return [] else do
@@ -89,9 +87,8 @@ instance arbArray :: (Arbitrary a) => Arbitrary [a] where
       as <- arbitrary
       return (a : as)
 
-instance coarbArray :: (Coarbitrary a) => Coarbitrary [a] where
-  coarbitrary [] = id
-  coarbitrary (x : xs) = coarbitrary xs <<< coarbitrary x
+instance coarbArray :: (Coarbitrary a) => Coarbitrary (Array a) where
+  coarbitrary = foldl (\f x -> f <<< coarbitrary x) id
 
 instance arbFunction :: (Coarbitrary a, Arbitrary b) => Arbitrary (a -> b) where
   arbitrary = repeatable (\a -> coarbitrary a arbitrary)
@@ -99,7 +96,7 @@ instance arbFunction :: (Coarbitrary a, Arbitrary b) => Arbitrary (a -> b) where
 instance coarbFunction :: (Arbitrary a, Coarbitrary b) => Coarbitrary (a -> b) where
   coarbitrary f gen = do
     xs <- arbitrary
-    coarbitrary (map f xs) gen
+    coarbitrary (map f (xs :: Array a)) gen
 
 instance arbTuple :: (Arbitrary a, Arbitrary b) => Arbitrary (Tuple a b) where
   arbitrary = Tuple <$> arbitrary <*> arbitrary
@@ -113,7 +110,7 @@ instance arbMaybe :: (Arbitrary a) => Arbitrary (Maybe a) where
     if b then pure Nothing else Just <$> arbitrary
 
 instance coarbMaybe :: (Coarbitrary a) => Coarbitrary (Maybe a) where
-  coarbitrary Nothing = perturbGen 1
+  coarbitrary Nothing = perturbGen 1.0
   coarbitrary (Just a) = coarbitrary a
 
 instance arbEither :: (Arbitrary a, Arbitrary b) => Arbitrary (Either a b) where

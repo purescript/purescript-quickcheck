@@ -17,12 +17,14 @@
 -- | ```
 module Test.QuickCheck where
 
+import Prelude
+
 import Console (CONSOLE(), log)
-import Control.Monad (replicateM)
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Exception (EXCEPTION(), throwException, error)
 import Control.Monad.Eff.Random (RANDOM(), random)
-import Data.Int (Int(), fromNumber, toNumber)
+import Data.Int (fromNumber, toNumber)
+import Data.List (List(..), replicateM)
 import Test.QuickCheck.Arbitrary
 import Test.QuickCheck.Gen
 import Test.QuickCheck.LCG
@@ -35,7 +37,7 @@ type QC a = forall eff. Eff (console :: CONSOLE, random :: RANDOM, err :: EXCEPT
 -- | This function generates a new random seed, runs 100 tests and
 -- | prints the test results to the console.
 quickCheck :: forall prop. (Testable prop) => prop -> QC Unit
-quickCheck prop = quickCheck' (fromNumber 100) prop
+quickCheck prop = quickCheck' 100 prop
 
 -- | A variant of the `quickCheck` function which accepts an extra parameter
 -- | representing the number of tests which should be run.
@@ -49,22 +51,22 @@ quickCheck' n prop = do
 
   where
 
-  throwOnFirstFailure :: Int -> [Result] -> QC Unit
-  throwOnFirstFailure _ [] = return unit
-  throwOnFirstFailure n (Failed msg : _) = throwException $ error $ "Test " ++ show (toNumber n) ++ " failed: \n" ++ msg
-  throwOnFirstFailure n (_ : rest) = throwOnFirstFailure (n + one) rest
+  throwOnFirstFailure :: Int -> List Result -> QC Unit
+  throwOnFirstFailure _ Nil = return unit
+  throwOnFirstFailure n (Cons (Failed msg) _) = throwException $ error $ "Test " ++ show (toNumber n) ++ " failed: \n" ++ msg
+  throwOnFirstFailure n (Cons _ rest) = throwOnFirstFailure (n + one) rest
 
-  countSuccesses :: [Result] -> Int
-  countSuccesses [] = zero
-  countSuccesses (Success : rest) = one + countSuccesses rest
-  countSuccesses (_ : rest) = countSuccesses rest
+  countSuccesses :: List Result -> Int
+  countSuccesses Nil = zero
+  countSuccesses (Cons Success rest) = one + countSuccesses rest
+  countSuccesses (Cons _ rest) = countSuccesses rest
 
 -- | Test a property, returning all test results as an array.
 -- |
 -- | The first argument is the _random seed_ to be passed to the random generator.
 -- | The second argument is the number of tests to run.
-quickCheckPure :: forall prop. (Testable prop) => Int -> Int -> prop -> [Result]
-quickCheckPure s n prop = evalGen (replicateM n (test prop)) { newSeed: s, size: fromNumber 10 }
+quickCheckPure :: forall prop. (Testable prop) => Int -> Int -> prop -> List Result
+quickCheckPure s n prop = evalGen (replicateM n (test prop)) { newSeed: s, size: 10 }
 
 -- | The `Testable` class represents _testable properties_.
 -- |

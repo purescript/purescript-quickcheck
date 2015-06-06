@@ -26,15 +26,18 @@ module Test.QuickCheck.Gen
   , showSample'
   ) where
 
+import Prelude
+
 import Console (CONSOLE(), print)
 import Control.Monad.Eff (Eff())
 import Data.Array ((!!), length, range)
 import Data.Foldable (fold)
-import Data.Int (Int(), fromNumber, toNumber)
+import Data.Int (fromNumber, toNumber)
 import Data.Maybe (fromMaybe)
 import Data.Monoid.Additive (Additive(..), runAdditive)
 import Data.Traversable (sequence)
 import Data.Tuple (Tuple(..), fst, snd)
+import Data.List (List(..))
 import Test.QuickCheck.LCG
 import qualified Math as M
 
@@ -86,31 +89,31 @@ chooseInt a b = fromNumber <$> choose (toNumber a) (toNumber b + 0.999999999)
 
 -- | Create a random generator which selects and executes a random generator from
 -- | a non-empty collection of random generators with uniform probability.
-oneOf :: forall a. Gen a -> [Gen a] -> Gen a
+oneOf :: forall a. Gen a -> Array (Gen a) -> Gen a
 oneOf x xs = do
   n <- chooseInt zero (length xs)
   if n < one then x else fromMaybe x (xs !! (n - one))
 
 -- | Create a random generator which selects and executes a random generator from
 -- | a non-empty, weighted collection of random generators.
-frequency :: forall a. Tuple Number (Gen a) -> [Tuple Number (Gen a)] -> Gen a
+frequency :: forall a. Tuple Number (Gen a) -> List (Tuple Number (Gen a)) -> Gen a
 frequency x xs = let
-    xxs   = x : xs
-    total = runAdditive $ fold (((Additive <<< fst) <$> xxs) :: [Additive Number])
-    pick n d [] = d
-    pick n d ((Tuple k x) : xs) = if n <= k then x else pick (n - k) d xs
+    xxs   = Cons x xs
+    total = runAdditive $ fold (map (Additive <<< fst) xxs :: List (Additive Number))
+    pick n d Nil = d
+    pick n d (Cons (Tuple k x) xs) = if n <= k then x else pick (n - k) d xs
   in do
-    n <- choose 0 total
+    n <- choose zero total
     pick n (snd x) xxs
 
 -- | Create a random generator which generates an array of random values.
-arrayOf :: forall a. Gen a -> Gen [a]
+arrayOf :: forall a. Gen a -> Gen (Array a)
 arrayOf g = sized $ \n ->
   do k <- chooseInt zero n
      vectorOf k g
 
 -- | Create a random generator which generates a non-empty array of random values.
-arrayOf1 :: forall a. Gen a -> Gen (Tuple a [a])
+arrayOf1 :: forall a. Gen a -> Gen (Tuple a (Array a))
 arrayOf1 g = sized $ \n ->
   do k <- chooseInt zero n
      x <- g
@@ -118,12 +121,12 @@ arrayOf1 g = sized $ \n ->
      return $ Tuple x xs
 
 -- | Create a random generator which generates a vector of random values of a specified size.
-vectorOf :: forall a. Int -> Gen a -> Gen [a]
+vectorOf :: forall a. Int -> Gen a -> Gen (Array a)
 vectorOf k g = sequence $ const g <$> range one k
 
 -- | Create a random generator which selects a value from a non-empty collection with
 -- | uniform probability.
-elements :: forall a. a -> [a] -> Gen a
+elements :: forall a. a -> Array a -> Gen a
 elements x xs = do
   n <- chooseInt zero (length xs)
   pure if n == zero then x else fromMaybe x (xs !! (n - one))
@@ -137,7 +140,7 @@ evalGen :: forall a. Gen a -> GenState -> a
 evalGen gen st = (runGen gen st).value
 
 -- | Sample a random generator
-sample :: forall r a. Size -> Gen a -> [a]
+sample :: forall r a. Size -> Gen a -> Array a
 sample sz g = evalGen (vectorOf sz g) { newSeed: zero, size: sz }
 
 -- | Print a random sample to the console
@@ -146,7 +149,7 @@ showSample' n g = print $ sample n g
 
 -- | Print a random sample of 10 values to the console
 showSample :: forall r a. (Show a) => Gen a -> Eff (console :: CONSOLE | r) Unit
-showSample = showSample' (fromNumber 10)
+showSample = showSample' 10
 
 -- | A random generator which simply outputs the current seed
 lcgStep :: Gen Int
@@ -157,25 +160,18 @@ lcgStep = Gen f where
 uniform :: Gen Number
 uniform = (\n -> toNumber n / toNumber lcgN) <$> lcgStep
 
-foreign import float32ToInt32
-  "function float32ToInt32(n) {\
-  \  var arr = new ArrayBuffer(4);\
-  \  var fv = new Float32Array(arr);\
-  \  var iv = new Int32Array(arr);\
-  \  fv[0] = n;\
-  \  return iv[0];\
-  \}" :: Number -> Int
+foreign import float32ToInt32 :: Number -> Int
 
 -- | Perturb a random generator by modifying the current seed
 perturbGen :: forall a. Number -> Gen a -> Gen a
 perturbGen n (Gen f) = Gen $ \s -> f (s { newSeed = lcgNext (float32ToInt32 n) + s.newSeed })
 
 instance functorGen :: Functor Gen where
-  (<$>) f (Gen g) = Gen $ \s -> case g s of
+  map f (Gen g) = Gen $ \s -> case g s of
     { value = value, state = state } -> { value: f value, state: state }
 
 instance applyGen :: Apply Gen where
-  (<*>) (Gen f) (Gen x) = Gen $ \s ->
+  apply (Gen f) (Gen x) = Gen $ \s ->
     case f s of
       { value = f', state = s' } -> case x s' of
         { value = x', state = s'' } -> { value: f' x', state: s'' }
@@ -184,7 +180,7 @@ instance applicativeGen :: Applicative Gen where
   pure a = Gen (\s -> { value: a, state: s })
 
 instance bindGen :: Bind Gen where
-  (>>=) (Gen f) g = Gen $ \s -> case f s of
+  bind (Gen f) g = Gen $ \s -> case f s of
     { value = value, state = state } -> runGen (g value) state
 
 instance monadGen :: Monad Gen

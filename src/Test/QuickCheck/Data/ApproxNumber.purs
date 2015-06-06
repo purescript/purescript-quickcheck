@@ -1,5 +1,7 @@
 module Test.QuickCheck.Data.ApproxNumber where
 
+import Prelude
+
 import Test.QuickCheck.Arbitrary
 
 -- | A newtype for `Number` whose `Eq` instance uses an epsilon value to allow
@@ -19,24 +21,23 @@ instance coarbitraryApproxNumber :: Coarbitrary ApproxNumber where
   coarbitrary (ApproxNumber n) = coarbitrary n
 
 instance eqApproxNumber :: Eq ApproxNumber where
-  (==) (ApproxNumber x) (ApproxNumber y) = x =~= y
-  (/=) (ApproxNumber x) (ApproxNumber y) = not (x =~= y)
+  eq (ApproxNumber x) (ApproxNumber y) = x =~= y
 
 instance ordApproxNumber :: Ord ApproxNumber where
   compare (ApproxNumber x) (ApproxNumber y) = compare x y
 
 instance semiringApproxNumber :: Semiring ApproxNumber where
-  (+) (ApproxNumber x) (ApproxNumber y) = ApproxNumber (x + y)
+  add (ApproxNumber x) (ApproxNumber y) = ApproxNumber (x + y)
   zero = ApproxNumber zero
-  (*) (ApproxNumber x) (ApproxNumber y) = ApproxNumber (x * y)
+  mul (ApproxNumber x) (ApproxNumber y) = ApproxNumber (x * y)
   one = ApproxNumber one
 
 instance moduloSemiringApproxNumber :: ModuloSemiring ApproxNumber where
-  (/) (ApproxNumber x) (ApproxNumber y) = ApproxNumber (x / y)
+  div (ApproxNumber x) (ApproxNumber y) = ApproxNumber (x / y)
   mod (ApproxNumber x) (ApproxNumber y) = ApproxNumber (x `mod` y)
 
 instance ringApproxNumber :: Ring ApproxNumber where
-  (-) (ApproxNumber x) (ApproxNumber y) = ApproxNumber (x - y)
+  sub (ApproxNumber x) (ApproxNumber y) = ApproxNumber (x - y)
 
 instance divisionRingApproxNumber :: DivisionRing ApproxNumber
 instance numApproxNumber :: Num ApproxNumber

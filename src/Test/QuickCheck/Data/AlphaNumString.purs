@@ -1,26 +1,29 @@
 module Test.QuickCheck.Data.AlphaNumString where
 
+import Prelude
+
 import Data.Int (fromNumber, toNumber)
-import Data.String (fromCharArray, length)
+import Data.String (fromCharArray, toCharArray, length)
 import Data.String.Unsafe (charAt)
 import Math (round)
+import Test.QuickCheck.Gen
 import Test.QuickCheck.Arbitrary
 
 -- | A newtype for `String` whose `Arbitrary` instance generated random
 -- | alphanumeric strings.
 newtype AlphaNumString = AlphaNumString String
 
+runAlphaNumString :: AlphaNumString -> String
 runAlphaNumString (AlphaNumString s) = s
 
 instance arbAlphaNumString :: Arbitrary AlphaNumString where
-  arbitrary = do
-    arrNum <- arbitrary
-    return $ AlphaNumString <<< fromCharArray $ lookup <$> arrNum
+  arbitrary = AlphaNumString <<< fromCharArray <$> arrayOf anyChar
     where
-    chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-    lookup x = let index = fromNumber $ x * (toNumber (length chars) - 1)
-               in charAt index chars
-
+    rest :: Array Char
+    rest = toCharArray "bcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    
+    anyChar :: Gen Char
+    anyChar = oneOf (pure 'a') (map pure rest)
 
 instance coarbAlphaNumString :: Coarbitrary AlphaNumString where
   coarbitrary (AlphaNumString s) = coarbitrary s

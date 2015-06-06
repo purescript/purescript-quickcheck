@@ -7,9 +7,11 @@ module Test.QuickCheck.LCG
   , randomSeed
   ) where
 
+import Prelude
+
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Random (RANDOM(), random)
-import Data.Int (Int(), fromNumber, toNumber)
+import Data.Int (fromNumber, toNumber)
 import Data.Int.Bits (shl)
 
 type Seed = Int
@@ -19,15 +21,15 @@ lcgM :: Int
 lcgM = fromNumber lcgM'
 
 lcgM' :: Number
-lcgM' = 1103515245
+lcgM' = 1103515245.0
 
 -- | A magic constant for the linear congruential generator
 lcgC :: Int
-lcgC = fromNumber 12345
+lcgC = 12345
 
 -- | A magic constant for the linear congruential generator
 lcgN :: Int
-lcgN = one `shl` fromNumber 30
+lcgN = one `shl` 30
 
 -- | Step the linear congruential generator
 lcgNext :: Int -> Int
