@@ -5,6 +5,10 @@
     "John A. De Goes <john@degoes.net> (http://degoes.net)",
     "Phil Freeman <freeman.phil@gmail.com>"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/purescript/purescript-quickcheck.git"
+  },
   "ignore": [
     "**/.*",
     "bower_components",
@@ -17,11 +21,14 @@
     "package.json"
   ],
   "dependencies": {
-    "purescript-random": "~0.2.0",
-    "purescript-exceptions": "~0.3.0",
-    "purescript-strings": "~0.5.0",
-    "purescript-foldable-traversable": "~0.4.0",
-    "purescript-console": "~0.1.0",
-    "purescript-math": "~0.1.1"
+    "purescript-random": "^0.2.0",
+    "purescript-exceptions": "^0.3.0",
+    "purescript-strings": "^0.5.0",
+    "purescript-arrays": "^0.4.0",
+    "purescript-lists": "^0.7.0",
+    "purescript-either": "^0.2.0",
+    "purescript-foldable-traversable": "^0.4.0",
+    "purescript-console": "^0.1.0",
+    "purescript-math": "^0.2.0"
   }
 }

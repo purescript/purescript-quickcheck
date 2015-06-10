@@ -1,7 +1,4 @@
-# Module Documentation
-
 ## Module Test.QuickCheck
-
 
 This module is a partial port of the Haskell QuickCheck library.
 
@@ -24,7 +21,7 @@ main = quickCheck \n -> n + 1 > n
 #### `QC`
 
 ``` purescript
-type QC a = forall eff. Eff (err :: EXCEPTION, random :: RANDOM, console :: CONSOLE | eff) a
+type QC a = forall eff. Eff (console :: CONSOLE, random :: RANDOM, err :: EXCEPTION | eff) a
 ```
 
 A type synonym which represents the effects used by the `quickCheck` function.
@@ -52,7 +49,7 @@ representing the number of tests which should be run.
 #### `quickCheckPure`
 
 ``` purescript
-quickCheckPure :: forall prop. (Testable prop) => Int -> Int -> prop -> [Result]
+quickCheckPure :: forall prop. (Testable prop) => Int -> Int -> prop -> List Result
 ```
 
 Test a property, returning all test results as an array.
@@ -74,43 +71,28 @@ returning a `Boolean` or `Result`.
 
 Testable properties can be passed to the `quickCheck` function.
 
-#### `testableResult`
-
+##### Instances
 ``` purescript
 instance testableResult :: Testable Result
-```
-
-
-#### `testableBoolean`
-
-``` purescript
 instance testableBoolean :: Testable Boolean
-```
-
-
-#### `testableFunction`
-
-``` purescript
 instance testableFunction :: (Arbitrary t, Testable prop) => Testable (t -> prop)
 ```
-
 
 #### `Result`
 
 ``` purescript
 data Result
-  = Success 
+  = Success
   | Failed String
 ```
 
 The result of a test: success or failure (with an error message).
 
-#### `showResult`
-
+##### Instances
 ``` purescript
+instance testableResult :: Testable Result
 instance showResult :: Show Result
 ```
-
 
 #### `(<?>)`
 
@@ -141,6 +123,5 @@ Self-documenting equality assertion
 ```
 
 Self-documenting inequality assertion
-
 
 

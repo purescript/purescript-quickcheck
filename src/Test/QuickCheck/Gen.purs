@@ -28,8 +28,8 @@ module Test.QuickCheck.Gen
 
 import Prelude
 
-import Console (CONSOLE(), print)
 import Control.Monad.Eff (Eff())
+import Control.Monad.Eff.Console (CONSOLE(), print)
 import Data.Array ((!!), length, range)
 import Data.Foldable (fold)
 import Data.Int (fromNumber, toNumber)
@@ -85,7 +85,12 @@ choose a b = (*) (max - min) >>> (+) min <$> uniform where
 
 -- | Create a random generator which chooses an integer from a range.
 chooseInt :: Int -> Int -> Gen Int
-chooseInt a b = fromNumber <$> choose (toNumber a) (toNumber b + 0.999999999)
+chooseInt a b = clamp <$> lcgStep
+  where
+  clamp :: Int -> Int
+  clamp x = case x `mod` (b - a) of
+              r | r >= 0 -> a + r
+                | otherwise -> b + r
 
 -- | Create a random generator which selects and executes a random generator from
 -- | a non-empty collection of random generators with uniform probability.

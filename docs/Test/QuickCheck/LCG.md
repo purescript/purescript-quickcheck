@@ -1,5 +1,3 @@
-# Module Documentation
-
 ## Module Test.QuickCheck.LCG
 
 #### `Seed`
@@ -7,7 +5,6 @@
 ``` purescript
 type Seed = Int
 ```
-
 
 #### `lcgM`
 
@@ -46,7 +43,5 @@ Step the linear congruential generator
 ``` purescript
 randomSeed :: forall e. Eff (random :: RANDOM | e) Seed
 ```
-
-
 
 

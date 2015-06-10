@@ -1,5 +1,3 @@
-# Module Documentation
-
 ## Module Test.QuickCheck.Data.ApproxNumber
 
 #### `ApproxNumber`
@@ -12,74 +10,23 @@ newtype ApproxNumber
 A newtype for `Number` whose `Eq` instance uses an epsilon value to allow
 for precision erros when comparing.
 
+##### Instances
+``` purescript
+instance arbitraryApproxNumber :: Arbitrary ApproxNumber
+instance coarbitraryApproxNumber :: Coarbitrary ApproxNumber
+instance eqApproxNumber :: Eq ApproxNumber
+instance ordApproxNumber :: Ord ApproxNumber
+instance semiringApproxNumber :: Semiring ApproxNumber
+instance moduloSemiringApproxNumber :: ModuloSemiring ApproxNumber
+instance ringApproxNumber :: Ring ApproxNumber
+instance divisionRingApproxNumber :: DivisionRing ApproxNumber
+instance numApproxNumber :: Num ApproxNumber
+```
+
 #### `(=~=)`
 
 ``` purescript
 (=~=) :: Number -> Number -> Boolean
 ```
-
-#### `arbitraryApproxNumber`
-
-``` purescript
-instance arbitraryApproxNumber :: Arbitrary ApproxNumber
-```
-
-
-#### `coarbitraryApproxNumber`
-
-``` purescript
-instance coarbitraryApproxNumber :: Coarbitrary ApproxNumber
-```
-
-
-#### `eqApproxNumber`
-
-``` purescript
-instance eqApproxNumber :: Eq ApproxNumber
-```
-
-
-#### `ordApproxNumber`
-
-``` purescript
-instance ordApproxNumber :: Ord ApproxNumber
-```
-
-
-#### `semiringApproxNumber`
-
-``` purescript
-instance semiringApproxNumber :: Semiring ApproxNumber
-```
-
-
-#### `moduloSemiringApproxNumber`
-
-``` purescript
-instance moduloSemiringApproxNumber :: ModuloSemiring ApproxNumber
-```
-
-
-#### `ringApproxNumber`
-
-``` purescript
-instance ringApproxNumber :: Ring ApproxNumber
-```
-
-
-#### `divisionRingApproxNumber`
-
-``` purescript
-instance divisionRingApproxNumber :: DivisionRing ApproxNumber
-```
-
-
-#### `numApproxNumber`
-
-``` purescript
-instance numApproxNumber :: Num ApproxNumber
-```
-
-
 
 

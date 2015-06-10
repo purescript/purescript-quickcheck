@@ -1,5 +1,3 @@
-# Module Documentation
-
 ## Module Test.QuickCheck.Data.AlphaNumString
 
 #### `AlphaNumString`
@@ -12,19 +10,16 @@ newtype AlphaNumString
 A newtype for `String` whose `Arbitrary` instance generated random
 alphanumeric strings.
 
-#### `arbAlphaNumString`
-
+##### Instances
 ``` purescript
 instance arbAlphaNumString :: Arbitrary AlphaNumString
-```
-
-
-#### `coarbAlphaNumString`
-
-``` purescript
 instance coarbAlphaNumString :: Coarbitrary AlphaNumString
 ```
 
+#### `runAlphaNumString`
 
+``` purescript
+runAlphaNumString :: AlphaNumString -> String
+```
 
 

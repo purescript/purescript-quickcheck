@@ -19,8 +19,8 @@ module Test.QuickCheck where
 
 import Prelude
 
-import Console (CONSOLE(), log)
 import Control.Monad.Eff (Eff())
+import Control.Monad.Eff.Console (CONSOLE(), log)
 import Control.Monad.Eff.Exception (EXCEPTION(), throwException, error)
 import Control.Monad.Eff.Random (RANDOM(), random)
 import Data.Int (fromNumber, toNumber)

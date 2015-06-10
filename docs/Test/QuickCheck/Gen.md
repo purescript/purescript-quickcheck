@@ -1,7 +1,4 @@
-# Module Documentation
-
 ## Module Test.QuickCheck.Gen
-
 
 This module defines the random generator monad used by the `Test.QuickCheck`
 module, as well as helper functions for constructing random generators.
@@ -18,7 +15,7 @@ the meaning of which depends on the particular generator used.
 #### `GenState`
 
 ``` purescript
-type GenState = { size :: Size, newSeed :: Seed }
+type GenState = { newSeed :: Seed, size :: Size }
 ```
 
 The state of the random generator monad
@@ -26,7 +23,7 @@ The state of the random generator monad
 #### `GenOut`
 
 ``` purescript
-type GenOut a = { value :: a, state :: GenState }
+type GenOut a = { state :: GenState, value :: a }
 ```
 
 The output of the random generator monad
@@ -40,6 +37,15 @@ data Gen a
 The random generator monad
 
 `Gen` is a state monad which encodes a linear congruential generator.
+
+##### Instances
+``` purescript
+instance functorGen :: Functor Gen
+instance applyGen :: Apply Gen
+instance applicativeGen :: Applicative Gen
+instance bindGen :: Bind Gen
+instance monadGen :: Monad Gen
+```
 
 #### `repeatable`
 
@@ -101,7 +107,7 @@ Create a random generator which chooses an integer from a range.
 #### `oneOf`
 
 ``` purescript
-oneOf :: forall a. Gen a -> [Gen a] -> Gen a
+oneOf :: forall a. Gen a -> Array (Gen a) -> Gen a
 ```
 
 Create a random generator which selects and executes a random generator from
@@ -110,7 +116,7 @@ a non-empty collection of random generators with uniform probability.
 #### `frequency`
 
 ``` purescript
-frequency :: forall a. Tuple Number (Gen a) -> [Tuple Number (Gen a)] -> Gen a
+frequency :: forall a. Tuple Number (Gen a) -> List (Tuple Number (Gen a)) -> Gen a
 ```
 
 Create a random generator which selects and executes a random generator from
@@ -119,7 +125,7 @@ a non-empty, weighted collection of random generators.
 #### `arrayOf`
 
 ``` purescript
-arrayOf :: forall a. Gen a -> Gen [a]
+arrayOf :: forall a. Gen a -> Gen (Array a)
 ```
 
 Create a random generator which generates an array of random values.
@@ -127,7 +133,7 @@ Create a random generator which generates an array of random values.
 #### `arrayOf1`
 
 ``` purescript
-arrayOf1 :: forall a. Gen a -> Gen (Tuple a [a])
+arrayOf1 :: forall a. Gen a -> Gen (Tuple a (Array a))
 ```
 
 Create a random generator which generates a non-empty array of random values.
@@ -135,7 +141,7 @@ Create a random generator which generates a non-empty array of random values.
 #### `vectorOf`
 
 ``` purescript
-vectorOf :: forall a. Int -> Gen a -> Gen [a]
+vectorOf :: forall a. Int -> Gen a -> Gen (Array a)
 ```
 
 Create a random generator which generates a vector of random values of a specified size.
@@ -143,7 +149,7 @@ Create a random generator which generates a vector of random values of a specifi
 #### `elements`
 
 ``` purescript
-elements :: forall a. a -> [a] -> Gen a
+elements :: forall a. a -> Array a -> Gen a
 ```
 
 Create a random generator which selects a value from a non-empty collection with
@@ -196,41 +202,5 @@ perturbGen :: forall a. Number -> Gen a -> Gen a
 ```
 
 Perturb a random generator by modifying the current seed
-
-#### `functorGen`
-
-``` purescript
-instance functorGen :: Functor Gen
-```
-
-
-#### `applyGen`
-
-``` purescript
-instance applyGen :: Apply Gen
-```
-
-
-#### `applicativeGen`
-
-``` purescript
-instance applicativeGen :: Applicative Gen
-```
-
-
-#### `bindGen`
-
-``` purescript
-instance bindGen :: Bind Gen
-```
-
-
-#### `monadGen`
-
-``` purescript
-instance monadGen :: Monad Gen
-```
-
-
 
 
