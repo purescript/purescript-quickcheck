@@ -46,14 +46,14 @@ quickCheck' n prop = do
   seed <- randomSeed
   let results = quickCheckPure seed n prop
   let successes = countSuccesses results
-  log $ show (toNumber successes) ++ "/" ++ show (toNumber n) ++ " test(s) passed."
+  log $ show successes ++ "/" ++ show n ++ " test(s) passed."
   throwOnFirstFailure one results
 
   where
 
   throwOnFirstFailure :: Int -> List Result -> QC Unit
   throwOnFirstFailure _ Nil = return unit
-  throwOnFirstFailure n (Cons (Failed msg) _) = throwException $ error $ "Test " ++ show (toNumber n) ++ " failed: \n" ++ msg
+  throwOnFirstFailure n (Cons (Failed msg) _) = throwException $ error $ "Test " ++ show n ++ " failed: \n" ++ msg
   throwOnFirstFailure n (Cons _ rest) = throwOnFirstFailure (n + one) rest
 
   countSuccesses :: List Result -> Int

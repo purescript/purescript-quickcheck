@@ -9,10 +9,12 @@ module Test.QuickCheck.LCG
 
 import Prelude
 
+import Math ((%))
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Random (RANDOM(), randomInt)
 import Data.Int (fromNumber, toNumber)
 import Data.Int.Bits (shl)
+import qualified Data.Maybe.Unsafe as U
 
 type Seed = Int
 
@@ -30,7 +32,8 @@ lcgN = one `shl` 30
 
 -- | Step the linear congruential generator
 lcgNext :: Int -> Int
-lcgNext n = (lcgM * n + lcgC) `mod` lcgN
+lcgNext n = U.fromJust $ fromNumber $ (toNumber lcgM * toNumber n + toNumber lcgC) % toNumber lcgN
 
+-- | Create a random seed
 randomSeed :: forall e. Eff (random :: RANDOM | e) Seed
 randomSeed = randomInt 0 lcgM

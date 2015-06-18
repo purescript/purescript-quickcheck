@@ -29,4 +29,6 @@ instance numApproxNumber :: Num ApproxNumber
 (=~=) :: Number -> Number -> Boolean
 ```
 
+_left-associative / precedence -1_
+
 

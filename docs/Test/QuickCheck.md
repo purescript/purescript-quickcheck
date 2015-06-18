@@ -100,6 +100,8 @@ instance showResult :: Show Result
 (<?>) :: Boolean -> String -> Result
 ```
 
+_left-associative / precedence -1_
+
 This operator attaches an error message to a failed test.
 
 For example:
@@ -114,6 +116,8 @@ test x = myProperty x <?> ("myProperty did not hold for " <> show x)
 (===) :: forall a b. (Eq a, Show a) => a -> a -> Result
 ```
 
+_left-associative / precedence -1_
+
 Self-documenting equality assertion
 
 #### `(/==)`
@@ -121,6 +125,8 @@ Self-documenting equality assertion
 ``` purescript
 (/==) :: forall a b. (Eq a, Show a) => a -> a -> Result
 ```
+
+_left-associative / precedence -1_
 
 Self-documenting inequality assertion
 

@@ -44,4 +44,6 @@ Step the linear congruential generator
 randomSeed :: forall e. Eff (random :: RANDOM | e) Seed
 ```
 
+Create a random seed
+
 
