@@ -30,18 +30,18 @@ import Test.QuickCheck.Gen
 import Test.QuickCheck.LCG
 
 -- | A type synonym which represents the effects used by the `quickCheck` function.
-type QC a = forall eff. Eff (console :: CONSOLE, random :: RANDOM, err :: EXCEPTION | eff) a
+type QC eff a = Eff (console :: CONSOLE, random :: RANDOM, err :: EXCEPTION | eff) a
 
 -- | Test a property.
 -- |
 -- | This function generates a new random seed, runs 100 tests and
 -- | prints the test results to the console.
-quickCheck :: forall prop. (Testable prop) => prop -> QC Unit
+quickCheck :: forall eff prop. (Testable prop) => prop -> QC eff Unit
 quickCheck prop = quickCheck' 100 prop
 
 -- | A variant of the `quickCheck` function which accepts an extra parameter
 -- | representing the number of tests which should be run.
-quickCheck' :: forall prop. (Testable prop) => Int -> prop -> QC Unit
+quickCheck' :: forall eff prop. (Testable prop) => Int -> prop -> QC eff Unit
 quickCheck' n prop = do
   seed <- randomSeed
   let results = quickCheckPure seed n prop
@@ -51,7 +51,7 @@ quickCheck' n prop = do
 
   where
 
-  throwOnFirstFailure :: Int -> List Result -> QC Unit
+  throwOnFirstFailure :: Int -> List Result -> QC eff Unit
   throwOnFirstFailure _ Nil = return unit
   throwOnFirstFailure n (Cons (Failed msg) _) = throwException $ error $ "Test " ++ show n ++ " failed: \n" ++ msg
   throwOnFirstFailure n (Cons _ rest) = throwOnFirstFailure (n + one) rest
