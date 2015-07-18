@@ -40,6 +40,7 @@ import Data.Traversable (sequence)
 import Data.Tuple (Tuple(..), fst, snd)
 import Data.List (List(..))
 import Test.QuickCheck.LCG
+import Control.Monad.Trampoline
 import qualified Math as M
 
 -- | Tests are parameterized by the `Size` of the randomly-generated data,
@@ -55,19 +56,22 @@ type GenOut a = { state :: GenState, value :: a }
 -- | The random generator monad
 -- |
 -- | `Gen` is a state monad which encodes a linear congruential generator.
-data Gen a = Gen (GenState -> GenOut a)
+data Gen a = Gen (GenState -> Trampoline (GenOut a))
+
+unGen :: forall a. Gen a -> GenState -> Trampoline (GenOut a)
+unGen (Gen f) = f
 
 -- | Create a random generator for a function type.
 repeatable :: forall a b. (a -> Gen b) -> Gen (a -> b)
-repeatable f = Gen $ \s -> { value: \a -> (runGen (f a) s).value, state: s }
+repeatable f = Gen $ \s -> done { value: \a -> (runGen (f a) s).value, state: s }
 
 -- | Create a random generator which uses the generator state explicitly.
 stateful :: forall a. (GenState -> Gen a) -> Gen a
-stateful f = Gen (\s -> runGen (f s) s)
+stateful f = Gen (\s -> unGen (f s) s)
 
 -- | Modify a random generator by setting a new random seed.
 variant :: forall a. Seed -> Gen a -> Gen a
-variant n g = Gen $ \s -> runGen g s { newSeed = n }
+variant n g = Gen $ \s -> unGen g s { newSeed = n }
 
 -- | Create a random generator which depends on the size parameter.
 sized :: forall a. (Size -> Gen a) -> Gen a
@@ -75,7 +79,7 @@ sized f = stateful (\s -> f s.size)
 
 -- | Modify a random generator by setting a new size parameter.
 resize :: forall a. Size -> Gen a -> Gen a
-resize sz g = Gen $ \s -> runGen g s { size = sz }
+resize sz g = Gen $ \s -> unGen g s { size = sz }
 
 -- | Create a random generator which samples a range of `Number`s i
 -- | with uniform probability.
@@ -142,7 +146,7 @@ elements x xs = do
 
 -- | Run a random generator
 runGen :: forall a. Gen a -> GenState -> GenOut a
-runGen (Gen f) = f
+runGen gen = runTrampoline <<< unGen gen
 
 -- | Run a random generator, keeping only the randomly-generated result
 evalGen :: forall a. Gen a -> GenState -> a
@@ -165,7 +169,7 @@ randomSample = randomSample' 10
 -- | A random generator which simply outputs the current seed
 lcgStep :: Gen Int
 lcgStep = Gen f where
-  f s = { value: runSeed s.newSeed, state: s { newSeed = lcgNext s.newSeed } }
+  f s = done { value: s.newSeed, state: s { newSeed = lcgNext s.newSeed } }
 
 -- | A random generator which approximates a uniform random variable on `[0, 1]`
 uniform :: Gen Number
@@ -180,20 +184,19 @@ perturbGen n (Gen f) = Gen $ \s -> f (s { newSeed = perturb s.newSeed })
   perturb oldSeed = mkSeed (runSeed (lcgNext (mkSeed (float32ToInt32 n))) + runSeed oldSeed)
 
 instance functorGen :: Functor Gen where
-  map f (Gen g) = Gen $ \s -> case g s of
-    { value = value, state = state } -> { value: f value, state: state }
+  map f (Gen g) = Gen $ \s -> do
+    { value = value, state = state } <- g s
+    return { value: f value, state: state }
 
 instance applyGen :: Apply Gen where
-  apply (Gen f) (Gen x) = Gen $ \s ->
-    case f s of
-      { value = f', state = s' } -> case x s' of
-        { value = x', state = s'' } -> { value: f' x', state: s'' }
+  apply = ap
 
 instance applicativeGen :: Applicative Gen where
-  pure a = Gen (\s -> { value: a, state: s })
+  pure a = Gen (\s -> done { value: a, state: s })
 
 instance bindGen :: Bind Gen where
-  bind (Gen f) g = Gen $ \s -> case f s of
-    { value = value, state = state } -> runGen (g value) state
+  bind (Gen f) g = Gen $ \s -> do
+    { value = value, state = state } <- f s
+    suspend $ unGen (g value) state
 
 instance monadGen :: Monad Gen
