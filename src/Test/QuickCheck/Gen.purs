@@ -31,6 +31,7 @@ import Prelude
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Console (CONSOLE(), print)
 import Data.Array ((!!), length, range)
+import Data.Either (Either(..))
 import Data.Foldable (fold)
 import Data.Int (fromNumber, toNumber)
 import Data.Maybe (fromMaybe)
@@ -39,6 +40,7 @@ import Data.Traversable (sequence)
 import Data.Tuple (Tuple(..), fst, snd)
 import Data.List (List(..))
 import Test.QuickCheck.LCG
+import Control.Monad.Rec.Class
 import qualified Math as M
 
 -- | Tests are parameterized by the `Size` of the randomly-generated data,
@@ -51,22 +53,28 @@ type GenState = { newSeed :: Seed, size :: Size }
 -- | The output of the random generator monad
 type GenOut a = { state :: GenState, value :: a }
 
+-- | An internal type, used for stack-safe tail recursion.
+type Accum a = { state :: GenState, gen :: Gen a }
+
 -- | The random generator monad
 -- |
 -- | `Gen` is a state monad which encodes a linear congruential generator.
-data Gen a = Gen (GenState -> GenOut a)
+data Gen a = Gen (GenState -> Either (Accum a) (GenOut a))
+
+unGen :: forall a. Gen a -> GenState -> Either (Accum a) (GenOut a)
+unGen (Gen f) = f
 
 -- | Create a random generator for a function type.
 repeatable :: forall a b. (a -> Gen b) -> Gen (a -> b)
-repeatable f = Gen $ \s -> { value: \a -> (runGen (f a) s).value, state: s }
+repeatable f = Gen $ \s -> Right { value: \a -> (runGen (f a) s).value, state: s }
 
 -- | Create a random generator which uses the generator state explicitly.
 stateful :: forall a. (GenState -> Gen a) -> Gen a
-stateful f = Gen (\s -> runGen (f s) s)
+stateful f = Gen (\s -> unGen (f s) s)
 
 -- | Modify a random generator by setting a new random seed.
 variant :: forall a. Seed -> Gen a -> Gen a
-variant n g = Gen $ \s -> runGen g s { newSeed = n }
+variant n g = Gen $ \s -> unGen g s { newSeed = n }
 
 -- | Create a random generator which depends on the size parameter.
 sized :: forall a. (Size -> Gen a) -> Gen a
@@ -74,7 +82,7 @@ sized f = stateful (\s -> f s.size)
 
 -- | Modify a random generator by setting a new size parameter.
 resize :: forall a. Size -> Gen a -> Gen a
-resize sz g = Gen $ \s -> runGen g s { size = sz }
+resize sz g = Gen $ \s -> unGen g s { size = sz }
 
 -- | Create a random generator which samples a range of `Number`s i
 -- | with uniform probability.
@@ -138,7 +146,9 @@ elements x xs = do
 
 -- | Run a random generator
 runGen :: forall a. Gen a -> GenState -> GenOut a
-runGen (Gen f) = f
+runGen gen state = tailRec go { gen: gen, state: state }
+  where
+  go accum = unGen accum.gen accum.state
 
 -- | Run a random generator, keeping only the randomly-generated result
 evalGen :: forall a. Gen a -> GenState -> a
@@ -159,7 +169,7 @@ showSample = showSample' 10
 -- | A random generator which simply outputs the current seed
 lcgStep :: Gen Int
 lcgStep = Gen f where
-  f s = { value: s.newSeed, state: s { newSeed = lcgNext s.newSeed } }
+  f s = Right { value: s.newSeed, state: s { newSeed = lcgNext s.newSeed } }
 
 -- | A random generator which approximates a uniform random variable on `[0, 1]`
 uniform :: Gen Number
@@ -172,20 +182,18 @@ perturbGen :: forall a. Number -> Gen a -> Gen a
 perturbGen n (Gen f) = Gen $ \s -> f (s { newSeed = lcgNext (float32ToInt32 n) + s.newSeed })
 
 instance functorGen :: Functor Gen where
-  map f (Gen g) = Gen $ \s -> case g s of
-    { value = value, state = state } -> { value: f value, state: state }
+  map f gen = gen >>= (return <<< f)
 
 instance applyGen :: Apply Gen where
-  apply (Gen f) (Gen x) = Gen $ \s ->
-    case f s of
-      { value = f', state = s' } -> case x s' of
-        { value = x', state = s'' } -> { value: f' x', state: s'' }
+  apply = ap
 
 instance applicativeGen :: Applicative Gen where
-  pure a = Gen (\s -> { value: a, state: s })
+  pure a = Gen (\s -> Right { value: a, state: s })
 
 instance bindGen :: Bind Gen where
-  bind (Gen f) g = Gen $ \s -> case f s of
-    { value = value, state = state } -> runGen (g value) state
+  bind (Gen f) g = Gen $ \s ->
+    case f s of
+      Right out  -> Left { state: out.state,   gen: g out.value     }
+      Left accum -> Left { state: accum.state, gen: accum.gen >>= g }
 
 instance monadGen :: Monad Gen
