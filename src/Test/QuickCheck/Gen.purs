@@ -31,6 +31,7 @@ import Prelude
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Console (CONSOLE(), print)
 import Data.Array ((!!), length, range)
+import Data.Either (Either(..))
 import Data.Foldable (fold)
 import Data.Int (fromNumber, toNumber)
 import Data.Maybe (fromMaybe)
@@ -39,7 +40,7 @@ import Data.Traversable (sequence)
 import Data.Tuple (Tuple(..), fst, snd)
 import Data.List (List(..))
 import Test.QuickCheck.LCG
-import Control.Monad.Trampoline
+import Control.Monad.Rec.Class
 import qualified Math as M
 
 -- | Tests are parameterized by the `Size` of the randomly-generated data,
@@ -52,17 +53,20 @@ type GenState = { newSeed :: Seed, size :: Size }
 -- | The output of the random generator monad
 type GenOut a = { state :: GenState, value :: a }
 
+-- | An internal type, used for stack-safe tail recursion.
+type Accum a = { state :: GenState, gen :: Gen a }
+
 -- | The random generator monad
 -- |
 -- | `Gen` is a state monad which encodes a linear congruential generator.
-data Gen a = Gen (GenState -> Trampoline (GenOut a))
+data Gen a = Gen (GenState -> Either (Accum a) (GenOut a))
 
-unGen :: forall a. Gen a -> GenState -> Trampoline (GenOut a)
+unGen :: forall a. Gen a -> GenState -> Either (Accum a) (GenOut a)
 unGen (Gen f) = f
 
 -- | Create a random generator for a function type.
 repeatable :: forall a b. (a -> Gen b) -> Gen (a -> b)
-repeatable f = Gen $ \s -> done { value: \a -> (runGen (f a) s).value, state: s }
+repeatable f = Gen $ \s -> Right { value: \a -> (runGen (f a) s).value, state: s }
 
 -- | Create a random generator which uses the generator state explicitly.
 stateful :: forall a. (GenState -> Gen a) -> Gen a
@@ -142,7 +146,9 @@ elements x xs = do
 
 -- | Run a random generator
 runGen :: forall a. Gen a -> GenState -> GenOut a
-runGen gen = runTrampoline <<< unGen gen
+runGen gen state = tailRec go { gen: gen, state: state }
+  where
+  go accum = unGen accum.gen accum.state
 
 -- | Run a random generator, keeping only the randomly-generated result
 evalGen :: forall a. Gen a -> GenState -> a
@@ -163,7 +169,7 @@ showSample = showSample' 10
 -- | A random generator which simply outputs the current seed
 lcgStep :: Gen Int
 lcgStep = Gen f where
-  f s = done { value: s.newSeed, state: s { newSeed = lcgNext s.newSeed } }
+  f s = Right { value: s.newSeed, state: s { newSeed = lcgNext s.newSeed } }
 
 -- | A random generator which approximates a uniform random variable on `[0, 1]`
 uniform :: Gen Number
@@ -176,19 +182,18 @@ perturbGen :: forall a. Number -> Gen a -> Gen a
 perturbGen n (Gen f) = Gen $ \s -> f (s { newSeed = lcgNext (float32ToInt32 n) + s.newSeed })
 
 instance functorGen :: Functor Gen where
-  map f (Gen g) = Gen $ \s -> do
-    { value = value, state = state } <- g s
-    return { value: f value, state: state }
+  map f gen = gen >>= (return <<< f)
 
 instance applyGen :: Apply Gen where
   apply = ap
 
 instance applicativeGen :: Applicative Gen where
-  pure a = Gen (\s -> done { value: a, state: s })
+  pure a = Gen (\s -> Right { value: a, state: s })
 
 instance bindGen :: Bind Gen where
-  bind (Gen f) g = Gen $ \s -> do
-    { value = value, state = state } <- f s
-    suspend $ unGen (g value) state
+  bind (Gen f) g = Gen $ \s ->
+    case f s of
+      Right out  -> Left { state: out.state,   gen: g out.value     }
+      Left accum -> Left { state: accum.state, gen: accum.gen >>= g }
 
 instance monadGen :: Monad Gen
