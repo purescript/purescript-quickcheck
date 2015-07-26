@@ -83,14 +83,15 @@ choose a b = (*) (max - min) >>> (+) min <$> uniform where
   min = M.min a b
   max = M.max a b
 
--- | Create a random generator which chooses an integer from a range.
+-- | Create a random generator which chooses uniformly distributed
+-- | integers from the closed interval `[a, b]`.
 chooseInt :: Int -> Int -> Gen Int
 chooseInt a b = clamp <$> lcgStep
   where
   clamp :: Int -> Int
-  clamp x = case x `mod` (b - a) of
+  clamp x = case x `mod` (b - a + one) of
               r | r >= 0 -> a + r
-                | otherwise -> b + r
+                | otherwise -> b + r + one
 
 -- | Create a random generator which selects and executes a random generator from
 -- | a non-empty collection of random generators with uniform probability.
