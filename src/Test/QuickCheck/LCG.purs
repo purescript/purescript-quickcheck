@@ -13,9 +13,7 @@ import Math ((%))
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Random (RANDOM(), randomInt)
 import Data.Int (fromNumber, toNumber)
-import Data.Int.Bits (shl, (.|.))
-import Data.Array (replicate)
-import Data.Foldable (product)
+import Data.Int.Bits (shl)
 import qualified Data.Maybe.Unsafe as U
 
 type Seed = Int
@@ -30,7 +28,7 @@ lcgC = 0
 
 -- | The *modulus*: a magic constant for the linear congruential generator
 lcgN :: Int
-lcgN = product (replicate 31 2) - 1
+lcgN = 1 `shl` 31 - 1
 
 -- | Step the linear congruential generator
 lcgNext :: Int -> Int
