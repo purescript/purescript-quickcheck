@@ -21,7 +21,7 @@ main = quickCheck \n -> n + 1 > n
 #### `QC`
 
 ``` purescript
-type QC a = forall eff. Eff (console :: CONSOLE, random :: RANDOM, err :: EXCEPTION | eff) a
+type QC eff a = Eff (console :: CONSOLE, random :: RANDOM, err :: EXCEPTION | eff) a
 ```
 
 A type synonym which represents the effects used by the `quickCheck` function.
@@ -29,7 +29,7 @@ A type synonym which represents the effects used by the `quickCheck` function.
 #### `quickCheck`
 
 ``` purescript
-quickCheck :: forall prop. (Testable prop) => prop -> QC Unit
+quickCheck :: forall eff prop. (Testable prop) => prop -> QC eff Unit
 ```
 
 Test a property.
@@ -40,7 +40,7 @@ prints the test results to the console.
 #### `quickCheck'`
 
 ``` purescript
-quickCheck' :: forall prop. (Testable prop) => Int -> prop -> QC Unit
+quickCheck' :: forall eff prop. (Testable prop) => Int -> prop -> QC eff Unit
 ```
 
 A variant of the `quickCheck` function which accepts an extra parameter

@@ -102,7 +102,8 @@ with uniform probability.
 chooseInt :: Int -> Int -> Gen Int
 ```
 
-Create a random generator which chooses an integer from a range.
+Create a random generator which chooses uniformly distributed
+integers from the closed interval `[a, b]`.
 
 #### `oneOf`
 
