@@ -191,7 +191,7 @@ Sample a random generator, using a randomly generated seed
 #### `randomSample`
 
 ``` purescript
-randomSample :: forall r a. Gen a -> Eff (console :: CONSOLE, random :: RANDOM | r) (Array a)
+randomSample :: forall r a. Gen a -> Eff (random :: RANDOM | r) (Array a)
 ```
 
 Get a random sample of 10 values

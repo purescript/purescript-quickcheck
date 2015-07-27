@@ -30,7 +30,6 @@ module Test.QuickCheck.Gen
 import Prelude
 
 import Control.Monad.Eff (Eff())
-import Control.Monad.Eff.Console (CONSOLE(), print)
 import Control.Monad.Eff.Random (RANDOM())
 import Data.Array ((!!), length, range)
 import Data.Foldable (fold)
@@ -160,7 +159,7 @@ randomSample' n g = do
   return $ sample seed n g
 
 -- | Get a random sample of 10 values
-randomSample :: forall r a. Gen a -> Eff (console :: CONSOLE, random :: RANDOM | r) (Array a)
+randomSample :: forall r a. Gen a -> Eff (random :: RANDOM | r) (Array a)
 randomSample = randomSample' 10
 
 -- | A random generator which simply outputs the current seed
