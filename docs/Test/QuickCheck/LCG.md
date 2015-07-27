@@ -12,7 +12,7 @@ type Seed = Int
 lcgM :: Int
 ```
 
-A magic constant for the linear congruential generator
+The *multiplier*: a magic constant for the linear congruential generator
 
 #### `lcgC`
 
@@ -20,7 +20,7 @@ A magic constant for the linear congruential generator
 lcgC :: Int
 ```
 
-A magic constant for the linear congruential generator
+The *increment*: a magic constant for the linear congruential generator
 
 #### `lcgN`
 
@@ -28,7 +28,7 @@ A magic constant for the linear congruential generator
 lcgN :: Int
 ```
 
-A magic constant for the linear congruential generator
+The *modulus*: a magic constant for the linear congruential generator
 
 #### `lcgNext`
 
