@@ -14,21 +14,23 @@ import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Random (RANDOM(), randomInt)
 import Data.Int (fromNumber, toNumber)
 import Data.Int.Bits (shl)
+import Data.Array (replicate)
+import Data.Foldable (product)
 import qualified Data.Maybe.Unsafe as U
 
 type Seed = Int
 
--- | A magic constant for the linear congruential generator
+-- | The *multiplier*: a magic constant for the linear congruential generator
 lcgM :: Int
-lcgM = 1103515245
+lcgM = 48271
 
--- | A magic constant for the linear congruential generator
+-- | The *increment*: a magic constant for the linear congruential generator
 lcgC :: Int
-lcgC = 12345
+lcgC = 0
 
--- | A magic constant for the linear congruential generator
+-- | The *modulus*: a magic constant for the linear congruential generator
 lcgN :: Int
-lcgN = one `shl` 30
+lcgN = product (replicate 31 2) - 1
 
 -- | Step the linear congruential generator
 lcgNext :: Int -> Int
