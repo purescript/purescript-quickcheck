@@ -127,7 +127,9 @@ arrayOf1 g = sized $ \n ->
 
 -- | Create a random generator which generates a vector of random values of a specified size.
 vectorOf :: forall a. Int -> Gen a -> Gen (Array a)
-vectorOf k g = sequence $ const g <$> range one k
+vectorOf k g
+  | k <= 0    = return []
+  | otherwise = sequence $ const g <$> range one k
 
 -- | Create a random generator which selects a value from a non-empty collection with
 -- | uniform probability.

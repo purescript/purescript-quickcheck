@@ -2,7 +2,6 @@ module Test.QuickCheck.Arbitrary where
 
 import Prelude
 
-import Data.Array ((:))
 import Data.Char (toCharCode, fromCharCode)
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
@@ -80,12 +79,7 @@ instance coarbOrdering :: Coarbitrary Ordering where
   coarbitrary GT = perturbGen 3.0
 
 instance arbArray :: (Arbitrary a) => Arbitrary (Array a) where
-  arbitrary = do
-    b <- arbitrary
-    if b then return [] else do
-      a <- arbitrary
-      as <- arbitrary
-      return (a : as)
+  arbitrary = arrayOf arbitrary
 
 instance coarbArray :: (Coarbitrary a) => Coarbitrary (Array a) where
   coarbitrary = foldl (\f x -> f <<< coarbitrary x) id
