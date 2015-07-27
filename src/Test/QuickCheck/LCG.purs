@@ -13,7 +13,7 @@ import Math ((%))
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Random (RANDOM(), randomInt)
 import Data.Int (fromNumber, toNumber)
-import Data.Int.Bits (shl)
+import Data.Int.Bits (shl, (.|.))
 import Data.Array (replicate)
 import Data.Foldable (product)
 import qualified Data.Maybe.Unsafe as U
@@ -38,4 +38,9 @@ lcgNext n = U.fromJust $ fromNumber $ (toNumber lcgM * toNumber n + toNumber lcg
 
 -- | Create a random seed
 randomSeed :: forall e. Eff (random :: RANDOM | e) Seed
-randomSeed = randomInt 0 lcgM
+randomSeed =
+  -- Because the increment is 0, we must ensure that any seed is coprime to the
+  -- modulus. Luckily, this is easy: the modulus has just one prime factor, 2,
+  -- so this means our seed will be coprime to the modulus iff it is odd.
+  -- We ensure oddness by perfoming a bitwise OR with 1.
+  randomInt 0 lcgM <#> (.|. 1)
