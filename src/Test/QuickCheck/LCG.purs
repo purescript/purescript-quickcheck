@@ -32,8 +32,25 @@ lcgN = 1 `shl` 31 - 1
 
 -- | Step the linear congruential generator
 lcgNext :: Int -> Int
-lcgNext n = U.fromJust $ fromNumber $ (toNumber lcgM * toNumber n + toNumber lcgC) % toNumber lcgN
+lcgNext n = U.fromJust $ fromNumber $ (toNumber lcgM * n' + toNumber lcgC) % toNumber lcgN
+  where
+  -- Ensure that the input is between seedMin and seedMax; the LCG will not
+  -- work well for other inputs.
+  n' = ensureBetween (toNumber seedMin) (toNumber seedMax) (toNumber n)
+
+ensureBetween :: Number -> Number -> Number -> Number
+ensureBetween min max n =
+  let rangeSize = max - min
+  in (((n % rangeSize) + rangeSize) % rangeSize) + min
 
 -- | Create a random seed
 randomSeed :: forall e. Eff (random :: RANDOM | e) Seed
-randomSeed = randomInt 1 lcgM
+randomSeed = randomInt seedMin seedMax
+
+-- | The minimum permissible Seed value.
+seedMin :: Seed
+seedMin = 1
+
+-- | The maximum permissible Seed value.
+seedMax :: Seed
+seedMax = lcgM - 1
