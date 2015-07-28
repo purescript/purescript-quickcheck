@@ -26,9 +26,12 @@ lcgM = 48271
 lcgC :: Int
 lcgC = 0
 
--- | The *modulus*: a magic constant for the linear congruential generator
+-- | The *modulus*: a magic constant for the linear congruential generator.
+-- | It is equal to 2^31 - 1, a Mersenne prime. It is useful for this value to
+-- | be prime, because then the requirement of the initial seed being coprime
+-- | to the modulus is satisfied when the seed is between 1 and lcgN - 1.
 lcgN :: Int
-lcgN = 1 `shl` 31 - 1
+lcgN = 2147483647
 
 -- | Step the linear congruential generator
 lcgNext :: Int -> Int
