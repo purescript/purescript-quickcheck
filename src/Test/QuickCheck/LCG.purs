@@ -1,5 +1,7 @@
 module Test.QuickCheck.LCG
   ( Seed()
+  , mkSeed
+  , runSeed
   , lcgM
   , lcgC
   , lcgN
@@ -15,8 +17,6 @@ import Control.Monad.Eff.Random (RANDOM(), randomInt)
 import Data.Int (fromNumber, toNumber)
 import Data.Int.Bits (shl)
 import qualified Data.Maybe.Unsafe as U
-
-type Seed = Int
 
 -- | The *multiplier*: a magic constant for the linear congruential generator
 lcgM :: Int
@@ -34,26 +34,41 @@ lcgN :: Int
 lcgN = 2147483647
 
 -- | Step the linear congruential generator
-lcgNext :: Int -> Int
-lcgNext n = U.fromJust $ fromNumber $ (toNumber lcgM * n' + toNumber lcgC) % toNumber lcgN
+lcgNext :: Seed -> Seed
+lcgNext = Seed <<< go <<< runSeed
   where
-  -- Ensure that the input is between seedMin and seedMax; the LCG will not
-  -- work well for other inputs.
-  n' = ensureBetween (toNumber seedMin) (toNumber seedMax) (toNumber n)
-
-ensureBetween :: Number -> Number -> Number -> Number
-ensureBetween min max n =
-  let rangeSize = max - min
-  in (((n % rangeSize) + rangeSize) % rangeSize) + min
+  go n = U.fromJust $ fromNumber $ (toNumber lcgM * toNumber n + toNumber lcgC) % toNumber lcgN
 
 -- | Create a random seed
 randomSeed :: forall e. Eff (random :: RANDOM | e) Seed
-randomSeed = randomInt seedMin seedMax
+randomSeed = mkSeed <$> randomInt seedMin seedMax
 
 -- | The minimum permissible Seed value.
-seedMin :: Seed
+seedMin :: Int
 seedMin = 1
 
 -- | The maximum permissible Seed value.
-seedMax :: Seed
+seedMax :: Int
 seedMax = lcgM - 1
+
+-- | A seed for the linear congruential generator. We omit a `Semiring`
+-- | instance because there is no `zero` value, as 0 is not an acceptable
+-- | seed for the generator.
+newtype Seed = Seed Int
+
+mkSeed :: Int -> Seed
+mkSeed x = Seed (ensureBetween seedMin seedMax x)
+
+runSeed :: Seed -> Int
+runSeed (Seed x) = x
+
+ensureBetween :: Int -> Int -> Int -> Int
+ensureBetween min max n =
+  let rangeSize = max - min
+  in (((n `mod` rangeSize) + rangeSize) `mod` rangeSize) + min
+
+instance showSeed :: Show Seed where
+  show (Seed x) = "Seed " <> show x
+
+instance eqSeed :: Eq Seed where
+  eq (Seed x) (Seed y) = eq x y
