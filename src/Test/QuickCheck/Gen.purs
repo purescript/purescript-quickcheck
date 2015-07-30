@@ -22,14 +22,15 @@ module Test.QuickCheck.Gen
   , evalGen
   , perturbGen
   , uniform
-  , showSample
-  , showSample'
+  , sample
+  , randomSample
+  , randomSample'
   ) where
 
 import Prelude
 
 import Control.Monad.Eff (Eff())
-import Control.Monad.Eff.Console (CONSOLE(), print)
+import Control.Monad.Eff.Random (RANDOM())
 import Data.Array ((!!), length, range)
 import Data.Foldable (fold)
 import Data.Int (fromNumber, toNumber)
@@ -148,21 +149,23 @@ evalGen :: forall a. Gen a -> GenState -> a
 evalGen gen st = (runGen gen st).value
 
 -- | Sample a random generator
-sample :: forall r a. Size -> Gen a -> Array a
-sample sz g = evalGen (vectorOf sz g) { newSeed: zero, size: sz }
+sample :: forall r a. Seed -> Size -> Gen a -> Array a
+sample seed sz g = evalGen (vectorOf sz g) { newSeed: seed, size: sz }
 
--- | Print a random sample to the console
-showSample' :: forall r a. (Show a) => Size -> Gen a -> Eff (console :: CONSOLE | r) Unit
-showSample' n g = print $ sample n g
+-- | Sample a random generator, using a randomly generated seed
+randomSample' :: forall r a. Size -> Gen a -> Eff (random :: RANDOM | r) (Array a)
+randomSample' n g = do
+  seed <- randomSeed
+  return $ sample seed n g
 
--- | Print a random sample of 10 values to the console
-showSample :: forall r a. (Show a) => Gen a -> Eff (console :: CONSOLE | r) Unit
-showSample = showSample' 10
+-- | Get a random sample of 10 values
+randomSample :: forall r a. Gen a -> Eff (random :: RANDOM | r) (Array a)
+randomSample = randomSample' 10
 
 -- | A random generator which simply outputs the current seed
 lcgStep :: Gen Int
 lcgStep = Gen f where
-  f s = { value: s.newSeed, state: s { newSeed = lcgNext s.newSeed } }
+  f s = { value: runSeed s.newSeed, state: s { newSeed = lcgNext s.newSeed } }
 
 -- | A random generator which approximates a uniform random variable on `[0, 1]`
 uniform :: Gen Number
@@ -172,7 +175,9 @@ foreign import float32ToInt32 :: Number -> Int
 
 -- | Perturb a random generator by modifying the current seed
 perturbGen :: forall a. Number -> Gen a -> Gen a
-perturbGen n (Gen f) = Gen $ \s -> f (s { newSeed = lcgNext (float32ToInt32 n) + s.newSeed })
+perturbGen n (Gen f) = Gen $ \s -> f (s { newSeed = perturb s.newSeed })
+  where
+  perturb oldSeed = mkSeed (runSeed (lcgNext (mkSeed (float32ToInt32 n))) + runSeed oldSeed)
 
 instance functorGen :: Functor Gen where
   map f (Gen g) = Gen $ \s -> case g s of

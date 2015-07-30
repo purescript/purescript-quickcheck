@@ -49,7 +49,7 @@ representing the number of tests which should be run.
 #### `quickCheckPure`
 
 ``` purescript
-quickCheckPure :: forall prop. (Testable prop) => Int -> Int -> prop -> List Result
+quickCheckPure :: forall prop. (Testable prop) => Seed -> Int -> prop -> List Result
 ```
 
 Test a property, returning all test results as an array.

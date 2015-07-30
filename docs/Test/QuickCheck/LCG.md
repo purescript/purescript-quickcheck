@@ -1,18 +1,12 @@
 ## Module Test.QuickCheck.LCG
 
-#### `Seed`
-
-``` purescript
-type Seed = Int
-```
-
 #### `lcgM`
 
 ``` purescript
 lcgM :: Int
 ```
 
-A magic constant for the linear congruential generator
+The *multiplier*: a magic constant for the linear congruential generator
 
 #### `lcgC`
 
@@ -20,7 +14,7 @@ A magic constant for the linear congruential generator
 lcgC :: Int
 ```
 
-A magic constant for the linear congruential generator
+The *increment*: a magic constant for the linear congruential generator
 
 #### `lcgN`
 
@@ -28,12 +22,15 @@ A magic constant for the linear congruential generator
 lcgN :: Int
 ```
 
-A magic constant for the linear congruential generator
+The *modulus*: a magic constant for the linear congruential generator.
+It is equal to 2^31 - 1, a Mersenne prime. It is useful for this value to
+be prime, because then the requirement of the initial seed being coprime
+to the modulus is satisfied when the seed is between 1 and lcgN - 1.
 
 #### `lcgNext`
 
 ``` purescript
-lcgNext :: Int -> Int
+lcgNext :: Seed -> Seed
 ```
 
 Step the linear congruential generator
@@ -45,5 +42,33 @@ randomSeed :: forall e. Eff (random :: RANDOM | e) Seed
 ```
 
 Create a random seed
+
+#### `Seed`
+
+``` purescript
+newtype Seed
+```
+
+A seed for the linear congruential generator. We omit a `Semiring`
+instance because there is no `zero` value, as 0 is not an acceptable
+seed for the generator.
+
+##### Instances
+``` purescript
+instance showSeed :: Show Seed
+instance eqSeed :: Eq Seed
+```
+
+#### `mkSeed`
+
+``` purescript
+mkSeed :: Int -> Seed
+```
+
+#### `runSeed`
+
+``` purescript
+runSeed :: Seed -> Int
+```
 
 

@@ -172,21 +172,29 @@ evalGen :: forall a. Gen a -> GenState -> a
 
 Run a random generator, keeping only the randomly-generated result
 
-#### `showSample'`
+#### `sample`
 
 ``` purescript
-showSample' :: forall r a. (Show a) => Size -> Gen a -> Eff (console :: CONSOLE | r) Unit
+sample :: forall r a. Seed -> Size -> Gen a -> Array a
 ```
 
-Print a random sample to the console
+Sample a random generator
 
-#### `showSample`
+#### `randomSample'`
 
 ``` purescript
-showSample :: forall r a. (Show a) => Gen a -> Eff (console :: CONSOLE | r) Unit
+randomSample' :: forall r a. Size -> Gen a -> Eff (random :: RANDOM | r) (Array a)
 ```
 
-Print a random sample of 10 values to the console
+Sample a random generator, using a randomly generated seed
+
+#### `randomSample`
+
+``` purescript
+randomSample :: forall r a. Gen a -> Eff (random :: RANDOM | r) (Array a)
+```
+
+Get a random sample of 10 values
 
 #### `uniform`
 
