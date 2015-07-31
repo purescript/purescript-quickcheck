@@ -19,6 +19,7 @@ main = do
 
   log "Testing stack safety of Gen"
   print =<< go 20000
+  print =<< go 100000
 
   where
   go n = map (sum <<< unsafeHead) $ randomSample' 1 (vectorOf n (arbitrary :: Gen Int))
