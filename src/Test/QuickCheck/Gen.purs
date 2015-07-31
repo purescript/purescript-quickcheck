@@ -3,7 +3,6 @@
 module Test.QuickCheck.Gen
   ( Gen()
   , GenState()
-  , GenOut()
   , Size()
   , repeatable
   , stateful
@@ -31,7 +30,11 @@ import Prelude
 
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Random (RANDOM())
+import Control.Monad.State (State(..), runState, evalState)
+import Control.Monad.State.Class (state, modify)
+import Control.Monad.Rec.Class (tailRecM)
 import Data.Array ((!!), length, range)
+import Data.Tuple (Tuple(..))
 import Data.Foldable (fold)
 import Data.Int (fromNumber, toNumber)
 import Data.Maybe (fromMaybe)
@@ -49,25 +52,22 @@ type Size = Int
 -- | The state of the random generator monad
 type GenState = { newSeed :: Seed, size :: Size }
 
--- | The output of the random generator monad
-type GenOut a = { state :: GenState, value :: a }
-
 -- | The random generator monad
 -- |
 -- | `Gen` is a state monad which encodes a linear congruential generator.
-data Gen a = Gen (GenState -> GenOut a)
+type Gen a = State GenState a
 
 -- | Create a random generator for a function type.
 repeatable :: forall a b. (a -> Gen b) -> Gen (a -> b)
-repeatable f = Gen $ \s -> { value: \a -> (runGen (f a) s).value, state: s }
+repeatable f = state $ \s -> Tuple (\a -> fst (runGen (f a) s)) s
 
 -- | Create a random generator which uses the generator state explicitly.
 stateful :: forall a. (GenState -> Gen a) -> Gen a
-stateful f = Gen (\s -> runGen (f s) s)
+stateful f = state $ \s -> runGen (f s) s
 
 -- | Modify a random generator by setting a new random seed.
 variant :: forall a. Seed -> Gen a -> Gen a
-variant n g = Gen $ \s -> runGen g s { newSeed = n }
+variant n g = state $ \s -> runGen g s { newSeed = n }
 
 -- | Create a random generator which depends on the size parameter.
 sized :: forall a. (Size -> Gen a) -> Gen a
@@ -75,7 +75,7 @@ sized f = stateful (\s -> f s.size)
 
 -- | Modify a random generator by setting a new size parameter.
 resize :: forall a. Size -> Gen a -> Gen a
-resize sz g = Gen $ \s -> runGen g s { size = sz }
+resize sz g = state $ \s -> runGen g s { size = sz }
 
 -- | Create a random generator which samples a range of `Number`s i
 -- | with uniform probability.
@@ -141,12 +141,12 @@ elements x xs = do
   pure if n == zero then x else fromMaybe x (xs !! (n - one))
 
 -- | Run a random generator
-runGen :: forall a. Gen a -> GenState -> GenOut a
-runGen (Gen f) = f
+runGen :: forall a. Gen a -> GenState -> Tuple a GenState
+runGen = runState
 
 -- | Run a random generator, keeping only the randomly-generated result
 evalGen :: forall a. Gen a -> GenState -> a
-evalGen gen st = (runGen gen st).value
+evalGen = evalState
 
 -- | Sample a random generator
 sample :: forall r a. Seed -> Size -> Gen a -> Array a
@@ -164,8 +164,8 @@ randomSample = randomSample' 10
 
 -- | A random generator which simply outputs the current seed
 lcgStep :: Gen Int
-lcgStep = Gen f where
-  f s = { value: runSeed s.newSeed, state: s { newSeed = lcgNext s.newSeed } }
+lcgStep = state f where
+  f s = Tuple (runSeed s.newSeed) (s { newSeed = lcgNext s.newSeed })
 
 -- | A random generator which approximates a uniform random variable on `[0, 1]`
 uniform :: Gen Number
@@ -175,25 +175,8 @@ foreign import float32ToInt32 :: Number -> Int
 
 -- | Perturb a random generator by modifying the current seed
 perturbGen :: forall a. Number -> Gen a -> Gen a
-perturbGen n (Gen f) = Gen $ \s -> f (s { newSeed = perturb s.newSeed })
+perturbGen n gen = do
+  modify \s -> s { newSeed = perturb s.newSeed }
+  gen
   where
   perturb oldSeed = mkSeed (runSeed (lcgNext (mkSeed (float32ToInt32 n))) + runSeed oldSeed)
-
-instance functorGen :: Functor Gen where
-  map f (Gen g) = Gen $ \s -> case g s of
-    { value = value, state = state } -> { value: f value, state: state }
-
-instance applyGen :: Apply Gen where
-  apply (Gen f) (Gen x) = Gen $ \s ->
-    case f s of
-      { value = f', state = s' } -> case x s' of
-        { value = x', state = s'' } -> { value: f' x', state: s'' }
-
-instance applicativeGen :: Applicative Gen where
-  pure a = Gen (\s -> { value: a, state: s })
-
-instance bindGen :: Bind Gen where
-  bind (Gen f) g = Gen $ \s -> case f s of
-    { value = value, state = state } -> runGen (g value) state
-
-instance monadGen :: Monad Gen
