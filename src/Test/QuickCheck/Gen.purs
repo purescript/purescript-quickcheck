@@ -32,7 +32,7 @@ import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Random (RANDOM())
 import Control.Monad.State (State(..), runState, evalState)
 import Control.Monad.State.Class (state, modify)
-import Control.Monad.Rec.Class (tailRecM)
+import Control.Monad.Rec.Class (MonadRec, tailRecM)
 import Data.Array ((!!), length, range)
 import Data.Tuple (Tuple(..))
 import Data.Foldable (fold)
@@ -41,7 +41,8 @@ import Data.Maybe (fromMaybe)
 import Data.Monoid.Additive (Additive(..), runAdditive)
 import Data.Traversable (sequence)
 import Data.Tuple (Tuple(..), fst, snd)
-import Data.List (List(..))
+import Data.Either (Either(..))
+import Data.List (List(..), fromList)
 import Test.QuickCheck.LCG
 import qualified Math as M
 
@@ -127,11 +128,21 @@ arrayOf1 g = sized $ \n ->
      xs <- vectorOf (k - one) g
      return $ Tuple x xs
 
+replicateMRec :: forall m a. (MonadRec m) => Int -> m a -> m (List a)
+replicateMRec k _ | k <= 0 = return Nil
+replicateMRec k gen = tailRecM go (Tuple Nil k)
+  where
+  go :: (Tuple (List a) Int) -> m (Either (Tuple (List a) Int) (List a))
+  go (Tuple acc 0) = return $ Right acc
+  go (Tuple acc n) = gen <#> \x -> Left (Tuple (Cons x acc) (n - 1))
+
+-- | Create a random generator which generates a list of random values of the specified size.
+listOf :: forall a. Int -> Gen a -> Gen (List a)
+listOf = replicateMRec
+
 -- | Create a random generator which generates a vector of random values of a specified size.
 vectorOf :: forall a. Int -> Gen a -> Gen (Array a)
-vectorOf k g
-  | k <= 0    = return []
-  | otherwise = sequence $ const g <$> range one k
+vectorOf k g = fromList <$> listOf k g
 
 -- | Create a random generator which selects a value from a non-empty collection with
 -- | uniform probability.
