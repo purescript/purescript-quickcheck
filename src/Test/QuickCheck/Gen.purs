@@ -15,6 +15,7 @@ module Test.QuickCheck.Gen
   , frequency
   , arrayOf
   , arrayOf1
+  , listOf
   , vectorOf
   , elements
   , runGen
