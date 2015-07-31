@@ -169,7 +169,7 @@ randomSample = randomSample' 10
 -- | A random generator which simply outputs the current seed
 lcgStep :: Gen Int
 lcgStep = Gen f where
-  f s = done { value: s.newSeed, state: s { newSeed = lcgNext s.newSeed } }
+  f s = done { value: runSeed s.newSeed, state: s { newSeed = lcgNext s.newSeed } }
 
 -- | A random generator which approximates a uniform random variable on `[0, 1]`
 uniform :: Gen Number
