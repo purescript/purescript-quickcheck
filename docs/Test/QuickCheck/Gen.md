@@ -20,32 +20,15 @@ type GenState = { newSeed :: Seed, size :: Size }
 
 The state of the random generator monad
 
-#### `GenOut`
-
-``` purescript
-type GenOut a = { state :: GenState, value :: a }
-```
-
-The output of the random generator monad
-
 #### `Gen`
 
 ``` purescript
-data Gen a
+type Gen a = State GenState a
 ```
 
 The random generator monad
 
 `Gen` is a state monad which encodes a linear congruential generator.
-
-##### Instances
-``` purescript
-instance functorGen :: Functor Gen
-instance applyGen :: Apply Gen
-instance applicativeGen :: Applicative Gen
-instance bindGen :: Bind Gen
-instance monadGen :: Monad Gen
-```
 
 #### `repeatable`
 
@@ -139,6 +122,14 @@ arrayOf1 :: forall a. Gen a -> Gen (Tuple a (Array a))
 
 Create a random generator which generates a non-empty array of random values.
 
+#### `listOf`
+
+``` purescript
+listOf :: forall a. Int -> Gen a -> Gen (List a)
+```
+
+Create a random generator which generates a list of random values of the specified size.
+
 #### `vectorOf`
 
 ``` purescript
@@ -159,7 +150,7 @@ uniform probability.
 #### `runGen`
 
 ``` purescript
-runGen :: forall a. Gen a -> GenState -> GenOut a
+runGen :: forall a. Gen a -> GenState -> Tuple a GenState
 ```
 
 Run a random generator
