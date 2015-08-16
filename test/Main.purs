@@ -5,6 +5,7 @@ import Prelude
 import Control.Bind
 import Data.Array (head)
 import Data.Maybe.Unsafe (fromJust)
+import Data.Either (Either())
 import Data.Foldable
 import Test.QuickCheck.Gen
 import Test.QuickCheck.Arbitrary
@@ -20,6 +21,12 @@ main = do
   log "Testing stack safety of Gen"
   print =<< go 20000
   print =<< go 100000
+
+  a <- randomSample arbitrary
+  print (a :: Array Boolean)
+
+  b <- randomSample arbitrary
+  print (b :: Array (Either Char Boolean))
 
   where
   go n = map (sum <<< unsafeHead) $ randomSample' 1 (vectorOf n (arbitrary :: Gen Int))
