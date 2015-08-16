@@ -20,6 +20,18 @@ import Test.QuickCheck.Gen
 class Arbitrary t where
   arbitrary :: Gen t
 
+class Arbitrary1 f where
+  arbitrary1 :: forall a. (Arbitrary a) => Gen (f a)
+
+instance arbArbitrary1 :: (Arbitrary1 f, Arbitrary a) => Arbitrary (f a) where
+  arbitrary = arbitrary1
+
+class Arbitrary2 f where
+  arbitrary2 :: forall a b. (Arbitrary a, Arbitrary b) => Gen (f a b)
+
+instance arb1Arbitrary2 :: (Arbitrary2 f, Arbitrary a) => Arbitrary1 (f a) where
+  arbitrary1 = arbitrary2
+
 -- | The `Coarbitrary` class represents types which appear on the left of
 -- | an `Arbitrary` function arrow.
 -- |
@@ -30,6 +42,18 @@ class Arbitrary t where
 -- | `Coarbitrary` instances can be written using the `perturbGen` function.
 class Coarbitrary t where
   coarbitrary :: forall r. t -> Gen r -> Gen r
+
+class Coarbitrary1 f where
+  coarbitrary1 :: forall a r. (Coarbitrary a) => f a -> Gen r -> Gen r
+
+instance coarbCoarbitrary1 :: (Coarbitrary1 f, Coarbitrary a) => Coarbitrary (f a) where
+  coarbitrary = coarbitrary1
+
+class Coarbitrary2 f where
+  coarbitrary2 :: forall a b r. (Coarbitrary a, Coarbitrary b) => f a b -> Gen r -> Gen r
+
+instance coarb1Coarbitrary2 :: (Coarbitrary2 f, Coarbitrary a) => Coarbitrary1 (f a) where
+  coarbitrary1 = coarbitrary2
 
 instance arbBoolean :: Arbitrary Boolean where
   arbitrary = do
@@ -78,11 +102,11 @@ instance coarbOrdering :: Coarbitrary Ordering where
   coarbitrary EQ = perturbGen 2.0
   coarbitrary GT = perturbGen 3.0
 
-instance arbArray :: (Arbitrary a) => Arbitrary (Array a) where
-  arbitrary = arrayOf arbitrary
+instance arb1Array :: Arbitrary1 Array where
+  arbitrary1 = arrayOf arbitrary
 
-instance coarbArray :: (Coarbitrary a) => Coarbitrary (Array a) where
-  coarbitrary = foldl (\f x -> f <<< coarbitrary x) id
+instance coarb1Array :: Coarbitrary1 Array where
+  coarbitrary1 = foldl (\f x -> f <<< coarbitrary x) id
 
 instance arbFunction :: (Coarbitrary a, Arbitrary b) => Arbitrary (a -> b) where
   arbitrary = repeatable (\a -> coarbitrary a arbitrary)
@@ -92,26 +116,26 @@ instance coarbFunction :: (Arbitrary a, Coarbitrary b) => Coarbitrary (a -> b) w
     xs <- arbitrary
     coarbitrary (map f (xs :: Array a)) gen
 
-instance arbTuple :: (Arbitrary a, Arbitrary b) => Arbitrary (Tuple a b) where
-  arbitrary = Tuple <$> arbitrary <*> arbitrary
+instance arb2Tuple :: Arbitrary2 Tuple where
+  arbitrary2 = Tuple <$> arbitrary <*> arbitrary
 
-instance coarbTuple :: (Coarbitrary a, Coarbitrary b) => Coarbitrary (Tuple a b) where
-  coarbitrary (Tuple a b) = coarbitrary a >>> coarbitrary b
+instance coarb2Tuple :: Coarbitrary2 Tuple where
+  coarbitrary2 (Tuple a b) = coarbitrary a >>> coarbitrary b
 
-instance arbMaybe :: (Arbitrary a) => Arbitrary (Maybe a) where
-  arbitrary = do
+instance arb1Maybe :: Arbitrary1 Maybe where
+  arbitrary1 = do
     b <- arbitrary
     if b then pure Nothing else Just <$> arbitrary
 
-instance coarbMaybe :: (Coarbitrary a) => Coarbitrary (Maybe a) where
-  coarbitrary Nothing = perturbGen 1.0
-  coarbitrary (Just a) = coarbitrary a
+instance coarb1Maybe :: Coarbitrary1 Maybe where
+  coarbitrary1 Nothing = perturbGen 1.0
+  coarbitrary1 (Just a) = coarbitrary a
 
-instance arbEither :: (Arbitrary a, Arbitrary b) => Arbitrary (Either a b) where
-  arbitrary = do
+instance arb2Either :: Arbitrary2 Either where
+  arbitrary2 = do
     b <- arbitrary
     if b then Left <$> arbitrary else Right <$> arbitrary
 
-instance coarbEither :: (Coarbitrary a, Coarbitrary b) => Coarbitrary (Either a b) where
-  coarbitrary (Left a)  = coarbitrary a
-  coarbitrary (Right b) = coarbitrary b
+instance coarb2Either :: Coarbitrary2 Either where
+  coarbitrary2 (Left a) = coarbitrary a
+  coarbitrary2 (Right b) = coarbitrary b
