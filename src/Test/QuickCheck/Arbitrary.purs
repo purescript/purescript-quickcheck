@@ -4,11 +4,14 @@ import Prelude
 
 import Data.Char (toCharCode, fromCharCode)
 import Data.Either (Either(..))
+import Data.Foldable (foldl)
+import Data.Identity (Identity(..))
+import Data.Int (fromNumber, toNumber)
+import Data.Lazy (Lazy(), defer, force)
+import Data.List (List(..))
 import Data.Maybe (Maybe(..))
 import Data.String (charCodeAt, fromCharArray, split)
 import Data.Tuple (Tuple(..))
-import Data.Int (fromNumber, toNumber)
-import Data.Foldable (foldl)
 import Test.QuickCheck.Gen
 
 -- | The `Arbitrary` class represents those types whose values can be
@@ -115,3 +118,21 @@ instance arbEither :: (Arbitrary a, Arbitrary b) => Arbitrary (Either a b) where
 instance coarbEither :: (Coarbitrary a, Coarbitrary b) => Coarbitrary (Either a b) where
   coarbitrary (Left a)  = coarbitrary a
   coarbitrary (Right b) = coarbitrary b
+
+instance arbitraryList :: (Arbitrary a) => Arbitrary (List a) where
+  arbitrary = sized \n -> chooseInt zero n >>= flip listOf arbitrary
+
+instance coarbList :: (Coarbitrary a) => Coarbitrary (List a) where
+  coarbitrary = foldl (\f x -> f <<< coarbitrary x) id
+
+instance arbitraryIdentity :: (Arbitrary a) => Arbitrary (Identity a) where
+  arbitrary = Identity <$> arbitrary
+
+instance coarbIdentity :: (Coarbitrary a) => Coarbitrary (Identity a) where
+  coarbitrary (Identity a) = coarbitrary a
+
+instance arbitraryLazy :: (Arbitrary a) => Arbitrary (Lazy a) where
+  arbitrary = arbitrary >>= pure <<< defer <<< const
+
+instance coarbLazy :: (Coarbitrary a) => Coarbitrary (Lazy a) where
+  coarbitrary a = coarbitrary (force a)
