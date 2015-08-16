@@ -108,11 +108,11 @@ instance arb1Array :: Arbitrary1 Array where
 instance coarb1Array :: Coarbitrary1 Array where
   coarbitrary1 = foldl (\f x -> f <<< coarbitrary x) id
 
-instance arbFunction :: (Coarbitrary a, Arbitrary b) => Arbitrary (a -> b) where
-  arbitrary = repeatable (\a -> coarbitrary a arbitrary)
+instance arb1Function :: (Coarbitrary a) => Arbitrary1 ((->) a) where
+  arbitrary1 = repeatable (\a -> coarbitrary a arbitrary)
 
-instance coarbFunction :: (Arbitrary a, Coarbitrary b) => Coarbitrary (a -> b) where
-  coarbitrary f gen = do
+instance coarb1Function :: (Arbitrary a) => Coarbitrary1 ((->) a) where
+  coarbitrary1 f gen = do
     xs <- arbitrary
     coarbitrary (map f (xs :: Array a)) gen
 
