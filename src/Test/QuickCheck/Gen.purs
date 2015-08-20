@@ -40,7 +40,7 @@ import Data.Foldable (fold)
 import Data.Int (fromNumber, toNumber)
 import Data.Maybe (fromMaybe)
 import Data.Monoid.Additive (Additive(..), runAdditive)
-import Data.Traversable (sequence)
+import Data.Traversable (sequence, traverse)
 import Data.Tuple (Tuple(..), fst, snd)
 import Data.Either (Either(..))
 import Data.List (List(..), fromList)
@@ -160,9 +160,13 @@ runGen = runState
 evalGen :: forall a. Gen a -> GenState -> a
 evalGen = evalState
 
--- | Sample a random generator
-sample :: forall r a. Seed -> Size -> Gen a -> Array a
-sample seed sz g = evalGen (vectorOf sz g) { newSeed: seed, size: sz }
+-- | Sample a random generator, using the given seed and producing a sample
+-- | containing the given number of values.
+sample :: forall r a. Seed -> Int -> Gen a -> Array a
+sample seed n g = evalGen sampleGen { newSeed: seed, size: 0 }
+  where
+  sampleGen = traverse (flip resize g) sizes
+  sizes = range 0 (n - 1) <#> (*2)
 
 -- | Sample a random generator, using a randomly generated seed
 randomSample' :: forall r a. Size -> Gen a -> Eff (random :: RANDOM | r) (Array a)
