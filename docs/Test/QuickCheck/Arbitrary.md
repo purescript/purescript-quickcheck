@@ -28,6 +28,9 @@ instance arbFunction :: (Coarbitrary a, Arbitrary b) => Arbitrary (a -> b)
 instance arbTuple :: (Arbitrary a, Arbitrary b) => Arbitrary (Tuple a b)
 instance arbMaybe :: (Arbitrary a) => Arbitrary (Maybe a)
 instance arbEither :: (Arbitrary a, Arbitrary b) => Arbitrary (Either a b)
+instance arbitraryList :: (Arbitrary a) => Arbitrary (List a)
+instance arbitraryIdentity :: (Arbitrary a) => Arbitrary (Identity a)
+instance arbitraryLazy :: (Arbitrary a) => Arbitrary (Lazy a)
 ```
 
 #### `Coarbitrary`
@@ -60,6 +63,9 @@ instance coarbFunction :: (Arbitrary a, Coarbitrary b) => Coarbitrary (a -> b)
 instance coarbTuple :: (Coarbitrary a, Coarbitrary b) => Coarbitrary (Tuple a b)
 instance coarbMaybe :: (Coarbitrary a) => Coarbitrary (Maybe a)
 instance coarbEither :: (Coarbitrary a, Coarbitrary b) => Coarbitrary (Either a b)
+instance coarbList :: (Coarbitrary a) => Coarbitrary (List a)
+instance coarbIdentity :: (Coarbitrary a) => Coarbitrary (Identity a)
+instance coarbLazy :: (Coarbitrary a) => Coarbitrary (Lazy a)
 ```
 
 
