@@ -31,7 +31,7 @@ import Prelude
 
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Random (RANDOM())
-import Control.Monad.State (State(..), runState, evalState)
+import Control.Monad.State (State(), runState, evalState)
 import Control.Monad.State.Class (state, modify)
 import Control.Monad.Rec.Class (MonadRec, tailRecM)
 import Data.Array ((!!), length, range)
