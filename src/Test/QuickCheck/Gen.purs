@@ -161,7 +161,7 @@ evalGen :: forall a. Gen a -> GenState -> a
 evalGen = evalState
 
 -- | Sample a random generator
-sample :: forall r a. Seed -> Size -> Gen a -> Array a
+sample :: forall a. Seed -> Size -> Gen a -> Array a
 sample seed sz g = evalGen (vectorOf sz g) { newSeed: seed, size: sz }
 
 -- | Sample a random generator, using a randomly generated seed

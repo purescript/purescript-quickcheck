@@ -106,9 +106,9 @@ instance showResult :: Show Result where
 (<?>) false msg = Failed msg
 
 -- | Self-documenting equality assertion
-(===) :: forall a b. (Eq a, Show a) => a -> a -> Result
+(===) :: forall a. (Eq a, Show a) => a -> a -> Result
 (===) a b = a == b <?> show a ++ " /= " ++ show b
 
 -- | Self-documenting inequality assertion
-(/==) :: forall a b. (Eq a, Show a) => a -> a -> Result
+(/==) :: forall a. (Eq a, Show a) => a -> a -> Result
 (/==) a b = a /= b <?> show a ++ " == " ++ show b
