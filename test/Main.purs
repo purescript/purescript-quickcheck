@@ -3,13 +3,16 @@ module Test.Main where
 
 import Prelude
 import Control.Bind
+import Control.Monad.Eff (Eff())
 import Data.Array (head)
 import Data.Maybe.Unsafe (fromJust)
 import Data.Foldable
 import Test.QuickCheck.Gen
 import Test.QuickCheck.Arbitrary
 import Control.Monad.Eff.Console
+import Control.Monad.Eff.Random (RANDOM())
 
+main :: forall eff. Eff (random :: RANDOM, console :: CONSOLE | eff) Unit
 main = do
   log "Try with some little Gens first"
   print =<< go 10
