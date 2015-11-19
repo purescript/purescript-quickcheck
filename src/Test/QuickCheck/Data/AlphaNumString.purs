@@ -2,10 +2,7 @@ module Test.QuickCheck.Data.AlphaNumString where
 
 import Prelude
 
-import Data.Int (fromNumber, toNumber)
-import Data.String (fromCharArray, toCharArray, length)
-import Data.String.Unsafe (charAt)
-import Math (round)
+import Data.String (fromCharArray, toCharArray)
 import Test.QuickCheck.Gen
 import Test.QuickCheck.Arbitrary
 
@@ -21,7 +18,7 @@ instance arbAlphaNumString :: Arbitrary AlphaNumString where
     where
     rest :: Array Char
     rest = toCharArray "bcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-    
+
     anyChar :: Gen Char
     anyChar = oneOf (pure 'a') (map pure rest)
 
