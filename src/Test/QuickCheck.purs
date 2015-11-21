@@ -22,10 +22,9 @@ import Prelude
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Console (CONSOLE(), log)
 import Control.Monad.Eff.Exception (EXCEPTION(), throwException, error)
-import Control.Monad.Eff.Random (RANDOM(), random)
 import Control.Monad.State.Trans (StateT())
 import Data.Identity (Identity())
-import Data.Int (fromNumber, toNumber)
+import Control.Monad.Eff.Random (RANDOM())
 import Data.List (List(..), replicateM)
 import Test.QuickCheck.Arbitrary
 import Test.QuickCheck.Gen
