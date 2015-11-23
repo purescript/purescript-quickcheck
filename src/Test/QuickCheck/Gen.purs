@@ -69,8 +69,8 @@ updateSeed f st = setSeed (f (getSeed st)) st
 getSize :: GenState -> Size
 getSize (GenState (Tuple sd sz)) = sz
 
-setSize :: GenState -> Size -> GenState
-setSize (GenState (Tuple sd sz)) sz' = genState sd sz'
+setSize :: Size -> GenState -> GenState
+setSize sz' (GenState (Tuple sd sz)) = genState sd sz'
 
 -- | The random generator monad
 -- |
@@ -95,7 +95,7 @@ sized f = stateful (f <<< getSize)
 
 -- | Modify a random generator by setting a new size parameter.
 resize :: forall a. Size -> Gen a -> Gen a
-resize sz g = state $ runGen g <<< flip setSize sz
+resize sz g = state $ runGen g <<< setSize sz
 
 -- | Create a random generator which samples a range of `Number`s i
 -- | with uniform probability.
