@@ -4,6 +4,7 @@ module Test.QuickCheck.Gen
   ( Gen()
   , GenState()
   , Size()
+  , genState
   , repeatable
   , stateful
   , variant
@@ -51,7 +52,25 @@ import qualified Math as M
 type Size = Int
 
 -- | The state of the random generator monad
-type GenState = { newSeed :: Seed, size :: Size }
+newtype GenState = GenState (Tuple Seed Size)
+
+genState :: Seed -> Size -> GenState
+genState sd sz = GenState (Tuple sd sz)
+
+getSeed :: GenState -> Seed
+getSeed (GenState (Tuple sd sz)) = sd
+
+setSeed :: Seed -> GenState -> GenState
+setSeed sd' (GenState (Tuple sd sz)) = genState sd' sz
+
+updateSeed :: (Seed -> Seed) -> GenState -> GenState
+updateSeed f st = setSeed (f (getSeed st)) st
+
+getSize :: GenState -> Size
+getSize (GenState (Tuple sd sz)) = sz
+
+setSize :: Size -> GenState -> GenState
+setSize sz' (GenState (Tuple sd sz)) = genState sd sz'
 
 -- | The random generator monad
 -- |
@@ -68,15 +87,15 @@ stateful f = state $ \s -> runGen (f s) s
 
 -- | Modify a random generator by setting a new random seed.
 variant :: forall a. Seed -> Gen a -> Gen a
-variant n g = state $ \s -> runGen g s { newSeed = n }
+variant n g = state $ runGen g <<< setSeed n
 
 -- | Create a random generator which depends on the size parameter.
 sized :: forall a. (Size -> Gen a) -> Gen a
-sized f = stateful (\s -> f s.size)
+sized f = stateful (f <<< getSize)
 
 -- | Modify a random generator by setting a new size parameter.
 resize :: forall a. Size -> Gen a -> Gen a
-resize sz g = state $ \s -> runGen g s { size = sz }
+resize sz g = state $ runGen g <<< setSize sz
 
 -- | Create a random generator which samples a range of `Number`s i
 -- | with uniform probability.
@@ -161,7 +180,7 @@ evalGen = evalState
 
 -- | Sample a random generator
 sample :: forall a. Seed -> Size -> Gen a -> Array a
-sample seed sz g = evalGen (vectorOf sz g) { newSeed: seed, size: sz }
+sample sd sz g = evalGen (vectorOf sz g) (genState sd sz)
 
 -- | Sample a random generator, using a randomly generated seed
 randomSample' :: forall r a. Size -> Gen a -> Eff (random :: RANDOM | r) (Array a)
@@ -176,7 +195,7 @@ randomSample = randomSample' 10
 -- | A random generator which simply outputs the current seed
 lcgStep :: Gen Int
 lcgStep = state f where
-  f s = Tuple (runSeed s.newSeed) (s { newSeed = lcgNext s.newSeed })
+  f = Tuple <$> (runSeed <<< getSeed) <*> updateSeed lcgNext
 
 -- | A random generator which approximates a uniform random variable on `[0, 1]`
 uniform :: Gen Number
@@ -187,7 +206,7 @@ foreign import float32ToInt32 :: Number -> Int
 -- | Perturb a random generator by modifying the current seed
 perturbGen :: forall a. Number -> Gen a -> Gen a
 perturbGen n gen = do
-  modify \s -> s { newSeed = perturb s.newSeed }
+  modify (updateSeed perturb)
   gen
   where
   perturb oldSeed = mkSeed (runSeed (lcgNext (mkSeed (float32ToInt32 n))) + runSeed oldSeed)
