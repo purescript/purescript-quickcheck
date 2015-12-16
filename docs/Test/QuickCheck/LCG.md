@@ -27,6 +27,14 @@ It is equal to 2^31 - 1, a Mersenne prime. It is useful for this value to
 be prime, because then the requirement of the initial seed being coprime
 to the modulus is satisfied when the seed is between 1 and lcgN - 1.
 
+#### `lcgPerturb`
+
+``` purescript
+lcgPerturb :: Number -> Seed -> Seed
+```
+
+Perturb a seed value
+
 #### `lcgNext`
 
 ``` purescript
@@ -55,8 +63,8 @@ seed for the generator.
 
 ##### Instances
 ``` purescript
-instance showSeed :: Show Seed
-instance eqSeed :: Eq Seed
+Show Seed
+Eq Seed
 ```
 
 #### `mkSeed`

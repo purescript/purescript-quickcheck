@@ -166,7 +166,7 @@ Run a random generator, keeping only the randomly-generated result
 #### `sample`
 
 ``` purescript
-sample :: forall r a. Seed -> Size -> Gen a -> Array a
+sample :: forall a. Seed -> Size -> Gen a -> Array a
 ```
 
 Sample a random generator

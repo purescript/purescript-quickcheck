@@ -12,8 +12,8 @@ alphanumeric strings.
 
 ##### Instances
 ``` purescript
-instance arbAlphaNumString :: Arbitrary AlphaNumString
-instance coarbAlphaNumString :: Coarbitrary AlphaNumString
+Arbitrary AlphaNumString
+Coarbitrary AlphaNumString
 ```
 
 #### `runAlphaNumString`
