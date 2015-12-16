@@ -6,6 +6,7 @@ module Test.QuickCheck.LCG
   , lcgC
   , lcgN
   , lcgNext
+  , lcgPerturb
   , randomSeed
   ) where
 
@@ -32,11 +33,15 @@ lcgC = 0
 lcgN :: Int
 lcgN = 2147483647
 
+-- | Perturb a seed value
+lcgPerturb :: Number -> Seed -> Seed
+lcgPerturb d = Seed <<< go <<< runSeed
+  where
+  go n = U.fromJust $ fromNumber $ (toNumber lcgM * toNumber n + d) % toNumber lcgN
+
 -- | Step the linear congruential generator
 lcgNext :: Seed -> Seed
-lcgNext = Seed <<< go <<< runSeed
-  where
-  go n = U.fromJust $ fromNumber $ (toNumber lcgM * toNumber n + toNumber lcgC) % toNumber lcgN
+lcgNext = lcgPerturb (toNumber lcgC)
 
 -- | Create a random seed
 randomSeed :: forall e. Eff (random :: RANDOM | e) Seed

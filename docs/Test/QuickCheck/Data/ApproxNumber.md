@@ -12,15 +12,15 @@ for precision erros when comparing.
 
 ##### Instances
 ``` purescript
-instance arbitraryApproxNumber :: Arbitrary ApproxNumber
-instance coarbitraryApproxNumber :: Coarbitrary ApproxNumber
-instance eqApproxNumber :: Eq ApproxNumber
-instance ordApproxNumber :: Ord ApproxNumber
-instance semiringApproxNumber :: Semiring ApproxNumber
-instance moduloSemiringApproxNumber :: ModuloSemiring ApproxNumber
-instance ringApproxNumber :: Ring ApproxNumber
-instance divisionRingApproxNumber :: DivisionRing ApproxNumber
-instance numApproxNumber :: Num ApproxNumber
+Arbitrary ApproxNumber
+Coarbitrary ApproxNumber
+Eq ApproxNumber
+Ord ApproxNumber
+Semiring ApproxNumber
+ModuloSemiring ApproxNumber
+Ring ApproxNumber
+DivisionRing ApproxNumber
+Num ApproxNumber
 ```
 
 #### `(=~=)`

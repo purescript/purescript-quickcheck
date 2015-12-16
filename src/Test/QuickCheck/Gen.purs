@@ -34,11 +34,13 @@ import Control.Monad.Eff.Random (RANDOM())
 import Control.Monad.State (State(), runState, evalState)
 import Control.Monad.State.Class (state, modify)
 import Control.Monad.Rec.Class (MonadRec, tailRecM)
+import Math ((%))
 import Data.Array ((!!), length)
 import Data.Tuple (Tuple(..))
 import Data.Foldable (fold)
-import Data.Int (toNumber)
+import Data.Int (toNumber, fromNumber)
 import Data.Maybe (fromMaybe)
+import Data.Maybe.Unsafe as U
 import Data.Monoid.Additive (Additive(..), runAdditive)
 import Data.Tuple (Tuple(..), fst, snd)
 import Data.Either (Either(..))
@@ -60,7 +62,7 @@ type Gen a = State GenState a
 
 -- | Create a random generator for a function type.
 repeatable :: forall a b. (a -> Gen b) -> Gen (a -> b)
-repeatable f = state $ \s -> Tuple (\a -> fst (runGen (f a) s)) s
+repeatable f = state $ \s -> Tuple (\a -> fst (runGen (f a) s)) (s { newSeed = lcgNext s.newSeed })
 
 -- | Create a random generator which uses the generator state explicitly.
 stateful :: forall a. (GenState -> Gen a) -> Gen a
@@ -187,7 +189,5 @@ foreign import float32ToInt32 :: Number -> Int
 -- | Perturb a random generator by modifying the current seed
 perturbGen :: forall a. Number -> Gen a -> Gen a
 perturbGen n gen = do
-  modify \s -> s { newSeed = perturb s.newSeed }
+  modify \s -> s { newSeed = lcgPerturb (toNumber (float32ToInt32 n)) s.newSeed }
   gen
-  where
-  perturb oldSeed = mkSeed (runSeed (lcgNext (mkSeed (float32ToInt32 n))) + runSeed oldSeed)

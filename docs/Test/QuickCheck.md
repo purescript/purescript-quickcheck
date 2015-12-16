@@ -73,9 +73,9 @@ Testable properties can be passed to the `quickCheck` function.
 
 ##### Instances
 ``` purescript
-instance testableResult :: Testable Result
-instance testableBoolean :: Testable Boolean
-instance testableFunction :: (Arbitrary t, Testable prop) => Testable (t -> prop)
+Testable Result
+Testable Boolean
+(Arbitrary t, Testable prop) => Testable (t -> prop)
 ```
 
 #### `Result`
@@ -90,8 +90,8 @@ The result of a test: success or failure (with an error message).
 
 ##### Instances
 ``` purescript
-instance testableResult :: Testable Result
-instance showResult :: Show Result
+Testable Result
+Show Result
 ```
 
 #### `(<?>)`
@@ -113,7 +113,7 @@ test x = myProperty x <?> ("myProperty did not hold for " <> show x)
 #### `(===)`
 
 ``` purescript
-(===) :: forall a b. (Eq a, Show a) => a -> a -> Result
+(===) :: forall a. (Eq a, Show a) => a -> a -> Result
 ```
 
 _left-associative / precedence -1_
@@ -123,7 +123,7 @@ Self-documenting equality assertion
 #### `(/==)`
 
 ``` purescript
-(/==) :: forall a b. (Eq a, Show a) => a -> a -> Result
+(/==) :: forall a. (Eq a, Show a) => a -> a -> Result
 ```
 
 _left-associative / precedence -1_

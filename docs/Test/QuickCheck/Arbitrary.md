@@ -16,18 +16,21 @@ module can be used to construct random generators.
 
 ##### Instances
 ``` purescript
-instance arbBoolean :: Arbitrary Boolean
-instance arbNumber :: Arbitrary Number
-instance arbInt :: Arbitrary Int
-instance arbString :: Arbitrary String
-instance arbChar :: Arbitrary Char
-instance arbUnit :: Arbitrary Unit
-instance arbOrdering :: Arbitrary Ordering
-instance arbArray :: (Arbitrary a) => Arbitrary (Array a)
-instance arbFunction :: (Coarbitrary a, Arbitrary b) => Arbitrary (a -> b)
-instance arbTuple :: (Arbitrary a, Arbitrary b) => Arbitrary (Tuple a b)
-instance arbMaybe :: (Arbitrary a) => Arbitrary (Maybe a)
-instance arbEither :: (Arbitrary a, Arbitrary b) => Arbitrary (Either a b)
+Arbitrary Boolean
+Arbitrary Number
+Arbitrary Int
+Arbitrary String
+Arbitrary Char
+Arbitrary Unit
+Arbitrary Ordering
+(Arbitrary a) => Arbitrary (Array a)
+(Coarbitrary a, Arbitrary b) => Arbitrary (a -> b)
+(Arbitrary a, Arbitrary b) => Arbitrary (Tuple a b)
+(Arbitrary a) => Arbitrary (Maybe a)
+(Arbitrary a, Arbitrary b) => Arbitrary (Either a b)
+(Arbitrary a) => Arbitrary (List a)
+(Arbitrary a) => Arbitrary (Identity a)
+(Arbitrary a) => Arbitrary (Lazy a)
 ```
 
 #### `Coarbitrary`
@@ -48,18 +51,21 @@ is the role of the `coarbitrary` function.
 
 ##### Instances
 ``` purescript
-instance coarbBoolean :: Coarbitrary Boolean
-instance coarbNumber :: Coarbitrary Number
-instance coarbInt :: Coarbitrary Int
-instance coarbString :: Coarbitrary String
-instance coarbChar :: Coarbitrary Char
-instance coarbUnit :: Coarbitrary Unit
-instance coarbOrdering :: Coarbitrary Ordering
-instance coarbArray :: (Coarbitrary a) => Coarbitrary (Array a)
-instance coarbFunction :: (Arbitrary a, Coarbitrary b) => Coarbitrary (a -> b)
-instance coarbTuple :: (Coarbitrary a, Coarbitrary b) => Coarbitrary (Tuple a b)
-instance coarbMaybe :: (Coarbitrary a) => Coarbitrary (Maybe a)
-instance coarbEither :: (Coarbitrary a, Coarbitrary b) => Coarbitrary (Either a b)
+Coarbitrary Boolean
+Coarbitrary Number
+Coarbitrary Int
+Coarbitrary String
+Coarbitrary Char
+Coarbitrary Unit
+Coarbitrary Ordering
+(Coarbitrary a) => Coarbitrary (Array a)
+(Arbitrary a, Coarbitrary b) => Coarbitrary (a -> b)
+(Coarbitrary a, Coarbitrary b) => Coarbitrary (Tuple a b)
+(Coarbitrary a) => Coarbitrary (Maybe a)
+(Coarbitrary a, Coarbitrary b) => Coarbitrary (Either a b)
+(Coarbitrary a) => Coarbitrary (List a)
+(Coarbitrary a) => Coarbitrary (Identity a)
+(Coarbitrary a) => Coarbitrary (Lazy a)
 ```
 
 
