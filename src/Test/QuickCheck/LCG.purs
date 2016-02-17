@@ -10,13 +10,13 @@ module Test.QuickCheck.LCG
   , randomSeed
   ) where
 
-import Prelude
+import Prelude (class Eq, class Show, eq, show, (<>), mod, (+), (-), (<$>), (<<<), (*), ($))
 
 import Math ((%))
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Random (RANDOM(), randomInt)
 import Data.Int (fromNumber, toNumber)
-import qualified Data.Maybe.Unsafe as U
+import Data.Maybe.Unsafe as U
 
 -- | The *multiplier*: a magic constant for the linear congruential generator
 lcgM :: Int

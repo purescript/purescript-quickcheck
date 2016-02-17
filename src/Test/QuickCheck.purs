@@ -17,16 +17,16 @@
 -- | ```
 module Test.QuickCheck where
 
-import Prelude
+import Prelude (class Show, class Eq, Unit, show, (++), (/=), (==), (<<<), (>>=), return, ($), one, bind, (+), zero, unit)
 
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Console (CONSOLE(), log)
 import Control.Monad.Eff.Exception (EXCEPTION(), throwException, error)
 import Control.Monad.Eff.Random (RANDOM())
 import Data.List (List(..), replicateM)
-import Test.QuickCheck.Arbitrary
-import Test.QuickCheck.Gen
-import Test.QuickCheck.LCG
+import Test.QuickCheck.Arbitrary (class Arbitrary, arbitrary)
+import Test.QuickCheck.Gen (Gen, evalGen)
+import Test.QuickCheck.LCG (Seed, randomSeed)
 
 -- | A type synonym which represents the effects used by the `quickCheck` function.
 type QC eff a = Eff (console :: CONSOLE, random :: RANDOM, err :: EXCEPTION | eff) a
@@ -100,14 +100,20 @@ instance showResult :: Show Result where
 -- | ```purescript
 -- | test x = myProperty x <?> ("myProperty did not hold for " <> show x)
 -- | ```
-(<?>) :: Boolean -> String -> Result
-(<?>) true _ = Success
-(<?>) false msg = Failed msg
+withHelp :: Boolean -> String -> Result
+withHelp true _ = Success
+withHelp false msg = Failed msg
+
+infix 2 withHelp as <?>
 
 -- | Self-documenting equality assertion
-(===) :: forall a. (Eq a, Show a) => a -> a -> Result
-(===) a b = a == b <?> show a ++ " /= " ++ show b
+assertEquals :: forall a. (Eq a, Show a) => a -> a -> Result
+assertEquals a b = a == b <?> show a ++ " /= " ++ show b
+
+infix 2 assertEquals as ===
 
 -- | Self-documenting inequality assertion
-(/==) :: forall a. (Eq a, Show a) => a -> a -> Result
-(/==) a b = a /= b <?> show a ++ " == " ++ show b
+assertNotEquals :: forall a. (Eq a, Show a) => a -> a -> Result
+assertNotEquals a b = a /= b <?> show a ++ " == " ++ show b
+
+infix 2 assertNotEquals as /==

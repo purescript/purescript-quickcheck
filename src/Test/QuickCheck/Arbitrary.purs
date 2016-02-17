@@ -1,6 +1,6 @@
 module Test.QuickCheck.Arbitrary where
 
-import Prelude
+import Prelude (Unit, Ordering(GT, EQ, LT), const, (<<<), pure, (>>=), (<$>), id, flip, zero, bind, (>>>), (<*>), map, unit, return, ($), negate, (*), (<))
 
 import Data.Char (toCharCode, fromCharCode)
 import Data.Either (Either(..))
@@ -12,7 +12,7 @@ import Data.List (List())
 import Data.Maybe (Maybe(..))
 import Data.String (charCodeAt, fromCharArray, split)
 import Data.Tuple (Tuple(..))
-import Test.QuickCheck.Gen
+import Test.QuickCheck.Gen (Gen, listOf, chooseInt, sized, perturbGen, repeatable, arrayOf, oneOf, uniform)
 
 -- | The `Arbitrary` class represents those types whose values can be
 -- | _randomly-generated_.
