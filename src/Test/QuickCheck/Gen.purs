@@ -27,26 +27,24 @@ module Test.QuickCheck.Gen
   , randomSample'
   ) where
 
-import Prelude
+import Prelude (bind, (/), (<$>), return, ($), one, (-), zero, (==), pure, (<#>), (<=), (<<<), map, (<), (+), otherwise, (>=), mod, (*), (>>>))
 
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Random (RANDOM())
 import Control.Monad.State (State(), runState, evalState)
 import Control.Monad.State.Class (state, modify)
-import Control.Monad.Rec.Class (MonadRec, tailRecM)
-import Math ((%))
+import Control.Monad.Rec.Class (class MonadRec, tailRecM)
 import Data.Array ((!!), length)
 import Data.Tuple (Tuple(..))
 import Data.Foldable (fold)
-import Data.Int (toNumber, fromNumber)
+import Data.Int (toNumber)
 import Data.Maybe (fromMaybe)
-import Data.Maybe.Unsafe as U
 import Data.Monoid.Additive (Additive(..), runAdditive)
 import Data.Tuple (Tuple(..), fst, snd)
 import Data.Either (Either(..))
 import Data.List (List(..), fromList)
-import Test.QuickCheck.LCG
-import qualified Math as M
+import Test.QuickCheck.LCG (Seed, lcgPerturb, lcgN, lcgNext, runSeed, randomSeed)
+import Math as M
 
 -- | Tests are parameterized by the `Size` of the randomly-generated data,
 -- | the meaning of which depends on the particular generator used.

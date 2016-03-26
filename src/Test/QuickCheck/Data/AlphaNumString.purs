@@ -1,10 +1,10 @@
 module Test.QuickCheck.Data.AlphaNumString where
 
-import Prelude
+import Prelude ((<$>), (<<<), pure, map)
 
 import Data.String (fromCharArray, toCharArray)
-import Test.QuickCheck.Gen
-import Test.QuickCheck.Arbitrary
+import Test.QuickCheck.Gen (Gen, arrayOf, oneOf)
+import Test.QuickCheck.Arbitrary (class Coarbitrary, class Arbitrary, coarbitrary)
 
 -- | A newtype for `String` whose `Arbitrary` instance generated random
 -- | alphanumeric strings.

@@ -1,18 +1,20 @@
 module Test.QuickCheck.Data.ApproxNumber where
 
-import Prelude
+import Prelude (class Num, class DivisionRing, class Ring, class ModuloSemiring, class Semiring, class Ord, class Eq, (-), mod, (/), one, (*), zero, (+), compare, (<$>), negate, (>=), (&&), (<=))
 
-import Test.QuickCheck.Arbitrary
+import Test.QuickCheck.Arbitrary (class Coarbitrary, class Arbitrary, coarbitrary, arbitrary)
 
 -- | A newtype for `Number` whose `Eq` instance uses an epsilon value to allow
 -- | for precision erros when comparing.
 newtype ApproxNumber = ApproxNumber Number
 
 -- Approximate equality comparison
-(=~=) :: Number -> Number -> Boolean
-(=~=) x y = (y - x) <= epsilon && (y - x) >= (-epsilon)
+approximateEqual :: Number -> Number -> Boolean
+approximateEqual x y = (y - x) <= epsilon && (y - x) >= (-epsilon)
   where
   epsilon = 0.00000001
+
+infix 2 approximateEqual as =~=
 
 instance arbitraryApproxNumber :: Arbitrary ApproxNumber where
   arbitrary = ApproxNumber <$> arbitrary
