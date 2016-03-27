@@ -1,5 +1,6 @@
 {
   "name": "purescript-quickcheck",
+  "homepage": "https://github.com/purescript/purescript-quickcheck",
   "license": "MIT",
   "authors": [
     "John A. De Goes <john@degoes.net> (http://degoes.net)",
@@ -19,12 +20,12 @@
     "package.json"
   ],
   "dependencies": {
-    "purescript-console": "^0.1.0",
-    "purescript-either": "^0.2.0",
-    "purescript-exceptions": "^0.3.0",
-    "purescript-lists": "^0.7.0",
-    "purescript-random": "^0.2.0",
-    "purescript-strings": "^0.7.0",
-    "purescript-transformers": "^0.8.1"
+    "purescript-console": "^1.0.0-rc.1",
+    "purescript-either": "^1.0.0-rc.1",
+    "purescript-exceptions": "^1.0.0-rc.1",
+    "purescript-lists": "^1.0.0-rc.1",
+    "purescript-random": "^1.0.0-rc.1",
+    "purescript-strings": "^1.0.0-rc.1",
+    "purescript-transformers": "^1.0.0-rc.1"
   }
 }

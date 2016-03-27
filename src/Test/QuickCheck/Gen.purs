@@ -1,9 +1,9 @@
 -- | This module defines the random generator monad used by the `Test.QuickCheck`
 -- | module, as well as helper functions for constructing random generators.
 module Test.QuickCheck.Gen
-  ( Gen()
-  , GenState()
-  , Size()
+  ( Gen
+  , GenState
+  , Size
   , repeatable
   , stateful
   , variant
@@ -27,24 +27,27 @@ module Test.QuickCheck.Gen
   , randomSample'
   ) where
 
-import Prelude (bind, (/), (<$>), return, ($), one, (-), zero, (==), pure, (<#>), (<=), (<<<), map, (<), (+), otherwise, (>=), mod, (*), (>>>))
+import Prelude
 
-import Control.Monad.Eff (Eff())
-import Control.Monad.Eff.Random (RANDOM())
-import Control.Monad.State (State(), runState, evalState)
-import Control.Monad.State.Class (state, modify)
+import Control.Monad.Eff (Eff)
+import Control.Monad.Eff.Random (RANDOM)
 import Control.Monad.Rec.Class (class MonadRec, tailRecM)
+import Control.Monad.State (State, runState, evalState)
+import Control.Monad.State.Class (state, modify)
+
 import Data.Array ((!!), length)
-import Data.Tuple (Tuple(..))
+import Data.Either (Either(..))
 import Data.Foldable (fold)
 import Data.Int (toNumber)
+import Data.List (List(..), toUnfoldable)
 import Data.Maybe (fromMaybe)
 import Data.Monoid.Additive (Additive(..), runAdditive)
+import Data.Tuple (Tuple(..))
 import Data.Tuple (Tuple(..), fst, snd)
-import Data.Either (Either(..))
-import Data.List (List(..), fromList)
-import Test.QuickCheck.LCG (Seed, lcgPerturb, lcgN, lcgNext, runSeed, randomSeed)
+
 import Math as M
+
+import Test.QuickCheck.LCG (Seed, lcgPerturb, lcgN, lcgNext, runSeed, randomSeed)
 
 -- | Tests are parameterized by the `Size` of the randomly-generated data,
 -- | the meaning of which depends on the particular generator used.
@@ -126,14 +129,14 @@ arrayOf1 g = sized $ \n ->
   do k <- chooseInt zero n
      x <- g
      xs <- vectorOf (k - one) g
-     return $ Tuple x xs
+     pure $ Tuple x xs
 
-replicateMRec :: forall m a. (MonadRec m) => Int -> m a -> m (List a)
-replicateMRec k _ | k <= 0 = return Nil
+replicateMRec :: forall m a. MonadRec m => Int -> m a -> m (List a)
+replicateMRec k _ | k <= 0 = pure Nil
 replicateMRec k gen = tailRecM go (Tuple Nil k)
   where
   go :: (Tuple (List a) Int) -> m (Either (Tuple (List a) Int) (List a))
-  go (Tuple acc 0) = return $ Right acc
+  go (Tuple acc 0) = pure $ Right acc
   go (Tuple acc n) = gen <#> \x -> Left (Tuple (Cons x acc) (n - 1))
 
 -- | Create a random generator which generates a list of random values of the specified size.
@@ -142,7 +145,7 @@ listOf = replicateMRec
 
 -- | Create a random generator which generates a vector of random values of a specified size.
 vectorOf :: forall a. Int -> Gen a -> Gen (Array a)
-vectorOf k g = fromList <$> listOf k g
+vectorOf k g = toUnfoldable <$> listOf k g
 
 -- | Create a random generator which selects a value from a non-empty collection with
 -- | uniform probability.
@@ -167,7 +170,7 @@ sample seed sz g = evalGen (vectorOf sz g) { newSeed: seed, size: sz }
 randomSample' :: forall r a. Size -> Gen a -> Eff (random :: RANDOM | r) (Array a)
 randomSample' n g = do
   seed <- randomSeed
-  return $ sample seed n g
+  pure $ sample seed n g
 
 -- | Get a random sample of 10 values
 randomSample :: forall r a. Gen a -> Eff (random :: RANDOM | r) (Array a)

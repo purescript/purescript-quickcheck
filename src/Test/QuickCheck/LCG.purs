@@ -1,5 +1,5 @@
 module Test.QuickCheck.LCG
-  ( Seed()
+  ( Seed
   , mkSeed
   , runSeed
   , lcgM
@@ -10,13 +10,17 @@ module Test.QuickCheck.LCG
   , randomSeed
   ) where
 
-import Prelude (class Eq, class Show, eq, show, (<>), mod, (+), (-), (<$>), (<<<), (*), ($))
+import Prelude
+
+import Control.Monad.Eff (Eff)
+import Control.Monad.Eff.Random (RANDOM, randomInt)
+
+import Data.Int (fromNumber, toNumber)
+import Data.Maybe (fromJust)
 
 import Math ((%))
-import Control.Monad.Eff (Eff())
-import Control.Monad.Eff.Random (RANDOM(), randomInt)
-import Data.Int (fromNumber, toNumber)
-import Data.Maybe.Unsafe as U
+
+import Partial.Unsafe (unsafePartial)
 
 -- | The *multiplier*: a magic constant for the linear congruential generator
 lcgM :: Int
@@ -37,7 +41,8 @@ lcgN = 2147483647
 lcgPerturb :: Number -> Seed -> Seed
 lcgPerturb d = Seed <<< go <<< runSeed
   where
-  go n = U.fromJust $ fromNumber $ (toNumber lcgM * toNumber n + d) % toNumber lcgN
+  go n = unsafePartial $ fromJust $
+    fromNumber $ (toNumber lcgM * toNumber n + d) % toNumber lcgN
 
 -- | Step the linear congruential generator
 lcgNext :: Seed -> Seed
