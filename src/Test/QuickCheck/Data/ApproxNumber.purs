@@ -1,6 +1,6 @@
 module Test.QuickCheck.Data.ApproxNumber where
 
-import Prelude (class Num, class DivisionRing, class Ring, class ModuloSemiring, class Semiring, class Ord, class Eq, (-), mod, (/), one, (*), zero, (+), compare, (<$>), negate, (>=), (&&), (<=))
+import Prelude
 
 import Test.QuickCheck.Arbitrary (class Coarbitrary, class Arbitrary, coarbitrary, arbitrary)
 
@@ -34,12 +34,14 @@ instance semiringApproxNumber :: Semiring ApproxNumber where
   mul (ApproxNumber x) (ApproxNumber y) = ApproxNumber (x * y)
   one = ApproxNumber one
 
-instance moduloSemiringApproxNumber :: ModuloSemiring ApproxNumber where
-  div (ApproxNumber x) (ApproxNumber y) = ApproxNumber (x / y)
-  mod (ApproxNumber x) (ApproxNumber y) = ApproxNumber (x `mod` y)
-
 instance ringApproxNumber :: Ring ApproxNumber where
   sub (ApproxNumber x) (ApproxNumber y) = ApproxNumber (x - y)
 
-instance divisionRingApproxNumber :: DivisionRing ApproxNumber
-instance numApproxNumber :: Num ApproxNumber
+instance commutativeRingApproxNumber :: CommutativeRing ApproxNumber
+
+instance euclideanRingApproxNumber :: EuclideanRing ApproxNumber where
+  degree (ApproxNumber x) = degree x
+  div (ApproxNumber x) (ApproxNumber y) = ApproxNumber (x / y)
+  mod (ApproxNumber x) (ApproxNumber y) = ApproxNumber (x `mod` y)
+
+instance fieldApproxNumber :: Field ApproxNumber

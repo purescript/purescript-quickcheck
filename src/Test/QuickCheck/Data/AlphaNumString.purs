@@ -1,8 +1,9 @@
 module Test.QuickCheck.Data.AlphaNumString where
 
-import Prelude ((<$>), (<<<), pure, map)
+import Prelude
 
 import Data.String (fromCharArray, toCharArray)
+
 import Test.QuickCheck.Gen (Gen, arrayOf, oneOf)
 import Test.QuickCheck.Arbitrary (class Coarbitrary, class Arbitrary, coarbitrary)
 

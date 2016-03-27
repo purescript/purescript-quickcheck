@@ -1,17 +1,18 @@
 module Test.QuickCheck.Arbitrary where
 
-import Prelude (Unit, Ordering(GT, EQ, LT), const, (<<<), pure, (>>=), (<$>), id, flip, zero, bind, (>>>), (<*>), map, unit, return, ($), negate, (*), (<))
+import Prelude
 
 import Data.Char (toCharCode, fromCharCode)
 import Data.Either (Either(..))
 import Data.Foldable (foldl)
 import Data.Identity (Identity(..))
 import Data.Int (toNumber)
-import Data.Lazy (Lazy(), defer, force)
-import Data.List (List())
+import Data.Lazy (Lazy, defer, force)
+import Data.List (List)
 import Data.Maybe (Maybe(..))
 import Data.String (charCodeAt, fromCharArray, split)
 import Data.Tuple (Tuple(..))
+
 import Test.QuickCheck.Gen (Gen, listOf, chooseInt, sized, perturbGen, repeatable, arrayOf, oneOf, uniform)
 
 -- | The `Arbitrary` class represents those types whose values can be
@@ -37,7 +38,7 @@ class Coarbitrary t where
 instance arbBoolean :: Arbitrary Boolean where
   arbitrary = do
     n <- uniform
-    return $ (n * 2.0) < 1.0
+    pure $ (n * 2.0) < 1.0
 
 instance coarbBoolean :: Coarbitrary Boolean where
   coarbitrary true = perturbGen 1.0
@@ -68,7 +69,7 @@ instance coarbChar :: Coarbitrary Char where
   coarbitrary c = coarbitrary $ toCharCode c
 
 instance arbUnit :: Arbitrary Unit where
-  arbitrary = return unit
+  arbitrary = pure unit
 
 instance coarbUnit :: Coarbitrary Unit where
   coarbitrary _ = perturbGen 1.0
@@ -81,10 +82,10 @@ instance coarbOrdering :: Coarbitrary Ordering where
   coarbitrary EQ = perturbGen 2.0
   coarbitrary GT = perturbGen 3.0
 
-instance arbArray :: (Arbitrary a) => Arbitrary (Array a) where
+instance arbArray :: Arbitrary a => Arbitrary (Array a) where
   arbitrary = arrayOf arbitrary
 
-instance coarbArray :: (Coarbitrary a) => Coarbitrary (Array a) where
+instance coarbArray :: Coarbitrary a => Coarbitrary (Array a) where
   coarbitrary = foldl (\f x -> f <<< coarbitrary x) id
 
 instance arbFunction :: (Coarbitrary a, Arbitrary b) => Arbitrary (a -> b) where
@@ -101,12 +102,12 @@ instance arbTuple :: (Arbitrary a, Arbitrary b) => Arbitrary (Tuple a b) where
 instance coarbTuple :: (Coarbitrary a, Coarbitrary b) => Coarbitrary (Tuple a b) where
   coarbitrary (Tuple a b) = coarbitrary a >>> coarbitrary b
 
-instance arbMaybe :: (Arbitrary a) => Arbitrary (Maybe a) where
+instance arbMaybe :: Arbitrary a => Arbitrary (Maybe a) where
   arbitrary = do
     b <- arbitrary
     if b then pure Nothing else Just <$> arbitrary
 
-instance coarbMaybe :: (Coarbitrary a) => Coarbitrary (Maybe a) where
+instance coarbMaybe :: Coarbitrary a => Coarbitrary (Maybe a) where
   coarbitrary Nothing = perturbGen 1.0
   coarbitrary (Just a) = coarbitrary a
 
@@ -119,20 +120,20 @@ instance coarbEither :: (Coarbitrary a, Coarbitrary b) => Coarbitrary (Either a 
   coarbitrary (Left a)  = coarbitrary a
   coarbitrary (Right b) = coarbitrary b
 
-instance arbitraryList :: (Arbitrary a) => Arbitrary (List a) where
+instance arbitraryList :: Arbitrary a => Arbitrary (List a) where
   arbitrary = sized \n -> chooseInt zero n >>= flip listOf arbitrary
 
-instance coarbList :: (Coarbitrary a) => Coarbitrary (List a) where
+instance coarbList :: Coarbitrary a => Coarbitrary (List a) where
   coarbitrary = foldl (\f x -> f <<< coarbitrary x) id
 
-instance arbitraryIdentity :: (Arbitrary a) => Arbitrary (Identity a) where
+instance arbitraryIdentity :: Arbitrary a => Arbitrary (Identity a) where
   arbitrary = Identity <$> arbitrary
 
-instance coarbIdentity :: (Coarbitrary a) => Coarbitrary (Identity a) where
+instance coarbIdentity :: Coarbitrary a => Coarbitrary (Identity a) where
   coarbitrary (Identity a) = coarbitrary a
 
-instance arbitraryLazy :: (Arbitrary a) => Arbitrary (Lazy a) where
+instance arbitraryLazy :: Arbitrary a => Arbitrary (Lazy a) where
   arbitrary = arbitrary >>= pure <<< defer <<< const
 
-instance coarbLazy :: (Coarbitrary a) => Coarbitrary (Lazy a) where
+instance coarbLazy :: Coarbitrary a => Coarbitrary (Lazy a) where
   coarbitrary a = coarbitrary (force a)

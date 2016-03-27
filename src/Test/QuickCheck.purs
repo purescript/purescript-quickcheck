@@ -17,13 +17,15 @@
 -- | ```
 module Test.QuickCheck where
 
-import Prelude (class Show, class Eq, Unit, show, (++), (/=), (==), (<<<), (>>=), return, ($), one, bind, (+), zero, unit)
+import Prelude
 
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Console (CONSOLE(), log)
 import Control.Monad.Eff.Exception (EXCEPTION(), throwException, error)
 import Control.Monad.Eff.Random (RANDOM())
+
 import Data.List (List(..), replicateM)
+
 import Test.QuickCheck.Arbitrary (class Arbitrary, arbitrary)
 import Test.QuickCheck.Gen (Gen, evalGen)
 import Test.QuickCheck.LCG (Seed, randomSeed)
@@ -45,14 +47,14 @@ quickCheck' n prop = do
   seed <- randomSeed
   let results = quickCheckPure seed n prop
   let successes = countSuccesses results
-  log $ show successes ++ "/" ++ show n ++ " test(s) passed."
+  log $ show successes <> "/" <> show n <> " test(s) passed."
   throwOnFirstFailure one results
 
   where
 
   throwOnFirstFailure :: Int -> List Result -> QC eff Unit
-  throwOnFirstFailure _ Nil = return unit
-  throwOnFirstFailure n (Cons (Failed msg) _) = throwException $ error $ "Test " ++ show n ++ " failed: \n" ++ msg
+  throwOnFirstFailure _ Nil = pure unit
+  throwOnFirstFailure n (Cons (Failed msg) _) = throwException $ error $ "Test " <> show n <> " failed: \n" <> msg
   throwOnFirstFailure n (Cons _ rest) = throwOnFirstFailure (n + one) rest
 
   countSuccesses :: List Result -> Int
@@ -77,11 +79,11 @@ class Testable prop where
   test :: prop -> Gen Result
 
 instance testableResult :: Testable Result where
-  test = return
+  test = pure
 
 instance testableBoolean :: Testable Boolean where
-  test true = return Success
-  test false = return $ Failed "Test returned false"
+  test true = pure Success
+  test false = pure $ Failed "Test returned false"
 
 instance testableFunction :: (Arbitrary t, Testable prop) => Testable (t -> prop) where
   test f = arbitrary >>= test <<< f
@@ -91,7 +93,7 @@ data Result = Success | Failed String
 
 instance showResult :: Show Result where
   show Success = "Success"
-  show (Failed msg) = "Failed: " ++ msg
+  show (Failed msg) = "Failed: " <> msg
 
 -- | This operator attaches an error message to a failed test.
 -- |
@@ -108,12 +110,12 @@ infix 2 withHelp as <?>
 
 -- | Self-documenting equality assertion
 assertEquals :: forall a. (Eq a, Show a) => a -> a -> Result
-assertEquals a b = a == b <?> show a ++ " /= " ++ show b
+assertEquals a b = a == b <?> show a <> " /= " <> show b
 
 infix 2 assertEquals as ===
 
 -- | Self-documenting inequality assertion
 assertNotEquals :: forall a. (Eq a, Show a) => a -> a -> Result
-assertNotEquals a b = a /= b <?> show a ++ " == " ++ show b
+assertNotEquals a b = a /= b <?> show a <> " == " <> show b
 
 infix 2 assertNotEquals as /==
