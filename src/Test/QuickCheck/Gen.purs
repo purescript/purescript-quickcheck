@@ -42,7 +42,6 @@ import Data.Int (toNumber)
 import Data.List (List(..), toUnfoldable)
 import Data.Maybe (fromMaybe)
 import Data.Monoid.Additive (Additive(..), runAdditive)
-import Data.Tuple (Tuple(..))
 import Data.Tuple (Tuple(..), fst, snd)
 
 import Math as M

@@ -20,13 +20,13 @@
     "package.json"
   ],
   "dependencies": {
+    "purescript-arrays": "^1.0.0-rc.4",
     "purescript-console": "^1.0.0-rc.1",
     "purescript-either": "^1.0.0-rc.1",
     "purescript-exceptions": "^1.0.0-rc.1",
     "purescript-lists": "^1.0.0-rc.1",
     "purescript-random": "^1.0.0-rc.1",
     "purescript-strings": "^1.0.0-rc.1",
-    "purescript-transformers": "^1.0.0-rc.1",
-    "purescript-arrays": "^1.0.0-rc.4"
+    "purescript-transformers": "^1.0.0-rc.1"
   }
 }

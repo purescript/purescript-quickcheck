@@ -24,7 +24,8 @@ import Control.Monad.Eff.Console (CONSOLE(), log)
 import Control.Monad.Eff.Exception (EXCEPTION(), throwException, error)
 import Control.Monad.Eff.Random (RANDOM())
 
-import Data.List (List(..), replicateM)
+import Data.List (List(..))
+import Data.Unfoldable (replicateA)
 
 import Test.QuickCheck.Arbitrary (class Arbitrary, arbitrary)
 import Test.QuickCheck.Gen (Gen, evalGen)
@@ -67,7 +68,7 @@ quickCheck' n prop = do
 -- | The first argument is the _random seed_ to be passed to the random generator.
 -- | The second argument is the number of tests to run.
 quickCheckPure :: forall prop. (Testable prop) => Seed -> Int -> prop -> List Result
-quickCheckPure s n prop = evalGen (replicateM n (test prop)) { newSeed: s, size: 10 }
+quickCheckPure s n prop = evalGen (replicateA n (test prop)) { newSeed: s, size: 10 }
 
 -- | The `Testable` class represents _testable properties_.
 -- |
