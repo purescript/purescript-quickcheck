@@ -35,22 +35,19 @@ import Prelude
 
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Console (CONSOLE(), log)
-import Control.Monad.Eff.Exception (EXCEPTION(), throwException, error)
+import Control.Monad.Eff.Exception (EXCEPTION, throwException, error)
 import Control.Monad.Eff.Random (RANDOM())
-import Control.Monad.Except.Trans (ExceptT, runExceptT, throwError)
-import Control.Monad.State (State)
-import Control.Monad.Trans (lift)
-import Control.Monad.Writer.Trans (WriterT, runWriterT, tell)
 import Control.Monad.Rec.Class (tailRecM)
-
 import Data.Either (Either(..))
-import Data.List (List(..))
-import Data.Monoid.Additive (Additive(..))
+import Data.Foldable (for_)
+import Data.List (List)
+import Data.Maybe (Maybe(..))
+import Data.Maybe.First (First(..))
+import Data.Monoid (mempty)
 import Data.Tuple (Tuple(..))
 import Data.Unfoldable (replicateA)
-
 import Test.QuickCheck.Arbitrary (class Arbitrary, arbitrary)
-import Test.QuickCheck.Gen (Gen, GenState, evalGen)
+import Test.QuickCheck.Gen (Gen, evalGen, runGen)
 import Test.QuickCheck.LCG (Seed, randomSeed)
 
 -- | A type synonym which represents the effects used by the `quickCheck` function.
@@ -68,23 +65,30 @@ quickCheck prop = quickCheck' 100 prop
 quickCheck' :: forall eff prop. Testable prop => Int -> prop -> QC eff Unit
 quickCheck' n prop = do
     seed <- randomSeed
-    case evalGen (runExceptT (runWriterT (tailRecM loop 0))) { newSeed: seed, size: 10 } of
-      Left err -> throwException $ error $ "Test " <> show (err.index + 1) <> " failed: \n" <> err.msg
-      Right (Tuple _ (Additive successes)) -> do
-        log $ show successes <> "/" <> show n <> " test(s) passed."
+    { successes, firstFailure } <- tailRecM loop { seed, index: 0, successes: 0, firstFailure: mempty }
+    log $ show successes <> "/" <> show n <> " test(s) passed."
+    for_ firstFailure \{ index, message } ->
+      throwException $ error $ "Test " <> show (index + 1) <> " failed: \n" <> message
   where
-    loop :: Int
-         -> WriterT (Additive Int)
-              (ExceptT { index :: Int, msg :: String }
-                (State GenState)) (Either Int Unit)
-    loop index | index == n = pure (Right unit)
-    loop index = do
-      result <- lift (lift (test prop))
-      case result of
-        Success -> do
-          tell (Additive 1)
-          pure (Left (index + 1))
-        Failed msg -> throwError { index, msg }
+    loop :: { seed :: Seed, index :: Int, successes :: Int, firstFailure :: First { index :: Int, message :: String } }
+         -> QC eff (Either { seed :: Seed, index :: Int, successes :: Int, firstFailure :: First { index :: Int, message :: String } }
+              { successes :: Int, firstFailure :: First { index :: Int, message :: String } })
+    loop { seed, index, successes, firstFailure }
+      | index == n = pure (Right { successes, firstFailure })
+      | otherwise = do
+        case runGen (test prop) { newSeed: seed, size: 10 } of
+          Tuple Success s ->
+            pure (Left { seed: s.newSeed
+                       , index: index + 1
+                       , successes: successes + 1
+                       , firstFailure
+                       })
+          Tuple (Failed message) s ->
+            pure (Left { seed: s.newSeed
+                       , index: index + 1
+                       , successes
+                       , firstFailure: firstFailure <> First (Just { index, message })
+                       })
 
 -- | Test a property, returning all test results as an array.
 -- |
