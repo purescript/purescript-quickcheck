@@ -2,7 +2,8 @@ module Test.QuickCheck.Data.ApproxNumber where
 
 import Prelude
 
-import Test.QuickCheck.Arbitrary (class Coarbitrary, class Arbitrary, coarbitrary, arbitrary)
+import Test.QuickCheck.Arbitrary (class Coarbitrary, class Arbitrary
+                                 , coarbitrary, arbitrary, defaultShrink)
 
 -- | A newtype for `Number` whose `Eq` instance uses an epsilon value to allow
 -- | for precision erros when comparing.
@@ -18,6 +19,7 @@ infix 2 approximateEqual as =~=
 
 instance arbitraryApproxNumber :: Arbitrary ApproxNumber where
   arbitrary = ApproxNumber <$> arbitrary
+  shrink = defaultShrink
 
 instance coarbitraryApproxNumber :: Coarbitrary ApproxNumber where
   coarbitrary (ApproxNumber n) = coarbitrary n
