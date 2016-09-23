@@ -27,7 +27,6 @@ import Control.Monad.Rec.Class (tailRecM)
 import Data.Either (Either(..))
 import Data.Foldable (fold, foldMap, for_)
 import Data.List (List)
-import Data.List.Lazy as LL
 import Data.Maybe (Maybe(..))
 import Data.Maybe.First (First(..), runFirst)
 import Data.Monoid (mempty)
@@ -75,16 +74,16 @@ quickCheck' n prop = do
       search { shrinkCount, testCase, index, message } = do
         case runFirst (foldMap (First <<< tryShrink) (shrink testCase)) of
           Just { message: message', testCase: testCase' } | shrinkCount < 100 -> do
-            search { index, message: message', shrinkCount: shrinkCount + 1, testCase: testCase' }
-          _ ->
-            log $ fold
+            pure $ Left { index, message: message', shrinkCount: shrinkCount + 1, testCase: testCase' }
+          _ -> do
+            Right unit <$ log (fold
               [ "Test "
               , show (index + 1)
               , " failed (with "
               , show shrinkCount
               , " reductions): \n"
               , message
-              ]
+              ])
 
       tryShrink testCase =
         case try prop testCase of
@@ -95,7 +94,7 @@ quickCheck' n prop = do
     { successes, firstFailure } <- tailRecM loop { seed, index: 0, successes: 0, firstFailure: mempty }
     log $ show successes <> "/" <> show n <> " test(s) passed."
     for_ firstFailure \{ index, message, testCase } ->
-      search { index, testCase, message, shrinkCount: 0 }
+      tailRecM search { index, testCase, message, shrinkCount: 0 }
 
 -- | Test a property, returning all test results as an array.
 -- |
@@ -105,17 +104,21 @@ quickCheckPure :: forall prop. Testable prop => Seed -> Int -> prop -> List Resu
 quickCheckPure s n prop = runSpace (test :: Space prop) \f ->
   evalGen (replicateA n (f prop <$> arbitrary)) { newSeed: s, size: 10 }
 
-newtype SpaceF state = SpaceF
-  { current :: state
-  , move :: state -> LL.List state
-  , test :: state -> Result
-  }
-
+-- | A `Space` for some property is defined by an `Arbitrary` instance which
+-- | provides the arguments for that property, returning a `Result`.
+-- |
+-- | This is used to collect function arguments into a nested `Tuple` in the
+-- | `Testable` instances.
+-- |
+-- | A `Space` can be explored to find minimal failing test cases by iteratively
+-- | `shrink`ing a failing case.
 newtype Space prop = Space (forall r. (forall a. Arbitrary a => (prop -> a -> Result) -> r) -> r)
 
 runSpace :: forall prop r. Space prop -> (forall a. Arbitrary a => (prop -> a -> Result) -> r) -> r
 runSpace (Space f) g = f g
 
+-- | Create a `Space` by providing a function which applies a property to
+-- | its arguments.
 space :: forall prop a. Arbitrary a => (prop -> a -> Result) -> Space prop
 space f = Space \toR -> toR f
 
