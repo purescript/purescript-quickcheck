@@ -5,7 +5,7 @@ import Prelude
 import Data.String (fromCharArray, toCharArray)
 
 import Test.QuickCheck.Gen (Gen, arrayOf, oneOf)
-import Test.QuickCheck.Arbitrary (class Coarbitrary, class Arbitrary, coarbitrary)
+import Test.QuickCheck.Arbitrary (class Coarbitrary, class Arbitrary, coarbitrary, defaultShrink)
 
 -- | A newtype for `String` whose `Arbitrary` instance generated random
 -- | alphanumeric strings.
@@ -22,6 +22,7 @@ instance arbAlphaNumString :: Arbitrary AlphaNumString where
 
     anyChar :: Gen Char
     anyChar = oneOf (pure 'a') (map pure rest)
+  shrink = defaultShrink
 
 instance coarbAlphaNumString :: Coarbitrary AlphaNumString where
   coarbitrary (AlphaNumString s) = coarbitrary s
