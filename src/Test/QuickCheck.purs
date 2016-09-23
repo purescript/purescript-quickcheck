@@ -31,7 +31,6 @@ import Data.List.Lazy as LL
 import Data.Maybe (Maybe(..))
 import Data.Maybe.First (First(..), runFirst)
 import Data.Monoid (mempty)
-import Data.Profunctor.Strong ((&&&))
 import Data.Tuple (Tuple(..))
 import Data.Unfoldable (replicateA)
 import Test.QuickCheck.Arbitrary (class Arbitrary, arbitrary, shrink)
