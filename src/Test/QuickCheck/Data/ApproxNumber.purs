@@ -2,11 +2,15 @@ module Test.QuickCheck.Data.ApproxNumber where
 
 import Prelude
 
+import Data.Newtype (class Newtype)
+
 import Test.QuickCheck.Arbitrary (class Coarbitrary, class Arbitrary, coarbitrary, arbitrary)
 
 -- | A newtype for `Number` whose `Eq` instance uses an epsilon value to allow
 -- | for precision erros when comparing.
 newtype ApproxNumber = ApproxNumber Number
+
+derive instance newtypeApproxNumber :: Newtype ApproxNumber _
 
 -- Approximate equality comparison
 approximateEqual :: Number -> Number -> Boolean

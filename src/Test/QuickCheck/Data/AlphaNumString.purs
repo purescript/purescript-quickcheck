@@ -2,6 +2,7 @@ module Test.QuickCheck.Data.AlphaNumString where
 
 import Prelude
 
+import Data.Newtype (class Newtype)
 import Data.String (fromCharArray, toCharArray)
 
 import Test.QuickCheck.Gen (Gen, arrayOf, oneOf)
@@ -11,8 +12,7 @@ import Test.QuickCheck.Arbitrary (class Coarbitrary, class Arbitrary, coarbitrar
 -- | alphanumeric strings.
 newtype AlphaNumString = AlphaNumString String
 
-runAlphaNumString :: AlphaNumString -> String
-runAlphaNumString (AlphaNumString s) = s
+derive instance newtypeAlphaNumString :: Newtype AlphaNumString _
 
 instance arbAlphaNumString :: Arbitrary AlphaNumString where
   arbitrary = AlphaNumString <<< fromCharArray <$> arrayOf anyChar

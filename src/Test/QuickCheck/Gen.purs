@@ -31,17 +31,17 @@ import Prelude
 
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Random (RANDOM)
-import Control.Monad.Rec.Class (class MonadRec, tailRecM)
+import Control.Monad.Rec.Class (class MonadRec, Step(..), tailRecM)
 import Control.Monad.State (State, runState, evalState)
 import Control.Monad.State.Class (state, modify)
 
 import Data.Array ((!!), length)
-import Data.Either (Either(..))
 import Data.Foldable (fold)
 import Data.Int (toNumber)
 import Data.List (List(..), toUnfoldable)
 import Data.Maybe (fromMaybe)
-import Data.Monoid.Additive (Additive(..), runAdditive)
+import Data.Monoid.Additive (Additive(..))
+import Data.Newtype (unwrap)
 import Data.Tuple (Tuple(..), fst, snd)
 
 import Math as M
@@ -109,7 +109,7 @@ oneOf x xs = do
 frequency :: forall a. Tuple Number (Gen a) -> List (Tuple Number (Gen a)) -> Gen a
 frequency x xs = let
     xxs   = Cons x xs
-    total = runAdditive $ fold (map (Additive <<< fst) xxs :: List (Additive Number))
+    total = unwrap $ fold (map (Additive <<< fst) xxs :: List (Additive Number))
     pick n d Nil = d
     pick n d (Cons (Tuple k x) xs) = if n <= k then x else pick (n - k) d xs
   in do
@@ -134,9 +134,9 @@ replicateMRec :: forall m a. MonadRec m => Int -> m a -> m (List a)
 replicateMRec k _ | k <= 0 = pure Nil
 replicateMRec k gen = tailRecM go (Tuple Nil k)
   where
-  go :: (Tuple (List a) Int) -> m (Either (Tuple (List a) Int) (List a))
-  go (Tuple acc 0) = pure $ Right acc
-  go (Tuple acc n) = gen <#> \x -> Left (Tuple (Cons x acc) (n - 1))
+  go :: (Tuple (List a) Int) -> m (Step (Tuple (List a) Int) (List a))
+  go (Tuple acc 0) = pure $ Done acc
+  go (Tuple acc n) = gen <#> \x -> Loop (Tuple (Cons x acc) (n - 1))
 
 -- | Create a random generator which generates a list of random values of the specified size.
 listOf :: forall a. Int -> Gen a -> Gen (List a)

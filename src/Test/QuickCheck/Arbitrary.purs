@@ -10,6 +10,7 @@ import Data.Int (toNumber)
 import Data.Lazy (Lazy, defer, force)
 import Data.List (List)
 import Data.Maybe (Maybe(..))
+import Data.Newtype (wrap)
 import Data.String (charCodeAt, fromCharArray, split)
 import Data.Tuple (Tuple(..))
 
@@ -60,7 +61,7 @@ instance arbString :: Arbitrary String where
   arbitrary = fromCharArray <$> arbitrary
 
 instance coarbString :: Coarbitrary String where
-  coarbitrary s = coarbitrary $ (charCodeAt zero <$> split "" s)
+  coarbitrary s = coarbitrary $ (charCodeAt zero <$> split (wrap "") s)
 
 instance arbChar :: Arbitrary Char where
   arbitrary = fromCharCode <$> chooseInt 0 65536
