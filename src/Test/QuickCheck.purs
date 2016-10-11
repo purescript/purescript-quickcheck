@@ -15,7 +15,21 @@
 -- | ```purescript
 -- | main = quickCheck \n -> n + 1 > n
 -- | ```
-module Test.QuickCheck where
+module Test.QuickCheck
+  ( QC
+  , quickCheck
+  , quickCheck'
+  , quickCheckPure
+  , class Testable
+  , test
+  , Result(..)
+  , withHelp
+  , (<?>)
+  , assertEquals
+  , (===)
+  , assertNotEquals
+  , (/==)
+  ) where
 
 import Prelude
 

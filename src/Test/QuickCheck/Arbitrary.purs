@@ -1,4 +1,9 @@
-module Test.QuickCheck.Arbitrary where
+module Test.QuickCheck.Arbitrary
+  ( class Arbitrary
+  , arbitrary
+  , class Coarbitrary
+  , coarbitrary
+  ) where
 
 import Prelude
 

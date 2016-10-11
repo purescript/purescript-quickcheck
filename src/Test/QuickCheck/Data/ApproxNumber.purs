@@ -1,4 +1,8 @@
-module Test.QuickCheck.Data.ApproxNumber where
+module Test.QuickCheck.Data.ApproxNumber
+  ( ApproxNumber(..)
+  , approximateEqual
+  , (=~=)
+  ) where
 
 import Prelude
 

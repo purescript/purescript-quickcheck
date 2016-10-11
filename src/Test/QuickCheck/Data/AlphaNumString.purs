@@ -1,4 +1,6 @@
-module Test.QuickCheck.Data.AlphaNumString where
+module Test.QuickCheck.Data.AlphaNumString
+  ( AlphaNumString(..)
+  ) where
 
 import Prelude
 

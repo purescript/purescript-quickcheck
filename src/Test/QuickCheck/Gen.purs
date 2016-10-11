@@ -1,7 +1,8 @@
 -- | This module defines the random generator monad used by the `Test.QuickCheck`
 -- | module, as well as helper functions for constructing random generators.
 module Test.QuickCheck.Gen
-  ( Gen
+  ( Gen(..)
+  , unGen
   , GenState
   , Size
   , repeatable
@@ -29,14 +30,17 @@ module Test.QuickCheck.Gen
 
 import Prelude
 
+import Control.Alt (class Alt)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Random (RANDOM)
 import Control.Monad.Rec.Class (class MonadRec, Step(..), tailRecM)
 import Control.Monad.State (State, runState, evalState)
 import Control.Monad.State.Class (state, modify)
+import Control.Monad.State.Trans (StateT)
 
 import Data.Array ((!!), length)
 import Data.Foldable (fold)
+import Data.Identity (Identity)
 import Data.Int (toNumber)
 import Data.List (List(..), toUnfoldable)
 import Data.Maybe (fromMaybe)
@@ -58,19 +62,31 @@ type GenState = { newSeed :: Seed, size :: Size }
 -- | The random generator monad
 -- |
 -- | `Gen` is a state monad which encodes a linear congruential generator.
-type Gen a = State GenState a
+newtype Gen a = Gen (StateT GenState Identity a)
+
+derive newtype instance functorGen :: Functor Gen
+derive newtype instance applyGen :: Apply Gen
+derive newtype instance applicativeGen :: Applicative Gen
+derive newtype instance bindGen :: Bind Gen
+derive newtype instance monadGen :: Monad Gen
+derive newtype instance altGen :: Alt Gen
+derive newtype instance monadRecGen :: MonadRec Gen
+
+-- | Exposes the underlying State implementation.
+unGen :: forall a. Gen a -> State GenState a
+unGen (Gen st) = st
 
 -- | Create a random generator for a function type.
 repeatable :: forall a b. (a -> Gen b) -> Gen (a -> b)
-repeatable f = state $ \s -> Tuple (\a -> fst (runGen (f a) s)) (s { newSeed = lcgNext s.newSeed })
+repeatable f = Gen $ state \s -> Tuple (\a -> fst (runGen (f a) s)) (s { newSeed = lcgNext s.newSeed })
 
 -- | Create a random generator which uses the generator state explicitly.
 stateful :: forall a. (GenState -> Gen a) -> Gen a
-stateful f = state $ \s -> runGen (f s) s
+stateful f = Gen $ state \s -> runGen (f s) s
 
 -- | Modify a random generator by setting a new random seed.
 variant :: forall a. Seed -> Gen a -> Gen a
-variant n g = state $ \s -> runGen g s { newSeed = n }
+variant n g = Gen $ state \s -> runGen g s { newSeed = n }
 
 -- | Create a random generator which depends on the size parameter.
 sized :: forall a. (Size -> Gen a) -> Gen a
@@ -78,7 +94,7 @@ sized f = stateful (\s -> f s.size)
 
 -- | Modify a random generator by setting a new size parameter.
 resize :: forall a. Size -> Gen a -> Gen a
-resize sz g = state $ \s -> runGen g s { size = sz }
+resize sz g = Gen $ state \s -> runGen g s { size = sz }
 
 -- | Create a random generator which samples a range of `Number`s i
 -- | with uniform probability.
@@ -155,11 +171,11 @@ elements x xs = do
 
 -- | Run a random generator
 runGen :: forall a. Gen a -> GenState -> Tuple a GenState
-runGen = runState
+runGen = runState <<< unGen
 
 -- | Run a random generator, keeping only the randomly-generated result
 evalGen :: forall a. Gen a -> GenState -> a
-evalGen = evalState
+evalGen = evalState <<< unGen
 
 -- | Sample a random generator
 sample :: forall a. Seed -> Size -> Gen a -> Array a
@@ -177,7 +193,7 @@ randomSample = randomSample' 10
 
 -- | A random generator which simply outputs the current seed
 lcgStep :: Gen Int
-lcgStep = state f where
+lcgStep = Gen $ state f where
   f s = Tuple (runSeed s.newSeed) (s { newSeed = lcgNext s.newSeed })
 
 -- | A random generator which approximates a uniform random variable on `[0, 1]`
@@ -188,6 +204,6 @@ foreign import float32ToInt32 :: Number -> Int
 
 -- | Perturb a random generator by modifying the current seed
 perturbGen :: forall a. Number -> Gen a -> Gen a
-perturbGen n gen = do
+perturbGen n gen = Gen do
   modify \s -> s { newSeed = lcgPerturb (toNumber (float32ToInt32 n)) s.newSeed }
-  gen
+  unGen gen
