@@ -1,7 +1,7 @@
 -- | This module defines the random generator monad used by the `Test.QuickCheck`
 -- | module, as well as helper functions for constructing random generators.
 module Test.QuickCheck.Gen
-  ( Gen(..)
+  ( Gen
   , unGen
   , GenState
   , Size
