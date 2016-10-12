@@ -30,12 +30,6 @@ instance arbitraryApproxNumber :: Arbitrary ApproxNumber where
 instance coarbitraryApproxNumber :: Coarbitrary ApproxNumber where
   coarbitrary (ApproxNumber n) = coarbitrary n
 
-instance eqApproxNumber :: Eq ApproxNumber where
-  eq (ApproxNumber x) (ApproxNumber y) = x =~= y
-
-instance ordApproxNumber :: Ord ApproxNumber where
-  compare (ApproxNumber x) (ApproxNumber y) = compare x y
-
 instance semiringApproxNumber :: Semiring ApproxNumber where
   add (ApproxNumber x) (ApproxNumber y) = ApproxNumber (x + y)
   zero = ApproxNumber zero
