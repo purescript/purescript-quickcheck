@@ -33,16 +33,22 @@ module Test.QuickCheck
 
 import Prelude
 
-import Control.Monad.Eff (Eff())
-import Control.Monad.Eff.Console (CONSOLE(), log)
-import Control.Monad.Eff.Exception (EXCEPTION(), throwException, error)
-import Control.Monad.Eff.Random (RANDOM())
+import Control.Monad.Eff (Eff)
+import Control.Monad.Eff.Console (CONSOLE, log)
+import Control.Monad.Eff.Exception (EXCEPTION, throwException, error)
+import Control.Monad.Eff.Random (RANDOM)
+import Control.Monad.Rec.Class (Step(..), tailRec)
 
-import Data.List (List(..))
+import Data.Foldable (for_)
+import Data.List (List)
+import Data.Maybe (Maybe(..))
+import Data.Maybe.First (First(..))
+import Data.Monoid (mempty)
+import Data.Tuple (Tuple(..))
 import Data.Unfoldable (replicateA)
 
 import Test.QuickCheck.Arbitrary (class Arbitrary, arbitrary)
-import Test.QuickCheck.Gen (Gen, evalGen)
+import Test.QuickCheck.Gen (Gen, evalGen, runGen)
 import Test.QuickCheck.LCG (Seed, randomSeed)
 
 -- | A type synonym which represents the effects used by the `quickCheck` function.
@@ -52,36 +58,52 @@ type QC eff a = Eff (console :: CONSOLE, random :: RANDOM, err :: EXCEPTION | ef
 -- |
 -- | This function generates a new random seed, runs 100 tests and
 -- | prints the test results to the console.
-quickCheck :: forall eff prop. (Testable prop) => prop -> QC eff Unit
+quickCheck :: forall eff prop. Testable prop => prop -> QC eff Unit
 quickCheck prop = quickCheck' 100 prop
 
 -- | A variant of the `quickCheck` function which accepts an extra parameter
 -- | representing the number of tests which should be run.
-quickCheck' :: forall eff prop. (Testable prop) => Int -> prop -> QC eff Unit
+quickCheck' :: forall eff prop. Testable prop => Int -> prop -> QC eff Unit
 quickCheck' n prop = do
   seed <- randomSeed
-  let results = quickCheckPure seed n prop
-  let successes = countSuccesses results
-  log $ show successes <> "/" <> show n <> " test(s) passed."
-  throwOnFirstFailure one results
-
+  let result = tailRec loop { seed, index: 0, successes: 0, firstFailure: mempty }
+  log $ show result.successes <> "/" <> show n <> " test(s) passed."
+  for_ result.firstFailure \{ index, message } ->
+    throwException $ error $ "Test " <> show (index + 1) <> " failed: \n" <> message
   where
+  loop :: LoopState -> Step LoopState (LoopResult ())
+  loop { seed, index, successes, firstFailure }
+    | index == n = Done { successes, firstFailure }
+    | otherwise =
+        case runGen (test prop) { newSeed: seed, size: 10 } of
+          Tuple Success s ->
+            Loop
+              { seed: s.newSeed
+              , index: index + 1
+              , successes: successes + 1
+              , firstFailure
+              }
+          Tuple (Failed message) s ->
+            Loop
+              { seed: s.newSeed
+              , index: index + 1
+              , successes
+              , firstFailure: firstFailure <> First (Just { index, message })
+              }
 
-  throwOnFirstFailure :: Int -> List Result -> QC eff Unit
-  throwOnFirstFailure _ Nil = pure unit
-  throwOnFirstFailure n (Cons (Failed msg) _) = throwException $ error $ "Test " <> show n <> " failed: \n" <> msg
-  throwOnFirstFailure n (Cons _ rest) = throwOnFirstFailure (n + one) rest
+type LoopResult r =
+  { successes :: Int
+  , firstFailure :: First { index :: Int, message :: String }
+  | r
+  }
 
-  countSuccesses :: List Result -> Int
-  countSuccesses Nil = zero
-  countSuccesses (Cons Success rest) = one + countSuccesses rest
-  countSuccesses (Cons _ rest) = countSuccesses rest
+type LoopState = LoopResult (seed :: Seed, index :: Int)
 
 -- | Test a property, returning all test results as an array.
 -- |
 -- | The first argument is the _random seed_ to be passed to the random generator.
 -- | The second argument is the number of tests to run.
-quickCheckPure :: forall prop. (Testable prop) => Seed -> Int -> prop -> List Result
+quickCheckPure :: forall prop. Testable prop => Seed -> Int -> prop -> List Result
 quickCheckPure s n prop = evalGen (replicateA n (test prop)) { newSeed: s, size: 10 }
 
 -- | The `Testable` class represents _testable properties_.
