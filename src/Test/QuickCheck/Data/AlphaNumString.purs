@@ -8,13 +8,15 @@ import Data.Newtype (class Newtype)
 import Data.String (fromCharArray, toCharArray)
 
 import Test.QuickCheck.Gen (Gen, arrayOf, oneOf)
-import Test.QuickCheck.Arbitrary (class Coarbitrary, class Arbitrary, coarbitrary)
+import Test.QuickCheck.Arbitrary (class Coarbitrary, class Arbitrary)
 
 -- | A newtype for `String` whose `Arbitrary` instance generated random
 -- | alphanumeric strings.
 newtype AlphaNumString = AlphaNumString String
 
 derive instance newtypeAlphaNumString :: Newtype AlphaNumString _
+derive newtype instance eqAlphaNumString :: Eq AlphaNumString
+derive newtype instance ordAlphaNumString :: Ord AlphaNumString
 
 instance arbAlphaNumString :: Arbitrary AlphaNumString where
   arbitrary = AlphaNumString <<< fromCharArray <$> arrayOf anyChar
@@ -25,5 +27,4 @@ instance arbAlphaNumString :: Arbitrary AlphaNumString where
     anyChar :: Gen Char
     anyChar = oneOf (pure 'a') (map pure rest)
 
-instance coarbAlphaNumString :: Coarbitrary AlphaNumString where
-  coarbitrary (AlphaNumString s) = coarbitrary s
+derive newtype instance coarbAlphaNumString :: Coarbitrary AlphaNumString
