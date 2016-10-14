@@ -51,7 +51,7 @@ import Data.Tuple (Tuple(..))
 import Data.Unfoldable (replicateA)
 
 import Test.QuickCheck.Arbitrary (class Arbitrary, arbitrary, shrink)
-import Test.QuickCheck.Gen (evalGen, runGen)
+import Test.QuickCheck.Gen (Gen, evalGen, runGen)
 import Test.QuickCheck.LCG (Seed, randomSeed, runSeed)
 
 -- | A type synonym which represents the effects used by the `quickCheck` function.
@@ -85,7 +85,7 @@ quickCheckWithSeed seed n prop = do
     let result = tailRec (loop try) { seed, index: 0, successes: 0, firstFailure: mempty }
     log $ show result.successes <> "/" <> show n <> " test(s) passed."
     for_ result.firstFailure \{ index, message, testCase, seed: failureSeed } -> do
-      shrunk <- pure $ tailRec (search try) { index, testCase, message, shrinkCount: 0 }
+      shrunk <- pure $ tailRec (search try) { index, testCase, message, shrinkCount: 0, seed: failureSeed }
       log (fold
         [ "Test ", show (shrunk.index + 1)
         , " failed (seed "
@@ -100,15 +100,18 @@ quickCheckWithSeed seed n prop = do
   loop
     :: forall a
      . Arbitrary a
-    => (prop -> a -> Result)
+    => (prop -> a -> Gen Result)
     -> LoopState a
     -> Step (LoopState a) (LoopState a)
   loop try state@{ seed, index, successes, firstFailure }
     | index == n = Done state
-    | otherwise =
-        case runGen arbitrary { newSeed: seed, size: 10 } of
-          Tuple testCase { newSeed } ->
-            case try prop testCase of
+    | otherwise = do
+        let trial = do args <- arbitrary
+                       result <- try prop args
+                       pure { args, result }
+        case runGen trial { newSeed: seed, size: 10 } of
+          Tuple { args, result } { newSeed } ->
+            case result of
               Success ->
                 Loop
                   { seed: newSeed
@@ -122,36 +125,38 @@ quickCheckWithSeed seed n prop = do
                   , index: index + 1
                   , successes
                   , firstFailure: firstFailure
-                      <> First (Just { seed, index, message, testCase })
+                      <> First (Just { seed, index, message, testCase: args })
                   }
 
   search
     :: forall a
      . Arbitrary a
-    => (prop -> a -> Result)
+    => (prop -> a -> Gen Result)
     -> ShrinkState a
     -> Step (ShrinkState a) (ShrinkState a)
-  search try state@{ shrinkCount, testCase, index, message } = do
-    case unwrap (foldMap (First <<< tryShrink try) (shrink testCase)) of
-      Just { message: message', testCase: testCase' } | shrinkCount < 100 ->
+  search try state@{ shrinkCount, testCase, index, message, seed } = do
+    case unwrap (foldMap (First <<< tryShrink try seed) (shrink testCase)) of
+      Just { message: message', testCase: testCase', seed } | shrinkCount < 100 ->
         Loop
           { index
           , message: message'
           , shrinkCount: shrinkCount + 1
           , testCase: testCase'
+          , seed: seed
           }
       _ ->
         Done state
 
   tryShrink
     :: forall a
-     . (prop -> a -> Result)
+     . (prop -> a -> Gen Result)
+    -> Seed
     -> a
-    -> Maybe { message :: String, testCase :: a }
-  tryShrink try testCase =
-    case try prop testCase of
-      Success -> Nothing
-      Failed message -> Just { message, testCase }
+    -> Maybe { message :: String, testCase :: a, seed :: Seed }
+  tryShrink try seed testCase =
+    case runGen (try prop testCase) { newSeed: seed, size: 10 } of
+      Tuple Success _ -> Nothing
+      Tuple (Failed message) newSeed -> Just { message, testCase, seed: newSeed.newSeed }
 
 type LoopState a =
   { successes :: Int
@@ -165,6 +170,7 @@ type ShrinkState a =
   , message :: String
   , shrinkCount :: Int
   , testCase :: a
+  , seed :: Seed
   }
 
 -- | Test a property, returning all test results as an array.
@@ -173,7 +179,7 @@ type ShrinkState a =
 -- | The second argument is the number of tests to run.
 quickCheckPure :: forall prop. Testable prop => Seed -> Int -> prop -> List Result
 quickCheckPure s n prop = runSpace (test :: Space prop) \f ->
-  evalGen (replicateA n (f prop <$> arbitrary)) { newSeed: s, size: 10 }
+  evalGen (replicateA n (arbitrary >>= f prop)) { newSeed: s, size: 10 }
 
 -- | A `Space` for some property is defined by an `Arbitrary` instance which
 -- | provides the arguments for that property, returning a `Result`.
@@ -183,14 +189,14 @@ quickCheckPure s n prop = runSpace (test :: Space prop) \f ->
 -- |
 -- | A `Space` can be explored to find minimal failing test cases by iteratively
 -- | `shrink`ing a failing case.
-newtype Space prop = Space (forall r. (forall a. Arbitrary a => (prop -> a -> Result) -> r) -> r)
+newtype Space prop = Space (forall r. (forall a. Arbitrary a => (prop -> a -> Gen Result) -> r) -> r)
 
-runSpace :: forall prop r. Space prop -> (forall a. Arbitrary a => (prop -> a -> Result) -> r) -> r
+runSpace :: forall prop r. Space prop -> (forall a. Arbitrary a => (prop -> a -> Gen Result) -> r) -> r
 runSpace (Space f) g = f g
 
 -- | Create a `Space` by providing a function which applies a property to
 -- | its arguments.
-space :: forall prop a. Arbitrary a => (prop -> a -> Result) -> Space prop
+space :: forall prop a. Arbitrary a => (prop -> a -> Gen Result) -> Space prop
 space f = Space \toR -> toR f
 
 -- | The `Testable` class represents _testable properties_.
@@ -203,13 +209,16 @@ class Testable prop where
   test :: Space prop
 
 instance testableResult :: Testable Result where
-  test = space \result (_ :: Unit) -> result
+  test = space \result (_ :: Unit) -> pure result
+
+instance testableGen :: Testable a => Testable (Gen a) where
+  test = runSpace (test :: Space a) \f -> space \gen a -> gen >>= flip f a
 
 instance testableBoolean :: Testable Boolean where
   test = space \success (_ :: Unit) ->
     if success
-      then Success
-      else Failed "Test returned false"
+      then pure Success
+      else pure (Failed "Test returned false")
 
 instance testableFunction :: (Arbitrary t, Testable prop) => Testable (t -> prop) where
   test = runSpace (test :: Space prop) \f ->
