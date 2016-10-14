@@ -138,6 +138,9 @@ instance testableBoolean :: Testable Boolean where
 instance testableFunction :: (Arbitrary t, Testable prop) => Testable (t -> prop) where
   test f = arbitrary >>= test <<< f
 
+instance testableGen :: Testable prop => Testable (Gen prop) where
+  test = flip bind test
+
 -- | The result of a test: success or failure (with an error message).
 data Result = Success | Failed String
 
