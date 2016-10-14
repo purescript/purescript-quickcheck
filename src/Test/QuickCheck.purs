@@ -19,6 +19,7 @@ module Test.QuickCheck
   ( QC
   , quickCheck
   , quickCheck'
+  , quickCheckWithSeed
   , quickCheckPure
   , class Testable
   , test
@@ -29,6 +30,8 @@ module Test.QuickCheck
   , (===)
   , assertNotEquals
   , (/==)
+  , module Test.QuickCheck.LCG
+  , module Test.QuickCheck.Arbitrary
   ) where
 
 import Prelude
@@ -47,9 +50,9 @@ import Data.Monoid (mempty)
 import Data.Tuple (Tuple(..))
 import Data.Unfoldable (replicateA)
 
-import Test.QuickCheck.Arbitrary (class Arbitrary, arbitrary)
+import Test.QuickCheck.Arbitrary (class Arbitrary, arbitrary, class Coarbitrary, coarbitrary)
 import Test.QuickCheck.Gen (Gen, evalGen, runGen)
-import Test.QuickCheck.LCG (Seed, randomSeed)
+import Test.QuickCheck.LCG (Seed, runSeed, randomSeed)
 
 -- | A type synonym which represents the effects used by the `quickCheck` function.
 type QC eff a = Eff (console :: CONSOLE, random :: RANDOM, err :: EXCEPTION | eff) a
@@ -66,14 +69,24 @@ quickCheck prop = quickCheck' 100 prop
 quickCheck' :: forall eff prop. Testable prop => Int -> prop -> QC eff Unit
 quickCheck' n prop = do
   seed <- randomSeed
+  quickCheckWithSeed seed n prop
+
+-- | A variant of the `quickCheck'` function that accepts a specific seed as
+-- | well as the number tests that should be run.
+quickCheckWithSeed
+  :: forall eff prop. Testable prop => Seed -> Int -> prop -> QC eff Unit
+quickCheckWithSeed seed n prop = do
   let result = tailRec loop { seed, index: 0, successes: 0, firstFailure: mempty }
   log $ show result.successes <> "/" <> show n <> " test(s) passed."
-  for_ result.firstFailure \{ index, message } ->
-    throwException $ error $ "Test " <> show (index + 1) <> " failed: \n" <> message
+  for_ result.firstFailure \{ index, message, seed: failureSeed } ->
+    throwException $ error
+      $ "Test " <> show (index + 1)
+      <> " (seed " <> show (runSeed failureSeed) <> ") failed: \n"
+      <> message
   where
-  loop :: LoopState -> Step LoopState (LoopResult ())
-  loop { seed, index, successes, firstFailure }
-    | index == n = Done { successes, firstFailure }
+  loop :: LoopState -> Step LoopState LoopState
+  loop state@{ seed, index, successes, firstFailure }
+    | index == n = Done state
     | otherwise =
         case runGen (test prop) { newSeed: seed, size: 10 } of
           Tuple Success s ->
@@ -88,16 +101,16 @@ quickCheck' n prop = do
               { seed: s.newSeed
               , index: index + 1
               , successes
-              , firstFailure: firstFailure <> First (Just { index, message })
+              , firstFailure:
+                  firstFailure <> First (Just { index, message, seed })
               }
 
-type LoopResult r =
+type LoopState =
   { successes :: Int
-  , firstFailure :: First { index :: Int, message :: String }
-  | r
+  , firstFailure :: First { index :: Int, message :: String, seed :: Seed }
+  , seed :: Seed
+  , index :: Int
   }
-
-type LoopState = LoopResult (seed :: Seed, index :: Int)
 
 -- | Test a property, returning all test results as an array.
 -- |
