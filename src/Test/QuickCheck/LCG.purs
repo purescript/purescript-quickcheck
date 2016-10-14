@@ -58,7 +58,7 @@ seedMin = 1
 
 -- | The maximum permissible Seed value.
 seedMax :: Int
-seedMax = lcgM - 1
+seedMax = lcgN - 1
 
 -- | A seed for the linear congruential generator. We omit a `Semiring`
 -- | instance because there is no `zero` value, as 0 is not an acceptable
@@ -73,8 +73,11 @@ runSeed (Seed x) = x
 
 ensureBetween :: Int -> Int -> Int -> Int
 ensureBetween min max n =
-  let rangeSize = max - min
-  in (((n `mod` rangeSize) + rangeSize) `mod` rangeSize) + min
+  let
+    rangeSize = max - min
+    n' = n `mod` rangeSize
+  in
+    if n' < min then n' + max else n'
 
 instance showSeed :: Show Seed where
   show (Seed x) = "Seed " <> show x
