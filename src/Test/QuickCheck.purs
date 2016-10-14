@@ -19,6 +19,7 @@ module Test.QuickCheck
   ( QC
   , quickCheck
   , quickCheck'
+  , quickCheckWithSeed
   , quickCheckPure
   , class Testable
   , test
@@ -51,7 +52,7 @@ import Data.Unfoldable (replicateA)
 
 import Test.QuickCheck.Arbitrary (class Arbitrary, arbitrary, shrink)
 import Test.QuickCheck.Gen (evalGen, runGen)
-import Test.QuickCheck.LCG (Seed, randomSeed)
+import Test.QuickCheck.LCG (Seed, randomSeed, runSeed)
 
 -- | A type synonym which represents the effects used by the `quickCheck` function.
 type QC eff a = Eff (console :: CONSOLE, random :: RANDOM, err :: EXCEPTION | eff) a
@@ -68,15 +69,28 @@ quickCheck prop = quickCheck' 100 prop
 quickCheck' :: forall eff prop. Testable prop => Int -> prop -> QC eff Unit
 quickCheck' n prop = do
   seed <- randomSeed
+  quickCheckWithSeed seed n prop
+
+-- | A variant of the `quickCheck'` function that accepts a specific seed as
+-- | well as the number tests that should be run.
+quickCheckWithSeed
+  :: forall eff prop
+   . Testable prop
+  => Seed
+  -> Int
+  -> prop
+  -> QC eff Unit
+quickCheckWithSeed seed n prop = do
   runSpace (test :: Space prop) \try -> do
     let result = tailRec (loop try) { seed, index: 0, successes: 0, firstFailure: mempty }
     log $ show result.successes <> "/" <> show n <> " test(s) passed."
-    for_ result.firstFailure \{ index, message, testCase } -> do
+    for_ result.firstFailure \{ index, message, testCase, seed: failureSeed } -> do
       shrunk <- pure $ tailRec (search try) { index, testCase, message, shrinkCount: 0 }
       log (fold
-        [ "Test "
-        , show (shrunk.index + 1)
-        , " failed (with "
+        [ "Test ", show (shrunk.index + 1)
+        , " failed (seed "
+        , show (runSeed failureSeed)
+        , ", "
         , show shrunk.shrinkCount
         , " reductions): \n"
         , shrunk.message
@@ -108,7 +122,7 @@ quickCheck' n prop = do
                   , index: index + 1
                   , successes
                   , firstFailure: firstFailure
-                      <> First (Just { index, message, testCase })
+                      <> First (Just { seed, index, message, testCase })
                   }
 
   search
@@ -141,7 +155,7 @@ quickCheck' n prop = do
 
 type LoopState a =
   { successes :: Int
-  , firstFailure :: First { index :: Int, message :: String, testCase :: a }
+  , firstFailure :: First { seed :: Seed, index :: Int, message :: String, testCase :: a }
   , seed :: Seed
   , index :: Int
   }
