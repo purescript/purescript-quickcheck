@@ -8,6 +8,7 @@ module Test.QuickCheck.Gen
   , repeatable
   , stateful
   , variant
+  , suchThat
   , sized
   , resize
   , choose
@@ -87,6 +88,16 @@ stateful f = Gen $ state \s -> runGen (f s) s
 -- | Modify a random generator by setting a new random seed.
 variant :: forall a. Seed -> Gen a -> Gen a
 variant n g = Gen $ state \s -> runGen g s { newSeed = n }
+
+-- | Ensure that a generator only produces values that match a predicate. If
+-- | the predicate always returns false the generator will loop forever.
+suchThat :: forall a. Gen a -> (a -> Boolean) -> Gen a
+suchThat gen pred = tailRecM go unit
+  where
+  go :: Unit -> Gen (Step Unit a)
+  go _ = do
+    a <- gen
+    pure if pred a then Done a else Loop unit
 
 -- | Create a random generator which depends on the size parameter.
 sized :: forall a. (Size -> Gen a) -> Gen a
