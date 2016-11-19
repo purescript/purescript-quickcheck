@@ -1,8 +1,7 @@
 # purescript-quickcheck
 
-[![Latest release](http://img.shields.io/bower/v/purescript-quickcheck.svg)](https://github.com/purescript/purescript-quickcheck/releases)
-[![Build Status](https://travis-ci.org/purescript/purescript-quickcheck.svg?branch=master)](https://travis-ci.org/purescript/purescript-quickcheck)
-[![Dependency Status](https://www.versioneye.com/user/projects/55848c12363861001b000180/badge.svg?style=flat)](https://www.versioneye.com/user/projects/55848c12363861001b000180)
+[![Latest release](http://img.shields.io/github/release/purescript/purescript-quickcheck.svg)](https://github.com/purescript/purescript-quickcheck/releases)
+[![Build status](https://travis-ci.org/purescript/purescript-quickcheck.svg?branch=master)](https://travis-ci.org/purescript/purescript-quickcheck)
 
 An implementation of QuickCheck in PureScript.
 
