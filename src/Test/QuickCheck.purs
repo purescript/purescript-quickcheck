@@ -75,8 +75,8 @@ quickCheck' n prop = do
 -- | well as the number tests that should be run.
 quickCheckWithSeed
   :: forall eff prop. Testable prop => Seed -> Int -> prop -> QC eff Unit
-quickCheckWithSeed seed n prop = do
-  let result = tailRec loop { seed, index: 0, successes: 0, firstFailure: mempty }
+quickCheckWithSeed initialSeed n prop = do
+  let result = tailRec loop { seed: initialSeed, index: 0, successes: 0, firstFailure: mempty }
   log $ show result.successes <> "/" <> show n <> " test(s) passed."
   for_ result.firstFailure \{ index, message, seed: failureSeed } ->
     throwException $ error
