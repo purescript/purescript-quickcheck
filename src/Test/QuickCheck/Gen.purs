@@ -138,7 +138,7 @@ frequency x xs = let
     xxs   = Cons x xs
     total = unwrap $ fold (map (Additive <<< fst) xxs :: List (Additive Number))
     pick n d Nil = d
-    pick n d (Cons (Tuple k x) xs) = if n <= k then x else pick (n - k) d xs
+    pick n d (Cons (Tuple k x') xs') = if n <= k then x' else pick (n - k) d xs'
   in do
     n <- choose zero total
     pick n (snd x) xxs
