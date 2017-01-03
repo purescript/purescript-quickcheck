@@ -3,6 +3,10 @@ module Test.QuickCheck.Arbitrary
   , arbitrary
   , class Coarbitrary
   , coarbitrary
+  , genericArbitrary
+  , genericCoarbitrary
+  , class ArbitraryGenericSum
+  , arbitraryGenericSum
   ) where
 
 import Prelude
@@ -23,8 +27,9 @@ import Data.Newtype (wrap)
 import Data.NonEmpty (NonEmpty(..), (:|))
 import Data.String (charCodeAt, fromCharArray, split)
 import Data.Tuple (Tuple(..))
+import Data.Generic.Rep (class Generic, to, from, NoArguments(..), Sum(..), Product(..), Constructor(..), Argument(..), Rec(..), Field(..))
 
-import Test.QuickCheck.Gen (Gen, elements, listOf, chooseInt, sized, perturbGen, repeatable, arrayOf, uniform)
+import Test.QuickCheck.Gen (Gen, elements, listOf, chooseInt, sized, perturbGen, repeatable, arrayOf, oneOf, uniform)
 
 -- | The `Arbitrary` class represents those types whose values can be
 -- | _randomly-generated_.
@@ -154,3 +159,67 @@ instance arbNonEmptyList :: Arbitrary a => Arbitrary (NonEmptyList a) where
 
 instance coarbNonEmptyList :: Coarbitrary a => Coarbitrary (NonEmptyList a) where
   coarbitrary (NonEmptyList nel) = coarbitrary nel
+
+instance arbitraryNoArguments :: Arbitrary NoArguments where
+  arbitrary = pure NoArguments
+
+instance coarbitraryNoArguments :: Coarbitrary NoArguments where
+  coarbitrary NoArguments = id
+
+-- | To be able to evenly distribute over chains of Sum types we build up
+-- | a collection of generators and choose between.  Each right component
+-- | of a Sum is either a Constructor or another Sum.
+class ArbitraryGenericSum t where
+  arbitraryGenericSum :: Array (Gen t)
+
+instance arbGenSumSum :: (Arbitrary l, ArbitraryGenericSum r) => ArbitraryGenericSum (Sum l r) where
+  arbitraryGenericSum = [Inl <$> arbitrary] <> (map Inr <$> arbitraryGenericSum)
+
+instance arbGenSumConstructor :: Arbitrary a => ArbitraryGenericSum (Constructor s a) where
+  arbitraryGenericSum = [arbitrary]
+
+instance arbitrarySum :: (Arbitrary l, ArbitraryGenericSum r) => Arbitrary (Sum l r) where
+  arbitrary = oneOf $ (Inl <$> arbitrary) :| (map Inr <$> arbitraryGenericSum)
+
+instance coarbitrarySum :: (Coarbitrary l, Coarbitrary r) => Coarbitrary (Sum l r) where
+  coarbitrary (Inl l) = coarbitrary l
+  coarbitrary (Inr r) = coarbitrary r
+
+instance arbitraryProduct :: (Arbitrary l, Arbitrary r) => Arbitrary (Product l r) where
+  arbitrary = Product <$> arbitrary <*> arbitrary
+
+instance coarbitraryProduct :: (Coarbitrary l, Coarbitrary r) => Coarbitrary (Product l r) where
+  coarbitrary (Product a b) = coarbitrary a >>> coarbitrary b
+
+instance arbitraryConstructor :: Arbitrary a => Arbitrary (Constructor s a) where
+  arbitrary = Constructor <$> arbitrary
+
+instance coarbitraryConstructor :: Coarbitrary a => Coarbitrary (Constructor s a) where
+  coarbitrary (Constructor a) = coarbitrary a
+
+instance arbitraryArgument :: Arbitrary a => Arbitrary (Argument a) where
+  arbitrary = Argument <$> arbitrary
+
+instance coarbitraryArgument :: Coarbitrary a => Coarbitrary (Argument a) where
+  coarbitrary (Argument a) = coarbitrary a
+
+instance arbitraryRec :: Arbitrary a => Arbitrary (Rec a) where
+  arbitrary = Rec <$> arbitrary
+
+instance coarbitraryRec :: Coarbitrary a => Coarbitrary (Rec a) where
+  coarbitrary (Rec a) = coarbitrary a
+
+instance arbitraryField :: Arbitrary a => Arbitrary (Field s a) where
+  arbitrary = Field <$> arbitrary
+
+instance coarbitraryField :: Coarbitrary a => Coarbitrary (Field s a) where
+  coarbitrary (Field a) = coarbitrary a
+
+-- | A `Generic` implementation of the `arbitrary` member from the `Arbitrary` type class.
+genericArbitrary :: forall a rep. Generic a rep => Arbitrary rep => Gen a
+genericArbitrary = to <$> (arbitrary :: Gen rep)
+
+-- | A `Generic` implementation of the `coarbitrary` member from the `Coarbitrary` type class.
+genericCoarbitrary :: forall a rep. Generic a rep => Coarbitrary rep => a -> Gen a -> Gen a
+genericCoarbitrary x g = to <$> coarbitrary (from x) (from <$> g)
+
