@@ -126,16 +126,16 @@ chooseInt a b = clamp <$> lcgStep
                 | otherwise -> b + r + one
 
 -- | Create a random generator which selects and executes a random generator from
--- | a non-empty collection of random generators with uniform probability.
-oneOf :: forall a. Gen a -> Array (Gen a) -> Gen a
-oneOf x xs = do
+-- | a non-empty array of random generators with uniform probability.
+oneOf :: forall a. NonEmpty Array (Gen a) -> Gen a
+oneOf (x :| xs) = do
   n <- chooseInt zero (length xs)
   if n < one then x else fromMaybe x (xs !! (n - one))
 
 -- | Create a random generator which selects and executes a random generator from
--- | a non-empty, weighted collection of random generators.
-frequency :: forall a. Tuple Number (Gen a) -> List (Tuple Number (Gen a)) -> Gen a
-frequency x xs = let
+-- | a non-empty, weighted list of random generators.
+frequency :: forall a. NonEmpty List (Tuple Number (Gen a)) -> Gen a
+frequency (x :| xs) = let
     xxs   = Cons x xs
     total = unwrap $ fold (map (Additive <<< fst) xxs :: List (Additive Number))
     pick n d Nil = d
@@ -151,12 +151,12 @@ arrayOf g = sized $ \n ->
      vectorOf k g
 
 -- | Create a random generator which generates a non-empty array of random values.
-arrayOf1 :: forall a. Gen a -> Gen (Tuple a (Array a))
+arrayOf1 :: forall a. Gen a -> Gen (NonEmpty Array a)
 arrayOf1 g = sized $ \n ->
   do k <- chooseInt zero n
      x <- g
      xs <- vectorOf (k - one) g
-     pure $ Tuple x xs
+     pure $ x :| xs
 
 replicateMRec :: forall m a. MonadRec m => Int -> m a -> m (List a)
 replicateMRec k _ | k <= 0 = pure Nil
