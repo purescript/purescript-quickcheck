@@ -48,6 +48,7 @@ import Data.Maybe (fromMaybe)
 import Data.Monoid.Additive (Additive(..))
 import Data.Newtype (unwrap)
 import Data.Tuple (Tuple(..), fst, snd)
+import Data.NonEmpty (NonEmpty, (:|))
 
 import Math as M
 
@@ -173,10 +174,10 @@ listOf = replicateMRec
 vectorOf :: forall a. Int -> Gen a -> Gen (Array a)
 vectorOf k g = toUnfoldable <$> listOf k g
 
--- | Create a random generator which selects a value from a non-empty collection with
+-- | Create a random generator which selects a value from a non-empty array with
 -- | uniform probability.
-elements :: forall a. a -> Array a -> Gen a
-elements x xs = do
+elements :: forall a. NonEmpty Array a -> Gen a
+elements (x :| xs) = do
   n <- chooseInt zero (length xs)
   pure if n == zero then x else fromMaybe x (xs !! (n - one))
 

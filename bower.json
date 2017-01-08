@@ -27,6 +27,7 @@
     "purescript-lists": "^3.0.0",
     "purescript-random": "^2.0.0",
     "purescript-strings": "^2.0.0",
-    "purescript-transformers": "^2.0.0"
+    "purescript-transformers": "^2.0.0",
+    "purescript-nonempty": "3.0.0"
   }
 }
