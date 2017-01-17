@@ -37,11 +37,9 @@ import Control.Monad.Eff.Random (RANDOM)
 import Control.Monad.Rec.Class (class MonadRec, Step(..), tailRecM)
 import Control.Monad.State (State, runState, evalState)
 import Control.Monad.State.Class (state, modify)
-import Control.Monad.State.Trans (StateT)
 
 import Data.Array ((!!), length)
 import Data.Foldable (fold)
-import Data.Identity (Identity)
 import Data.Int (toNumber)
 import Data.List (List(..), toUnfoldable)
 import Data.Maybe (fromMaybe)
@@ -63,7 +61,7 @@ type GenState = { newSeed :: Seed, size :: Size }
 -- | The random generator monad
 -- |
 -- | `Gen` is a state monad which encodes a linear congruential generator.
-newtype Gen a = Gen (StateT GenState Identity a)
+newtype Gen a = Gen (State GenState a)
 
 derive newtype instance functorGen :: Functor Gen
 derive newtype instance applyGen :: Apply Gen
