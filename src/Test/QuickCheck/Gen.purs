@@ -39,16 +39,19 @@ import Control.Monad.State (State, runState, evalState)
 import Control.Monad.State.Class (state, modify)
 
 import Data.Array ((!!), length)
+import Data.Enum (class BoundedEnum, fromEnum, toEnum)
 import Data.Foldable (fold)
 import Data.Int (toNumber, floor)
 import Data.List (List(..), toUnfoldable)
-import Data.Maybe (fromMaybe)
+import Data.Maybe (fromMaybe, fromJust)
 import Data.Monoid.Additive (Additive(..))
 import Data.Newtype (unwrap)
 import Data.Tuple (Tuple(..), fst, snd)
 import Data.NonEmpty (NonEmpty, (:|))
 
 import Math ((%))
+
+import Partial.Unsafe (unsafePartial)
 
 import Test.QuickCheck.LCG (Seed, lcgPerturb, lcgN, lcgNext, runSeed, randomSeed)
 
@@ -168,6 +171,15 @@ arrayOf1 g = sized $ \n ->
      x <- g
      xs <- vectorOf (k - one) g
      pure $ x :| xs
+
+-- | Create a random generator for a finite enumeration.
+-- | `toEnum i` must be well-behaved:
+-- | It must return a value wrapped in Just for all Ints between
+-- | `fromEnum bottom` and `fromEnum top`.
+enum :: forall a. BoundedEnum a => Gen a
+enum = do
+  i <- chooseInt (fromEnum (bottom :: a)) (fromEnum (top :: a))
+  pure (unsafePartial $ fromJust $ toEnum i)
 
 replicateMRec :: forall m a. MonadRec m => Int -> m a -> m (List a)
 replicateMRec k _ | k <= 0 = pure Nil
