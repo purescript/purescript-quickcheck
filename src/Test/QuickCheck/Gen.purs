@@ -114,21 +114,25 @@ choose a b = (*) (max' - min') >>> (+) min' <$> uniform where
 
 -- | Create a random generator which chooses uniformly distributed
 -- | integers from the closed interval `[a, b]`.
+-- | Note that very large intervals will cause a loss of uniformity.
 chooseInt :: Int -> Int -> Gen Int
-chooseInt a b = floor <<< clamp <$> choose32BitNumber
+chooseInt a b = if a <= b then chooseInt' a b else chooseInt' b a
+
+-- guaranteed a <= b
+chooseInt' :: Int -> Int -> Gen Int
+chooseInt' a b = floor <<< clamp <$> choose32BitPosNumber
   where
-  choose32BitNumber :: Gen Number
-  choose32BitNumber = (+) <$> choose31BitNumber <*> choose31BitNumber
+    choose32BitPosNumber :: Gen Number
+    choose32BitPosNumber = (+) <$> choose31BitPosNumber <*> choose31BitPosNumber
 
-  choose31BitNumber :: Gen Number
-  choose31BitNumber = toNumber <$> lcgStep
+    choose31BitPosNumber :: Gen Number
+    choose31BitPosNumber = toNumber <$> lcgStep
 
-  clamp :: Number -> Number
-  clamp x = case x % (numB - numA + one) of
-              r | r >= 0.0 -> numA + r
-                | otherwise -> numB + r + one
-  numA = toNumber a
-  numB = toNumber b
+    clamp :: Number -> Number
+    clamp x = numA + (x % (numB - numA + one))
+
+    numA = toNumber a
+    numB = toNumber b
 
 -- | Create a random generator which selects and executes a random generator from
 -- | a non-empty collection of random generators with uniform probability.
