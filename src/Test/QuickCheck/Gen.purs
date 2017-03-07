@@ -40,14 +40,14 @@ import Control.Monad.State.Class (state, modify)
 
 import Data.Array ((!!), length)
 import Data.Foldable (fold)
-import Data.Int (toNumber)
+import Data.Int (toNumber, floor)
 import Data.List (List(..), toUnfoldable)
 import Data.Maybe (fromMaybe)
 import Data.Monoid.Additive (Additive(..))
 import Data.Newtype (unwrap)
 import Data.Tuple (Tuple(..), fst, snd)
 
-import Math as M
+import Math ((%))
 
 import Test.QuickCheck.LCG (Seed, lcgPerturb, lcgN, lcgNext, runSeed, randomSeed)
 
@@ -108,19 +108,27 @@ resize sz g = Gen $ state \s -> runGen g s { size = sz }
 -- | Create a random generator which samples a range of `Number`s i
 -- | with uniform probability.
 choose :: Number -> Number -> Gen Number
-choose a b = (*) (max - min) >>> (+) min <$> uniform where
-  min = M.min a b
-  max = M.max a b
+choose a b = (*) (max' - min') >>> (+) min' <$> uniform where
+  min' = min a b
+  max' = max a b
 
 -- | Create a random generator which chooses uniformly distributed
 -- | integers from the closed interval `[a, b]`.
 chooseInt :: Int -> Int -> Gen Int
-chooseInt a b = clamp <$> lcgStep
+chooseInt a b = floor <<< clamp <$> choose32BitNumber
   where
-  clamp :: Int -> Int
-  clamp x = case x `mod` (b - a + one) of
-              r | r >= 0 -> a + r
-                | otherwise -> b + r + one
+  choose32BitNumber :: Gen Number
+  choose32BitNumber = (+) <$> choose31BitNumber <*> choose31BitNumber
+
+  choose31BitNumber :: Gen Number
+  choose31BitNumber = toNumber <$> lcgStep
+
+  clamp :: Number -> Number
+  clamp x = case x % (numB - numA + one) of
+              r | r >= 0.0 -> numA + r
+                | otherwise -> numB + r + one
+  numA = toNumber a
+  numB = toNumber b
 
 -- | Create a random generator which selects and executes a random generator from
 -- | a non-empty collection of random generators with uniform probability.
