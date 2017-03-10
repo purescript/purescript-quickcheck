@@ -123,7 +123,8 @@ chooseInt' :: Int -> Int -> Gen Int
 chooseInt' a b = floor <<< clamp <$> choose32BitPosNumber
   where
     choose32BitPosNumber :: Gen Number
-    choose32BitPosNumber = (+) <$> choose31BitPosNumber <*> choose31BitPosNumber
+    choose32BitPosNumber =
+      (+) <$> choose31BitPosNumber <*> (((*) 2.0) <$> choose31BitPosNumber)
 
     choose31BitPosNumber :: Gen Number
     choose31BitPosNumber = toNumber <$> lcgStep
