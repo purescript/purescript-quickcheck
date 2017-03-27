@@ -40,7 +40,7 @@ import Control.Monad.State.Class (state, modify)
 
 import Data.Array ((!!), length)
 import Data.Foldable (fold)
-import Data.Int (toNumber)
+import Data.Int (toNumber, floor)
 import Data.List (List(..), toUnfoldable)
 import Data.Maybe (fromMaybe)
 import Data.Monoid.Additive (Additive(..))
@@ -48,7 +48,7 @@ import Data.Newtype (unwrap)
 import Data.Tuple (Tuple(..), fst, snd)
 import Data.NonEmpty (NonEmpty, (:|))
 
-import Math as M
+import Math ((%))
 
 import Test.QuickCheck.LCG (Seed, lcgPerturb, lcgN, lcgNext, runSeed, randomSeed)
 
@@ -109,19 +109,32 @@ resize sz g = Gen $ state \s -> runGen g s { size = sz }
 -- | Create a random generator which samples a range of `Number`s i
 -- | with uniform probability.
 choose :: Number -> Number -> Gen Number
-choose a b = (*) (max - min) >>> (+) min <$> uniform where
-  min = M.min a b
-  max = M.max a b
+choose a b = (*) (max' - min') >>> (+) min' <$> uniform where
+  min' = min a b
+  max' = max a b
 
 -- | Create a random generator which chooses uniformly distributed
 -- | integers from the closed interval `[a, b]`.
+-- | Note that very large intervals will cause a loss of uniformity.
 chooseInt :: Int -> Int -> Gen Int
-chooseInt a b = clamp <$> lcgStep
+chooseInt a b = if a <= b then chooseInt' a b else chooseInt' b a
+
+-- guaranteed a <= b
+chooseInt' :: Int -> Int -> Gen Int
+chooseInt' a b = floor <<< clamp <$> choose32BitPosNumber
   where
-  clamp :: Int -> Int
-  clamp x = case x `mod` (b - a + one) of
-              r | r >= 0 -> a + r
-                | otherwise -> b + r + one
+    choose32BitPosNumber :: Gen Number
+    choose32BitPosNumber =
+      (+) <$> choose31BitPosNumber <*> (((*) 2.0) <$> choose31BitPosNumber)
+
+    choose31BitPosNumber :: Gen Number
+    choose31BitPosNumber = toNumber <$> lcgStep
+
+    clamp :: Number -> Number
+    clamp x = numA + (x % (numB - numA + one))
+
+    numA = toNumber a
+    numB = toNumber b
 
 -- | Create a random generator which selects and executes a random generator from
 -- | a non-empty array of random generators with uniform probability.
