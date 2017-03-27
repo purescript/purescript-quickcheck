@@ -18,6 +18,7 @@ import Data.Maybe (Maybe(..))
 import Data.Newtype (wrap)
 import Data.String (charCodeAt, fromCharArray, split)
 import Data.Tuple (Tuple(..))
+import Data.NonEmpty ((:|))
 
 import Test.QuickCheck.Gen (Gen, listOf, chooseInt, sized, perturbGen, repeatable, arrayOf, oneOf, uniform)
 
@@ -81,7 +82,7 @@ instance coarbUnit :: Coarbitrary Unit where
   coarbitrary _ = perturbGen 1.0
 
 instance arbOrdering :: Arbitrary Ordering where
-  arbitrary = oneOf (pure LT) [pure EQ, pure GT]
+  arbitrary = oneOf $ (pure LT) :| [pure EQ, pure GT]
 
 instance coarbOrdering :: Coarbitrary Ordering where
   coarbitrary LT = perturbGen 1.0

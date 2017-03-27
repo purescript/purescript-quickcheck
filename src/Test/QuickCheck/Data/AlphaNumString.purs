@@ -6,6 +6,7 @@ import Prelude
 
 import Data.Newtype (class Newtype)
 import Data.String (fromCharArray, toCharArray)
+import Data.NonEmpty ((:|))
 
 import Test.QuickCheck.Gen (Gen, arrayOf, oneOf)
 import Test.QuickCheck.Arbitrary (class Coarbitrary, class Arbitrary)
@@ -25,6 +26,6 @@ instance arbAlphaNumString :: Arbitrary AlphaNumString where
     rest = toCharArray "bcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
     anyChar :: Gen Char
-    anyChar = oneOf (pure 'a') (map pure rest)
+    anyChar = oneOf $ (pure 'a') :| (map pure rest)
 
 derive newtype instance coarbAlphaNumString :: Coarbitrary AlphaNumString
