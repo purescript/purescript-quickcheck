@@ -55,7 +55,7 @@ import Test.QuickCheck.Gen (Gen, evalGen, runGen)
 import Test.QuickCheck.LCG (Seed, runSeed, randomSeed)
 
 -- | A type synonym which represents the effects used by the `quickCheck` function.
-type QC eff a = Eff (console :: CONSOLE, random :: RANDOM, err :: EXCEPTION | eff) a
+type QC eff a = Eff (console :: CONSOLE, random :: RANDOM, exception :: EXCEPTION | eff) a
 
 -- | Test a property.
 -- |
@@ -162,13 +162,13 @@ withHelp false msg = Failed msg
 infix 2 withHelp as <?>
 
 -- | Self-documenting equality assertion
-assertEquals :: forall a. (Eq a, Show a) => a -> a -> Result
+assertEquals :: forall a. Eq a => Show a => a -> a -> Result
 assertEquals a b = a == b <?> show a <> " /= " <> show b
 
 infix 2 assertEquals as ===
 
 -- | Self-documenting inequality assertion
-assertNotEquals :: forall a. (Eq a, Show a) => a -> a -> Result
+assertNotEquals :: forall a. Eq a => Show a => a -> a -> Result
 assertNotEquals a b = a /= b <?> show a <> " == " <> show b
 
 infix 2 assertNotEquals as /==
