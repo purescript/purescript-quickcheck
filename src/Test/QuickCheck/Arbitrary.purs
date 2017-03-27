@@ -14,11 +14,12 @@ import Data.Identity (Identity(..))
 import Data.Int (toNumber)
 import Data.Lazy (Lazy, defer, force)
 import Data.List (List)
+import Data.List.NonEmpty (NonEmptyList(..))
 import Data.Maybe (Maybe(..))
 import Data.Newtype (wrap)
+import Data.NonEmpty (NonEmpty(..), (:|))
 import Data.String (charCodeAt, fromCharArray, split)
 import Data.Tuple (Tuple(..))
-import Data.NonEmpty ((:|))
 
 import Test.QuickCheck.Gen (Gen, listOf, chooseInt, sized, perturbGen, repeatable, arrayOf, oneOf, uniform)
 
@@ -144,3 +145,15 @@ instance arbitraryLazy :: Arbitrary a => Arbitrary (Lazy a) where
 
 instance coarbLazy :: Coarbitrary a => Coarbitrary (Lazy a) where
   coarbitrary a = coarbitrary (force a)
+
+instance arbNonEmpty :: (Arbitrary (f a), Arbitrary a) => Arbitrary (NonEmpty f a) where
+  arbitrary = NonEmpty <$> arbitrary <*> arbitrary
+
+instance coarbNonEmpty :: (Coarbitrary (f a), Coarbitrary a) => Coarbitrary (NonEmpty f a) where
+  coarbitrary (NonEmpty head tail) = coarbitrary head >>> coarbitrary tail
+
+instance arbNonEmptyList :: Arbitrary a => Arbitrary (NonEmptyList a) where
+  arbitrary = NonEmptyList <$> arbitrary
+
+instance coarbNonEmptyList :: Coarbitrary a => Coarbitrary (NonEmptyList a) where
+  coarbitrary (NonEmptyList nel) = coarbitrary nel
