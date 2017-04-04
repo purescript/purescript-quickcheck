@@ -7,6 +7,9 @@ module Test.QuickCheck.Arbitrary
 
 import Prelude
 
+import Control.Monad.Gen.Class (chooseBool)
+import Control.Monad.Gen.Common as MGC
+
 import Data.Char (toCharCode, fromCharCode)
 import Data.Either (Either(..))
 import Data.Foldable (foldl)
@@ -21,7 +24,7 @@ import Data.NonEmpty (NonEmpty(..), (:|))
 import Data.String (charCodeAt, fromCharArray, split)
 import Data.Tuple (Tuple(..))
 
-import Test.QuickCheck.Gen (Gen, listOf, chooseInt, sized, perturbGen, repeatable, arrayOf, oneOf, uniform)
+import Test.QuickCheck.Gen (Gen, elements, listOf, chooseInt, sized, perturbGen, repeatable, arrayOf, uniform)
 
 -- | The `Arbitrary` class represents those types whose values can be
 -- | _randomly-generated_.
@@ -44,9 +47,7 @@ class Coarbitrary t where
   coarbitrary :: forall r. t -> Gen r -> Gen r
 
 instance arbBoolean :: Arbitrary Boolean where
-  arbitrary = do
-    n <- uniform
-    pure $ (n * 2.0) < 1.0
+  arbitrary = chooseBool
 
 instance coarbBoolean :: Coarbitrary Boolean where
   coarbitrary true = perturbGen 1.0
@@ -83,7 +84,7 @@ instance coarbUnit :: Coarbitrary Unit where
   coarbitrary _ = perturbGen 1.0
 
 instance arbOrdering :: Arbitrary Ordering where
-  arbitrary = oneOf $ (pure LT) :| [pure EQ, pure GT]
+  arbitrary = elements $ LT :| [EQ, GT]
 
 instance coarbOrdering :: Coarbitrary Ordering where
   coarbitrary LT = perturbGen 1.0
@@ -111,18 +112,14 @@ instance coarbTuple :: (Coarbitrary a, Coarbitrary b) => Coarbitrary (Tuple a b)
   coarbitrary (Tuple a b) = coarbitrary a >>> coarbitrary b
 
 instance arbMaybe :: Arbitrary a => Arbitrary (Maybe a) where
-  arbitrary = do
-    b <- arbitrary
-    if b then pure Nothing else Just <$> arbitrary
+  arbitrary = MGC.genMaybe arbitrary
 
 instance coarbMaybe :: Coarbitrary a => Coarbitrary (Maybe a) where
   coarbitrary Nothing = perturbGen 1.0
   coarbitrary (Just a) = coarbitrary a
 
 instance arbEither :: (Arbitrary a, Arbitrary b) => Arbitrary (Either a b) where
-  arbitrary = do
-    b <- arbitrary
-    if b then Left <$> arbitrary else Right <$> arbitrary
+  arbitrary = MGC.genEither arbitrary arbitrary
 
 instance coarbEither :: (Coarbitrary a, Coarbitrary b) => Coarbitrary (Either a b) where
   coarbitrary (Left a)  = coarbitrary a

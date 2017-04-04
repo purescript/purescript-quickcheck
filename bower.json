@@ -25,6 +25,7 @@
     "purescript-either": "^3.0.0",
     "purescript-enums": "^3.0.0",
     "purescript-exceptions": "^3.0.0",
+    "purescript-gen": "^1.0.0",
     "purescript-lists": "^4.0.0",
     "purescript-nonempty": "^4.0.0",
     "purescript-partial": "^1.2.0",
