@@ -39,6 +39,7 @@ import Control.Monad.Rec.Class (class MonadRec, Step(..), tailRecM)
 import Control.Monad.State (State, runState, evalState)
 import Control.Monad.State.Class (state, modify)
 import Control.Monad.Gen.Class (class MonadGen)
+import Control.Lazy (class Lazy)
 
 import Data.Array ((!!), length, zip, sortBy)
 import Data.Enum (class BoundedEnum, fromEnum, toEnum)
@@ -76,6 +77,7 @@ derive newtype instance bindGen :: Bind Gen
 derive newtype instance monadGen :: Monad Gen
 derive newtype instance altGen :: Alt Gen
 derive newtype instance monadRecGen :: MonadRec Gen
+derive newtype instance lazyGen :: Lazy (Gen a)
 
 instance monadGenGen :: MonadGen Gen where
   chooseInt = chooseInt
