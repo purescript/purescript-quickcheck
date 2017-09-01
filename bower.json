@@ -33,5 +33,8 @@
     "purescript-strings": "^3.0.0",
     "purescript-transformers": "^3.0.0",
     "purescript-generics-rep": "^5.0.0"
+  },
+  "devDependencies": {
+    "purescript-assert": "^3.0.0"
   }
 }

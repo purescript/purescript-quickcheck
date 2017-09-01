@@ -28,8 +28,18 @@ module Test.QuickCheck
   , (<?>)
   , assertEquals
   , (===)
+  , (==?)
   , assertNotEquals
   , (/==)
+  , (/=?)
+  , assertLessThan
+  , (<?)
+  , assertLessThanEq
+  , (<=?)
+  , assertGreaterThan
+  , (>?)
+  , assertGreaterThanEq
+  , (>=?)
   , module Test.QuickCheck.LCG
   , module Test.QuickCheck.Arbitrary
   ) where
@@ -41,7 +51,6 @@ import Control.Monad.Eff.Console (CONSOLE, log)
 import Control.Monad.Eff.Exception (EXCEPTION, throwException, error)
 import Control.Monad.Eff.Random (RANDOM)
 import Control.Monad.Rec.Class (Step(..), tailRec)
-
 import Data.Foldable (for_)
 import Data.List (List)
 import Data.Maybe (Maybe(..))
@@ -49,7 +58,6 @@ import Data.Maybe.First (First(..))
 import Data.Monoid (mempty)
 import Data.Tuple (Tuple(..))
 import Data.Unfoldable (replicateA)
-
 import Test.QuickCheck.Arbitrary (class Arbitrary, arbitrary, class Coarbitrary, coarbitrary)
 import Test.QuickCheck.Gen (Gen, evalGen, runGen)
 import Test.QuickCheck.LCG (Seed, runSeed, randomSeed)
@@ -161,14 +169,40 @@ withHelp false msg = Failed msg
 
 infix 2 withHelp as <?>
 
+-- | Self-documenting comparison operation
+assertOp :: forall a. Eq a => Show a => (a -> a -> Boolean) -> String -> a -> a -> Result
+assertOp op failString a b = a `op` b <?> show a <> failString <> show b
+
 -- | Self-documenting equality assertion
 assertEquals :: forall a. Eq a => Show a => a -> a -> Result
-assertEquals a b = a == b <?> show a <> " /= " <> show b
+assertEquals = assertOp (==) " /= "
 
 infix 2 assertEquals as ===
+infix 2 assertEquals as ==?
 
 -- | Self-documenting inequality assertion
 assertNotEquals :: forall a. Eq a => Show a => a -> a -> Result
-assertNotEquals a b = a /= b <?> show a <> " == " <> show b
+assertNotEquals = assertOp (/=) " == "
 
 infix 2 assertNotEquals as /==
+infix 2 assertNotEquals as /=?
+
+assertLessThan :: forall a. Ord a => Show a => a -> a -> Result
+assertLessThan = assertOp (<) " >= "
+
+infix 2 assertLessThan as <?
+
+assertLessThanEq :: forall a. Ord a => Show a => a -> a -> Result
+assertLessThanEq = assertOp (<=) " > "
+
+infix 2 assertLessThanEq as <=?
+
+assertGreaterThan :: forall a. Ord a => Show a => a -> a -> Result
+assertGreaterThan = assertOp (>) " <= "
+
+infix 2 assertGreaterThan as >?
+
+assertGreaterThanEq :: forall a. Ord a => Show a => a -> a -> Result
+assertGreaterThanEq = assertOp (>=) " < "
+
+infix 2 assertGreaterThanEq as >=?
