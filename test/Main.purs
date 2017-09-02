@@ -46,6 +46,11 @@ main = do
   log "Generating via Generic"
   logShow =<< randomSample' 10 (arbitrary :: Gen (Foo Int))
 
+  log "Arbitrary instance for records"
+  listOfRecords ← randomSample' 10 (arbitrary :: Gen { foo :: Int, nested :: { bar :: Boolean } })
+  let toString rec = "{ foo: " <> show rec.foo <> "; nested.bar: " <> show rec.nested.bar <> " }"
+  logShow (toString <$> listOfRecords)
+
   quickCheck \(x :: Int) -> x <? x + 1
   quickCheck \(x :: Int) -> x <=? x + 1
   quickCheck \(x :: Int) -> x >=? x - 1
