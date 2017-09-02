@@ -32,7 +32,9 @@
     "purescript-random": "^3.0.0",
     "purescript-strings": "^3.0.0",
     "purescript-transformers": "^3.0.0",
-    "purescript-generics-rep": "^5.0.0"
+    "purescript-generics-rep": "^5.0.0",
+    "purescript-typelevel-prelude": "^2.4.0",
+    "purescript-record": "^0.2.0"
   },
   "devDependencies": {
     "purescript-assert": "^3.0.0"

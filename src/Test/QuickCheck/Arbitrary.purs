@@ -7,6 +7,8 @@ module Test.QuickCheck.Arbitrary
   , genericCoarbitrary
   , class ArbitraryGenericSum
   , arbitraryGenericSum
+  , class ArbitraryRowList
+  , arbitraryRecord
   ) where
 
 import Prelude
@@ -17,6 +19,7 @@ import Control.Monad.Gen.Common as MGC
 import Data.Char (toCharCode, fromCharCode)
 import Data.Either (Either(..))
 import Data.Foldable (foldl)
+import Data.Generic.Rep (class Generic, to, from, NoArguments(..), Sum(..), Product(..), Constructor(..), Argument(..), Rec(..), Field(..))
 import Data.Identity (Identity(..))
 import Data.Int (toNumber)
 import Data.Lazy (Lazy, defer, force)
@@ -25,9 +28,13 @@ import Data.List.NonEmpty (NonEmptyList(..))
 import Data.Maybe (Maybe(..))
 import Data.Newtype (wrap)
 import Data.NonEmpty (NonEmpty(..), (:|))
+import Data.Record (insert)
 import Data.String (charCodeAt, fromCharArray, split)
+import Data.Symbol (class IsSymbol, SProxy(..))
 import Data.Tuple (Tuple(..))
-import Data.Generic.Rep (class Generic, to, from, NoArguments(..), Sum(..), Product(..), Constructor(..), Argument(..), Rec(..), Field(..))
+
+import Type.Prelude (class RowToList)
+import Type.Row (kind RowList, class RowLacks, Nil, Cons, RLProxy(..))
 
 import Test.QuickCheck.Gen (Gen, elements, listOf, chooseInt, sized, perturbGen, repeatable, arrayOf, oneOf, uniform)
 
@@ -223,3 +230,31 @@ genericArbitrary = to <$> (arbitrary :: Gen rep)
 genericCoarbitrary :: forall a rep. Generic a rep => Coarbitrary rep => a -> Gen a -> Gen a
 genericCoarbitrary x g = to <$> coarbitrary (from x) (from <$> g)
 
+-- | A helper typeclass to implement `Arbitrary` for records.
+class ArbitraryRowList
+        (list :: RowList)
+        (row :: # Type)
+        | list -> row where
+  arbitraryRecord :: RLProxy list -> Gen (Record row)
+
+instance arbitraryRowListNil :: ArbitraryRowList Nil () where
+  arbitraryRecord _ = pure {}
+
+instance arbitraryRowListCons ::
+  ( Arbitrary a
+  , ArbitraryRowList listRest rowRest
+  , RowLacks key rowRest
+  , RowCons key a rowRest rowFull
+  , RowToList rowFull (Cons key a listRest)
+  , IsSymbol key
+  ) => ArbitraryRowList (Cons key a listRest) rowFull where
+  arbitraryRecord _ = do
+     value <- arbitrary
+     previous <- arbitraryRecord (RLProxy :: RLProxy listRest)
+     pure $ insert (SProxy :: SProxy key) value previous
+
+instance arbitraryRecordInstance ::
+  ( RowToList row list
+  , ArbitraryRowList list row
+  ) => Arbitrary (Record row) where
+  arbitrary = arbitraryRecord (RLProxy :: RLProxy list)
