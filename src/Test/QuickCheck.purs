@@ -120,7 +120,7 @@ type LoopState =
   , index :: Int
   }
 
--- | Test a property, returning all test results as an array.
+-- | Test a property, returning all test results as a List.
 -- |
 -- | The first argument is the _random seed_ to be passed to the random generator.
 -- | The second argument is the number of tests to run.
