@@ -37,7 +37,7 @@ import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Random (RANDOM)
 import Control.Monad.Rec.Class (class MonadRec, Step(..), tailRecM)
 import Control.Monad.State (State, runState, evalState)
-import Control.Monad.State.Class (state, modify)
+import Control.Monad.State.Class (state, get, modify)
 import Control.Monad.Gen.Class (class MonadGen)
 import Control.Lazy (class Lazy)
 
@@ -83,7 +83,7 @@ instance monadGenGen :: MonadGen Gen where
   chooseInt = chooseInt
   chooseFloat = choose
   chooseBool = (_ < 0.5) <$> uniform
-  resize f g = stateful \state -> resize (f state.size) g
+  resize f g = sized \s -> resize (f s) g
   sized = sized
 
 -- | Exposes the underlying State implementation.
@@ -118,7 +118,7 @@ sized f = stateful (\s -> f s.size)
 
 -- | Modify a random generator by setting a new size parameter.
 resize :: forall a. Size -> Gen a -> Gen a
-resize sz g = Gen $ state \s -> runGen g s { size = sz }
+resize sz g = Gen $ fst <<< runGen g <<< (_ { size = sz }) <$> get
 
 -- | Create a random generator which samples a range of `Number`s i
 -- | with uniform probability.
