@@ -20,6 +20,7 @@ module Test.QuickCheck
   , quickCheck
   , quickCheck'
   , quickCheckWithSeed
+  , quickCheckWithGeneratorSizeAndSeed
   , quickCheckPure
   , class Testable
   , test
@@ -59,7 +60,7 @@ import Data.Monoid (mempty)
 import Data.Tuple (Tuple(..))
 import Data.Unfoldable (replicateA)
 import Test.QuickCheck.Arbitrary (class Arbitrary, arbitrary, class Coarbitrary, coarbitrary)
-import Test.QuickCheck.Gen (Gen, evalGen, runGen)
+import Test.QuickCheck.Gen (Gen, Size, evalGen, runGen)
 import Test.QuickCheck.LCG (Seed, runSeed, randomSeed)
 
 -- | A type synonym which represents the effects used by the `quickCheck` function.
@@ -67,8 +68,8 @@ type QC eff a = Eff (console :: CONSOLE, random :: RANDOM, exception :: EXCEPTIO
 
 -- | Test a property.
 -- |
--- | This function generates a new random seed, runs 100 tests and
--- | prints the test results to the console.
+-- | This function creates a new generator with a random seed and default
+-- | size of 10, runs 100 tests and prints the test results to the console.
 quickCheck :: forall eff prop. Testable prop => prop -> QC eff Unit
 quickCheck prop = quickCheck' 100 prop
 
@@ -79,12 +80,18 @@ quickCheck' n prop = do
   seed <- randomSeed
   quickCheckWithSeed seed n prop
 
--- | A variant of the `quickCheck'` function that accepts a specific seed as
--- | well as the number tests that should be run.
+-- | A variant of the `quickCheck'` function that accepts a specific seed
+-- | as well as the number of tests that should be run.
 quickCheckWithSeed
   :: forall eff prop. Testable prop => Seed -> Int -> prop -> QC eff Unit
-quickCheckWithSeed initialSeed n prop = do
-  let result = tailRec loop { seed: initialSeed, index: 0, successes: 0, firstFailure: mempty }
+quickCheckWithSeed = quickCheckWithGeneratorSizeAndSeed 10
+
+-- | A variant of the `quickCheckWithSeed` function that the size of the used
+-- | generator, a specific seed as well as the number of tests that should be run.
+quickCheckWithGeneratorSizeAndSeed
+  :: forall eff prop. Testable prop => Size -> Seed -> Int -> prop -> QC eff Unit
+quickCheckWithGeneratorSizeAndSeed genSize initialSeed n prop = do
+  let result = tailRec (loop genSize) { seed: initialSeed, index: 0, successes: 0, firstFailure: mempty }
   log $ show result.successes <> "/" <> show n <> " test(s) passed."
   for_ result.firstFailure \{ index, message, seed: failureSeed } ->
     throwException $ error
@@ -92,11 +99,11 @@ quickCheckWithSeed initialSeed n prop = do
       <> " (seed " <> show (runSeed failureSeed) <> ") failed: \n"
       <> message
   where
-  loop :: LoopState -> Step LoopState LoopState
-  loop state@{ seed, index, successes, firstFailure }
+  loop :: Size -> LoopState -> Step LoopState LoopState
+  loop generatorSize state@{ seed, index, successes, firstFailure }
     | index == n = Done state
     | otherwise =
-        case runGen (test prop) { newSeed: seed, size: 10 } of
+        case runGen (test prop) { newSeed: seed, size: generatorSize } of
           Tuple Success s ->
             Loop
               { seed: s.newSeed
