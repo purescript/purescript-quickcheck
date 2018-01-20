@@ -12,6 +12,7 @@ module Test.QuickCheck.Arbitrary
   ) where
 
 import Prelude
+import Prim.Row (class Cons)
 
 import Control.Monad.Gen.Class (chooseBool)
 import Control.Monad.Gen.Common as MGC
