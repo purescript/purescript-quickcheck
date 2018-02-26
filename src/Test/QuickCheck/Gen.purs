@@ -33,14 +33,13 @@ module Test.QuickCheck.Gen
 import Prelude
 
 import Control.Alt (class Alt)
+import Control.Lazy (class Lazy)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Random (RANDOM)
+import Control.Monad.Gen.Class (class MonadGen)
 import Control.Monad.Rec.Class (class MonadRec, Step(..), tailRecM)
 import Control.Monad.State (State, runState, evalState)
-import Control.Monad.State.Class (state, get, modify)
-import Control.Monad.Gen.Class (class MonadGen)
-import Control.Lazy (class Lazy)
-
+import Control.Monad.State.Class (modify, state)
 import Data.Array ((!!), length, zip, sortBy)
 import Data.Enum (class BoundedEnum, fromEnum, toEnum)
 import Data.Foldable (fold)
@@ -49,13 +48,10 @@ import Data.List (List(..), toUnfoldable)
 import Data.Maybe (fromMaybe, fromJust)
 import Data.Monoid.Additive (Additive(..))
 import Data.Newtype (unwrap)
-import Data.Tuple (Tuple(..), fst, snd)
 import Data.NonEmpty (NonEmpty, (:|))
-
+import Data.Tuple (Tuple(..), fst, snd)
 import Math ((%))
-
 import Partial.Unsafe (unsafePartial)
-
 import Test.QuickCheck.LCG (Seed, lcgPerturb, lcgN, lcgNext, runSeed, randomSeed)
 
 -- | Tests are parameterized by the `Size` of the randomly-generated data,
@@ -118,7 +114,8 @@ sized f = stateful (\s -> f s.size)
 
 -- | Modify a random generator by setting a new size parameter.
 resize :: forall a. Size -> Gen a -> Gen a
-resize sz g = Gen $ fst <<< runGen g <<< (_ { size = sz }) <$> get
+resize sz g = Gen $ state \{ newSeed, size } ->
+  (_ {size = size} ) <$> runGen g { newSeed, size: sz}
 
 -- | Create a random generator which samples a range of `Number`s i
 -- | with uniform probability.
