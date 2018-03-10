@@ -18,9 +18,13 @@
 module Test.QuickCheck
   ( QC
   , quickCheck
+  , quickCheckGen
   , quickCheck'
+  , quickCheckGen'
   , quickCheckWithSeed
+  , quickCheckGenWithSeed
   , quickCheckPure
+  , quickCheckGenPure
   , class Testable
   , test
   , Result(..)
@@ -72,12 +76,27 @@ type QC eff a = Eff (console :: CONSOLE, random :: RANDOM, exception :: EXCEPTIO
 quickCheck :: forall eff prop. Testable prop => prop -> QC eff Unit
 quickCheck prop = quickCheck' 100 prop
 
+-- | A version of `quickCheck` with the property specialized to `Gen`.
+-- |
+-- | The `quickCheckGen` variants are useful for writing property tests where a
+-- | `MonadGen` constraint (or QuickCheck's `Gen` directly) is being used,
+-- | rather than relying on `Arbitrary` instances. Especially useful for the
+-- | `MonadGen`-constrained properties as they will not infer correctly when
+-- | used with the `quickCheck` functions unless an explicit type annotation is
+-- | used.
+quickCheckGen :: forall eff prop. Testable prop => Gen prop -> QC eff Unit
+quickCheckGen = quickCheck
+
 -- | A variant of the `quickCheck` function which accepts an extra parameter
 -- | representing the number of tests which should be run.
 quickCheck' :: forall eff prop. Testable prop => Int -> prop -> QC eff Unit
 quickCheck' n prop = do
   seed <- randomSeed
   quickCheckWithSeed seed n prop
+
+-- | A version of `quickCheck'` with the property specialized to `Gen`.
+quickCheckGen' :: forall eff prop. Testable prop => Int -> Gen prop -> QC eff Unit
+quickCheckGen' = quickCheck'
 
 -- | A variant of the `quickCheck'` function that accepts a specific seed as
 -- | well as the number tests that should be run.
@@ -113,6 +132,10 @@ quickCheckWithSeed initialSeed n prop = do
                   firstFailure <> First (Just { index, message, seed })
               }
 
+-- | A version of `quickCheckWithSeed` with the property specialized to `Gen`.
+quickCheckGenWithSeed :: forall eff prop. Testable prop => Seed -> Int -> Gen prop -> QC eff Unit
+quickCheckGenWithSeed = quickCheckWithSeed
+
 type LoopState =
   { successes :: Int
   , firstFailure :: First { index :: Int, message :: String, seed :: Seed }
@@ -126,6 +149,10 @@ type LoopState =
 -- | The second argument is the number of tests to run.
 quickCheckPure :: forall prop. Testable prop => Seed -> Int -> prop -> List Result
 quickCheckPure s n prop = evalGen (replicateA n (test prop)) { newSeed: s, size: 10 }
+
+-- | A version of `quickCheckPure` with the property specialized to `Gen`.
+quickCheckGenPure :: forall prop. Testable prop => Seed -> Int -> Gen prop -> List Result
+quickCheckGenPure = quickCheckPure
 
 -- | The `Testable` class represents _testable properties_.
 -- |
