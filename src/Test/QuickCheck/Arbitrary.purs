@@ -15,7 +15,10 @@ import Prelude
 
 import Control.Monad.Gen.Class (chooseBool)
 import Control.Monad.Gen.Common as MGC
-
+import Control.Monad.ST (pureST)
+import Data.Array.NonEmpty (NonEmptyArray)
+import Data.Array.NonEmpty as NEA
+import Data.Array.ST (pushSTArray, unsafeFreeze, unsafeThaw)
 import Data.Char (toCharCode, fromCharCode)
 import Data.Either (Either(..))
 import Data.Foldable (foldl)
@@ -25,18 +28,19 @@ import Data.Int (toNumber)
 import Data.Lazy (Lazy, defer, force)
 import Data.List (List)
 import Data.List.NonEmpty (NonEmptyList(..))
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), fromJust)
 import Data.Newtype (wrap)
 import Data.NonEmpty (NonEmpty(..), (:|))
 import Data.Record (insert)
 import Data.String (charCodeAt, fromCharArray, split)
+import Data.String.NonEmpty (NonEmptyString)
+import Data.String.NonEmpty as NES
 import Data.Symbol (class IsSymbol, SProxy(..))
 import Data.Tuple (Tuple(..))
-
+import Partial.Unsafe (unsafePartial)
+import Test.QuickCheck.Gen (Gen, arrayOf, chooseInt, elements, listOf, oneOf, perturbGen, repeatable, sized, uniform)
 import Type.Prelude (class RowToList)
 import Type.Row (kind RowList, class RowLacks, Nil, Cons, RLProxy(..))
-
-import Test.QuickCheck.Gen (Gen, elements, listOf, chooseInt, sized, perturbGen, repeatable, arrayOf, oneOf, uniform)
 
 -- | The `Arbitrary` class represents those types whose values can be
 -- | _randomly-generated_.
@@ -83,6 +87,12 @@ instance arbString :: Arbitrary String where
 instance coarbString :: Coarbitrary String where
   coarbitrary s = coarbitrary $ (charCodeAt zero <$> split (wrap "") s)
 
+instance arbNonEmptyString :: Arbitrary NonEmptyString where
+  arbitrary = NES.cons <$> arbitrary <*> arbitrary
+
+instance coarbNonEmptyString :: Coarbitrary NonEmptyString where
+  coarbitrary = coarbitrary <<< NES.toString
+
 instance arbChar :: Arbitrary Char where
   arbitrary = fromCharCode <$> chooseInt 0 65536
 
@@ -108,6 +118,18 @@ instance arbArray :: Arbitrary a => Arbitrary (Array a) where
 
 instance coarbArray :: Coarbitrary a => Coarbitrary (Array a) where
   coarbitrary = foldl (\f x -> f <<< coarbitrary x) id
+
+instance arbNonEmptyArray :: Arbitrary a => Arbitrary (NonEmptyArray a) where
+  arbitrary = do
+     x <- arbitrary
+     xs <- arbitrary
+     pure $ unsafePartial fromJust $ NEA.fromArray $ pureST do
+        mxs <- unsafeThaw xs
+        _ <- pushSTArray mxs x
+        unsafeFreeze mxs
+
+instance coarbNonEmptyArray :: Coarbitrary a => Coarbitrary (NonEmptyArray a) where
+  coarbitrary = coarbitrary <<< NEA.toArray
 
 instance arbFunction :: (Coarbitrary a, Arbitrary b) => Arbitrary (a -> b) where
   arbitrary = repeatable (\a -> coarbitrary a arbitrary)
