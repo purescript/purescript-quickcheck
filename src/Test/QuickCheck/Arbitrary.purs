@@ -12,6 +12,7 @@ module Test.QuickCheck.Arbitrary
   ) where
 
 import Prelude
+import Prim.Row (class Cons)
 
 import Control.Monad.Gen.Class (chooseBool)
 import Control.Monad.Gen.Common as MGC
@@ -266,7 +267,7 @@ instance arbitraryRowListCons ::
   ( Arbitrary a
   , ArbitraryRowList listRest rowRest
   , RowLacks key rowRest
-  , RowCons key a rowRest rowFull
+  , Cons key a rowRest rowFull
   , RowToList rowFull (Cons key a listRest)
   , IsSymbol key
   ) => ArbitraryRowList (Cons key a listRest) rowFull where
