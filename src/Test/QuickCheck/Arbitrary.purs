@@ -245,7 +245,7 @@ instance arbitraryRowListCons ::
   ( Arbitrary a
   , ArbitraryRowList listRest rowRest
   , RowLacks key rowRest
-  , RowCons key a rowRest rowFull
+  , Cons key a rowRest rowFull
   , RowToList rowFull (Cons key a listRest)
   , IsSymbol key
   ) => ArbitraryRowList (Cons key a listRest) rowFull where
