@@ -20,23 +20,24 @@
     "package.json"
   ],
   "dependencies": {
-    "purescript-arrays": "^4.3.0",
-    "purescript-console": "^3.0.0",
-    "purescript-either": "^3.0.0",
-    "purescript-enums": "^3.0.0",
-    "purescript-exceptions": "^3.0.0",
-    "purescript-gen": "^1.0.0",
-    "purescript-lists": "^4.0.0",
-    "purescript-nonempty": "^4.0.0",
-    "purescript-partial": "^1.2.0",
-    "purescript-random": "^3.0.0",
-    "purescript-strings": "^3.5.0",
-    "purescript-transformers": "^3.0.0",
-    "purescript-generics-rep": "^5.0.0",
-    "purescript-typelevel-prelude": "^2.4.0",
-    "purescript-record": "^0.2.0"
+    "purescript-arrays": "#compiler/0.12",
+    "purescript-console": "#compiler/0.12",
+    "purescript-either": "#compiler/0.12",
+    "purescript-enums": "#compiler/0.12",
+    "purescript-exceptions": "#compiler/0.12",
+    "purescript-gen": "#compiler/0.12",
+    "purescript-generics-rep": "#compiler/0.12",
+    "purescript-lcg": "#compiler/0.12",
+    "purescript-lists": "#compiler/0.12",
+    "purescript-nonempty": "#compiler/0.12",
+    "purescript-partial": "#compiler/0.12",
+    "purescript-random": "#compiler/0.12",
+    "purescript-record": "#compiler/0.12",
+    "purescript-strings": "#compiler/0.12",
+    "purescript-transformers": "#compiler/0.12",
+    "purescript-typelevel-prelude": "#compiler/0.12"
   },
   "devDependencies": {
-    "purescript-assert": "^3.0.0"
+    "purescript-assert": "#compiler/0.12"
   }
 }

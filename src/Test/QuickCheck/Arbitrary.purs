@@ -15,14 +15,14 @@ import Prelude
 
 import Control.Monad.Gen.Class (chooseBool)
 import Control.Monad.Gen.Common as MGC
-import Control.Monad.ST (pureST)
+import Control.Monad.ST as ST
 import Data.Array.NonEmpty (NonEmptyArray)
 import Data.Array.NonEmpty as NEA
 import Data.Array.ST (pushSTArray, unsafeFreeze, unsafeThaw)
 import Data.Char (toCharCode, fromCharCode)
 import Data.Either (Either(..))
 import Data.Foldable (foldl)
-import Data.Generic.Rep (class Generic, to, from, NoArguments(..), Sum(..), Product(..), Constructor(..), Argument(..), Rec(..), Field(..))
+import Data.Generic.Rep (class Generic, to, from, NoArguments(..), Sum(..), Product(..), Constructor(..), Argument(..))
 import Data.Identity (Identity(..))
 import Data.Int (toNumber)
 import Data.Lazy (Lazy, defer, force)
@@ -31,16 +31,17 @@ import Data.List.NonEmpty (NonEmptyList(..))
 import Data.Maybe (Maybe(..), fromJust)
 import Data.Newtype (wrap)
 import Data.NonEmpty (NonEmpty(..), (:|))
-import Data.Record (insert)
+import Data.Record as Record
 import Data.String (charCodeAt, fromCharArray, split)
 import Data.String.NonEmpty (NonEmptyString)
 import Data.String.NonEmpty as NES
 import Data.Symbol (class IsSymbol, SProxy(..))
 import Data.Tuple (Tuple(..))
 import Partial.Unsafe (unsafePartial)
+import Prim.Row as Row
+import Prim.RowList as RL
 import Test.QuickCheck.Gen (Gen, arrayOf, chooseInt, elements, listOf, oneOf, perturbGen, repeatable, sized, uniform)
-import Type.Prelude (class RowToList)
-import Type.Row (kind RowList, class RowLacks, Nil, Cons, RLProxy(..))
+import Type.Data.RowList (RLProxy(..))
 
 -- | The `Arbitrary` class represents those types whose values can be
 -- | _randomly-generated_.
@@ -117,13 +118,13 @@ instance arbArray :: Arbitrary a => Arbitrary (Array a) where
   arbitrary = arrayOf arbitrary
 
 instance coarbArray :: Coarbitrary a => Coarbitrary (Array a) where
-  coarbitrary = foldl (\f x -> f <<< coarbitrary x) id
+  coarbitrary = foldl (\f x -> f <<< coarbitrary x) identity
 
 instance arbNonEmptyArray :: Arbitrary a => Arbitrary (NonEmptyArray a) where
   arbitrary = do
      x <- arbitrary
      xs <- arbitrary
-     pure $ unsafePartial fromJust $ NEA.fromArray $ pureST do
+     pure $ unsafePartial fromJust $ NEA.fromArray $ ST.run do
         mxs <- unsafeThaw xs
         _ <- pushSTArray mxs x
         unsafeFreeze mxs
@@ -163,7 +164,7 @@ instance arbitraryList :: Arbitrary a => Arbitrary (List a) where
   arbitrary = sized \n -> chooseInt zero n >>= flip listOf arbitrary
 
 instance coarbList :: Coarbitrary a => Coarbitrary (List a) where
-  coarbitrary = foldl (\f x -> f <<< coarbitrary x) id
+  coarbitrary = foldl (\f x -> f <<< coarbitrary x) identity
 
 instance arbitraryIdentity :: Arbitrary a => Arbitrary (Identity a) where
   arbitrary = Identity <$> arbitrary
@@ -193,7 +194,7 @@ instance arbitraryNoArguments :: Arbitrary NoArguments where
   arbitrary = pure NoArguments
 
 instance coarbitraryNoArguments :: Coarbitrary NoArguments where
-  coarbitrary NoArguments = id
+  coarbitrary NoArguments = identity
 
 -- | To be able to evenly distribute over chains of Sum types we build up
 -- | a collection of generators and choose between.  Each right component
@@ -232,18 +233,6 @@ instance arbitraryArgument :: Arbitrary a => Arbitrary (Argument a) where
 instance coarbitraryArgument :: Coarbitrary a => Coarbitrary (Argument a) where
   coarbitrary (Argument a) = coarbitrary a
 
-instance arbitraryRec :: Arbitrary a => Arbitrary (Rec a) where
-  arbitrary = Rec <$> arbitrary
-
-instance coarbitraryRec :: Coarbitrary a => Coarbitrary (Rec a) where
-  coarbitrary (Rec a) = coarbitrary a
-
-instance arbitraryField :: Arbitrary a => Arbitrary (Field s a) where
-  arbitrary = Field <$> arbitrary
-
-instance coarbitraryField :: Coarbitrary a => Coarbitrary (Field s a) where
-  coarbitrary (Field a) = coarbitrary a
-
 -- | A `Generic` implementation of the `arbitrary` member from the `Arbitrary` type class.
 genericArbitrary :: forall a rep. Generic a rep => Arbitrary rep => Gen a
 genericArbitrary = to <$> (arbitrary :: Gen rep)
@@ -253,30 +242,27 @@ genericCoarbitrary :: forall a rep. Generic a rep => Coarbitrary rep => a -> Gen
 genericCoarbitrary x g = to <$> coarbitrary (from x) (from <$> g)
 
 -- | A helper typeclass to implement `Arbitrary` for records.
-class ArbitraryRowList
-        (list :: RowList)
-        (row :: # Type)
-        | list -> row where
+class ArbitraryRowList list row | list -> row where
   arbitraryRecord :: RLProxy list -> Gen (Record row)
 
-instance arbitraryRowListNil :: ArbitraryRowList Nil () where
+instance arbitraryRowListNil :: ArbitraryRowList RL.Nil () where
   arbitraryRecord _ = pure {}
 
 instance arbitraryRowListCons ::
   ( Arbitrary a
   , ArbitraryRowList listRest rowRest
-  , RowLacks key rowRest
-  , RowCons key a rowRest rowFull
-  , RowToList rowFull (Cons key a listRest)
+  , Row.Lacks key rowRest
+  , Row.Cons key a rowRest rowFull
+  , RL.RowToList rowFull (RL.Cons key a listRest)
   , IsSymbol key
-  ) => ArbitraryRowList (Cons key a listRest) rowFull where
+  ) => ArbitraryRowList (RL.Cons key a listRest) rowFull where
   arbitraryRecord _ = do
      value <- arbitrary
      previous <- arbitraryRecord (RLProxy :: RLProxy listRest)
-     pure $ insert (SProxy :: SProxy key) value previous
+     pure $ Record.insert (SProxy :: SProxy key) value previous
 
 instance arbitraryRecordInstance ::
-  ( RowToList row list
+  ( RL.RowToList row list
   , ArbitraryRowList list row
   ) => Arbitrary (Record row) where
   arbitrary = arbitraryRecord (RLProxy :: RLProxy list)
