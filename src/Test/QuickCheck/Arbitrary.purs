@@ -31,7 +31,7 @@ import Data.List.NonEmpty (NonEmptyList(..))
 import Data.Maybe (Maybe(..), fromJust)
 import Data.Newtype (wrap)
 import Data.NonEmpty (NonEmpty(..), (:|))
-import Data.Record as Record
+import Record as Record
 import Data.String (charCodeAt, fromCharArray, split)
 import Data.String.NonEmpty (NonEmptyString)
 import Data.String.NonEmpty as NES
