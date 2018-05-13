@@ -18,7 +18,7 @@ import Control.Monad.Gen.Common as MGC
 import Control.Monad.ST as ST
 import Data.Array.NonEmpty (NonEmptyArray)
 import Data.Array.NonEmpty as NEA
-import Data.Array.ST (pushSTArray, unsafeFreeze, unsafeThaw)
+import Data.Array.ST as STA
 import Data.Char (toCharCode, fromCharCode)
 import Data.Either (Either(..))
 import Data.Foldable (foldl)
@@ -125,9 +125,9 @@ instance arbNonEmptyArray :: Arbitrary a => Arbitrary (NonEmptyArray a) where
      x <- arbitrary
      xs <- arbitrary
      pure $ unsafePartial fromJust $ NEA.fromArray $ ST.run do
-        mxs <- unsafeThaw xs
-        _ <- pushSTArray mxs x
-        unsafeFreeze mxs
+        mxs <- STA.unsafeThaw xs
+        _ <- STA.push x mxs
+        STA.unsafeFreeze mxs
 
 instance coarbNonEmptyArray :: Coarbitrary a => Coarbitrary (NonEmptyArray a) where
   coarbitrary = coarbitrary <<< NEA.toArray
