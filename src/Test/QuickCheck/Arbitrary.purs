@@ -19,8 +19,8 @@ import Control.Monad.ST as ST
 import Data.Array.NonEmpty (NonEmptyArray)
 import Data.Array.NonEmpty as NEA
 import Data.Array.ST as STA
-import Data.Char (toCharCode, fromCharCode)
 import Data.Either (Either(..))
+import Data.Enum (fromEnum, toEnumWithDefaults)
 import Data.Foldable (foldl)
 import Data.Generic.Rep (class Generic, to, from, NoArguments(..), Sum(..), Product(..), Constructor(..), Argument(..))
 import Data.Identity (Identity(..))
@@ -31,15 +31,15 @@ import Data.List.NonEmpty (NonEmptyList(..))
 import Data.Maybe (Maybe(..), fromJust)
 import Data.Newtype (wrap)
 import Data.NonEmpty (NonEmpty(..), (:|))
-import Record as Record
-import Data.String (charCodeAt, fromCharArray, split)
+import Data.String.CodeUnits (charAt, fromCharArray, split)
 import Data.String.NonEmpty (NonEmptyString)
-import Data.String.NonEmpty as NES
+import Data.String.NonEmpty.CodeUnits as NES
 import Data.Symbol (class IsSymbol, SProxy(..))
 import Data.Tuple (Tuple(..))
 import Partial.Unsafe (unsafePartial)
 import Prim.Row as Row
 import Prim.RowList as RL
+import Record as Record
 import Test.QuickCheck.Gen (Gen, arrayOf, chooseInt, elements, listOf, oneOf, perturbGen, repeatable, sized, uniform)
 import Type.Data.RowList (RLProxy(..))
 
@@ -86,7 +86,7 @@ instance arbString :: Arbitrary String where
   arbitrary = fromCharArray <$> arbitrary
 
 instance coarbString :: Coarbitrary String where
-  coarbitrary s = coarbitrary $ (charCodeAt zero <$> split (wrap "") s)
+  coarbitrary s = coarbitrary $ (charAt zero <$> split (wrap "") s)
 
 instance arbNonEmptyString :: Arbitrary NonEmptyString where
   arbitrary = NES.cons <$> arbitrary <*> arbitrary
@@ -95,10 +95,10 @@ instance coarbNonEmptyString :: Coarbitrary NonEmptyString where
   coarbitrary = coarbitrary <<< NES.toString
 
 instance arbChar :: Arbitrary Char where
-  arbitrary = fromCharCode <$> chooseInt 0 65536
+  arbitrary = toEnumWithDefaults bottom top <$> chooseInt 0 65536
 
 instance coarbChar :: Coarbitrary Char where
-  coarbitrary c = coarbitrary $ toCharCode c
+  coarbitrary c = coarbitrary $ fromEnum c
 
 instance arbUnit :: Arbitrary Unit where
   arbitrary = pure unit
