@@ -34,7 +34,8 @@ import Data.NonEmpty (NonEmpty(..), (:|))
 import Data.String (split)
 import Data.String.CodeUnits (charAt, fromCharArray)
 import Data.String.NonEmpty (NonEmptyString)
-import Data.String.NonEmpty.CodeUnits as NES
+import Data.String.NonEmpty as NES
+import Data.String.NonEmpty.CodeUnits as NESCU
 import Data.Symbol (class IsSymbol, SProxy(..))
 import Data.Tuple (Tuple(..))
 import Partial.Unsafe (unsafePartial)
@@ -90,7 +91,7 @@ instance coarbString :: Coarbitrary String where
   coarbitrary s = coarbitrary $ (charAt zero <$> split (wrap "") s)
 
 instance arbNonEmptyString :: Arbitrary NonEmptyString where
-  arbitrary = NES.cons <$> arbitrary <*> arbitrary
+  arbitrary = NESCU.cons <$> arbitrary <*> arbitrary
 
 instance coarbNonEmptyString :: Coarbitrary NonEmptyString where
   coarbitrary = coarbitrary <<< NES.toString
