@@ -16,8 +16,7 @@
 -- | main = quickCheck \n -> n + 1 > n
 -- | ```
 module Test.QuickCheck
-  ( QC
-  , quickCheck
+  ( quickCheck
   , quickCheckGen
   , quickCheck'
   , quickCheckGen'
@@ -44,36 +43,31 @@ module Test.QuickCheck
   , (>?)
   , assertGreaterThanEq
   , (>=?)
-  , module Test.QuickCheck.LCG
+  , module Random.LCG
   , module Test.QuickCheck.Arbitrary
   ) where
 
 import Prelude
 
-import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Console (CONSOLE, log)
-import Control.Monad.Eff.Exception (EXCEPTION, throwException, error)
-import Control.Monad.Eff.Random (RANDOM)
 import Control.Monad.Rec.Class (Step(..), tailRec)
 import Data.Foldable (for_)
 import Data.List (List)
 import Data.Maybe (Maybe(..))
 import Data.Maybe.First (First(..))
-import Data.Monoid (mempty)
 import Data.Tuple (Tuple(..))
 import Data.Unfoldable (replicateA)
+import Effect (Effect)
+import Effect.Console (log)
+import Effect.Exception (throwException, error)
+import Random.LCG (Seed, mkSeed, unSeed, randomSeed)
 import Test.QuickCheck.Arbitrary (class Arbitrary, arbitrary, class Coarbitrary, coarbitrary)
 import Test.QuickCheck.Gen (Gen, evalGen, runGen)
-import Test.QuickCheck.LCG (Seed, runSeed, randomSeed)
-
--- | A type synonym which represents the effects used by the `quickCheck` function.
-type QC eff a = Eff (console :: CONSOLE, random :: RANDOM, exception :: EXCEPTION | eff) a
 
 -- | Test a property.
 -- |
 -- | This function generates a new random seed, runs 100 tests and
 -- | prints the test results to the console.
-quickCheck :: forall eff prop. Testable prop => prop -> QC eff Unit
+quickCheck :: forall prop. Testable prop => prop -> Effect Unit
 quickCheck prop = quickCheck' 100 prop
 
 -- | A version of `quickCheck` with the property specialized to `Gen`.
@@ -84,31 +78,31 @@ quickCheck prop = quickCheck' 100 prop
 -- | `MonadGen`-constrained properties as they will not infer correctly when
 -- | used with the `quickCheck` functions unless an explicit type annotation is
 -- | used.
-quickCheckGen :: forall eff prop. Testable prop => Gen prop -> QC eff Unit
+quickCheckGen :: forall prop. Testable prop => Gen prop -> Effect Unit
 quickCheckGen = quickCheck
 
 -- | A variant of the `quickCheck` function which accepts an extra parameter
 -- | representing the number of tests which should be run.
-quickCheck' :: forall eff prop. Testable prop => Int -> prop -> QC eff Unit
+quickCheck' :: forall prop. Testable prop => Int -> prop -> Effect Unit
 quickCheck' n prop = do
   seed <- randomSeed
   quickCheckWithSeed seed n prop
 
 -- | A version of `quickCheck'` with the property specialized to `Gen`.
-quickCheckGen' :: forall eff prop. Testable prop => Int -> Gen prop -> QC eff Unit
+quickCheckGen' :: forall prop. Testable prop => Int -> Gen prop -> Effect Unit
 quickCheckGen' = quickCheck'
 
 -- | A variant of the `quickCheck'` function that accepts a specific seed as
 -- | well as the number tests that should be run.
 quickCheckWithSeed
-  :: forall eff prop. Testable prop => Seed -> Int -> prop -> QC eff Unit
+  :: forall prop. Testable prop => Seed -> Int -> prop -> Effect Unit
 quickCheckWithSeed initialSeed n prop = do
   let result = tailRec loop { seed: initialSeed, index: 0, successes: 0, firstFailure: mempty }
   log $ show result.successes <> "/" <> show n <> " test(s) passed."
   for_ result.firstFailure \{ index, message, seed: failureSeed } ->
     throwException $ error
       $ "Test " <> show (index + 1)
-      <> " (seed " <> show (runSeed failureSeed) <> ") failed: \n"
+      <> " (seed " <> show (unSeed failureSeed) <> ") failed: \n"
       <> message
   where
   loop :: LoopState -> Step LoopState LoopState
@@ -133,7 +127,7 @@ quickCheckWithSeed initialSeed n prop = do
               }
 
 -- | A version of `quickCheckWithSeed` with the property specialized to `Gen`.
-quickCheckGenWithSeed :: forall eff prop. Testable prop => Seed -> Int -> Gen prop -> QC eff Unit
+quickCheckGenWithSeed :: forall prop. Testable prop => Seed -> Int -> Gen prop -> Effect Unit
 quickCheckGenWithSeed = quickCheckWithSeed
 
 type LoopState =

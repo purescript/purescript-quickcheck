@@ -2,10 +2,9 @@ module Test.Main where
 
 import Prelude
 
-import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Console (CONSOLE, log, logShow)
-import Control.Monad.Eff.Exception (try, EXCEPTION)
-import Control.Monad.Eff.Random (RANDOM)
+import Effect (Effect)
+import Effect.Console (log, logShow)
+import Effect.Exception (try)
 import Control.Monad.Gen.Class as MGen
 import Data.Array.Partial (head)
 import Data.Either (isLeft)
@@ -14,25 +13,19 @@ import Data.Generic.Rep (class Generic)
 import Data.Generic.Rep.Show (genericShow)
 import Data.Tuple (fst)
 import Partial.Unsafe (unsafePartial)
-import Test.Assert (assert, ASSERT)
+import Test.Assert (assert)
 import Test.QuickCheck (class Testable, quickCheck, (/=?), (<=?), (<?), (==?), (>=?), (>?))
 import Test.QuickCheck.Arbitrary (arbitrary, genericArbitrary, class Arbitrary)
 import Test.QuickCheck.Gen (Gen, vectorOf, randomSample', resize, Size, runGen, sized)
-import Test.QuickCheck.LCG (mkSeed)
+import Random.LCG (mkSeed)
 
 data Foo a = F0 a | F1 a a | F2 { foo :: a, bar :: Array a }
 derive instance genericFoo :: Generic (Foo a) _
 instance showFoo :: Show a => Show (Foo a) where show = genericShow
 instance arbitraryFoo :: Arbitrary a => Arbitrary (Foo a) where arbitrary = genericArbitrary
 
-
-quickCheckFail
-  :: forall t e
-   . Testable t
-  => t
-  -> Eff (assert :: ASSERT, console :: CONSOLE, random :: RANDOM | e) Unit
+quickCheckFail :: forall t. Testable t => t -> Effect Unit
 quickCheckFail = assert <=< map isLeft <<< try <<< quickCheck
-
 
 testResize :: (forall a. Size -> Gen a -> Gen a) -> Boolean
 testResize resize' =
@@ -46,8 +39,7 @@ testResize resize' =
   in
     fst $ runGen gen { newSeed: mkSeed 0, size: initialSize }
 
-
-main :: Eff (assert :: ASSERT, console :: CONSOLE, random :: RANDOM, exception :: EXCEPTION) Unit
+main :: Effect Unit
 main = do
   log "MonadGen.resize"
   assert (testResize (MGen.resize <<< const))

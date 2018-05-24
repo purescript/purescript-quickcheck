@@ -34,8 +34,6 @@ import Prelude
 
 import Control.Alt (class Alt)
 import Control.Lazy (class Lazy)
-import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Random (RANDOM)
 import Control.Monad.Gen.Class (class MonadGen)
 import Control.Monad.Rec.Class (class MonadRec, Step(..), tailRecM)
 import Control.Monad.State (State, runState, evalState)
@@ -50,9 +48,10 @@ import Data.Monoid.Additive (Additive(..))
 import Data.Newtype (unwrap)
 import Data.NonEmpty (NonEmpty, (:|))
 import Data.Tuple (Tuple(..), fst, snd)
+import Effect (Effect)
 import Math ((%))
 import Partial.Unsafe (unsafePartial)
-import Test.QuickCheck.LCG (Seed, lcgPerturb, lcgN, lcgNext, runSeed, randomSeed)
+import Random.LCG (Seed, lcgPerturb, lcgM, lcgNext, unSeed, randomSeed)
 
 -- | Tests are parameterized by the `Size` of the randomly-generated data,
 -- | the meaning of which depends on the particular generator used.
@@ -231,28 +230,28 @@ sample :: forall a. Seed -> Size -> Gen a -> Array a
 sample seed sz g = evalGen (vectorOf sz g) { newSeed: seed, size: sz }
 
 -- | Sample a random generator, using a randomly generated seed
-randomSample' :: forall r a. Size -> Gen a -> Eff (random :: RANDOM | r) (Array a)
+randomSample' :: forall a. Size -> Gen a -> Effect (Array a)
 randomSample' n g = do
   seed <- randomSeed
   pure $ sample seed n g
 
 -- | Get a random sample of 10 values
-randomSample :: forall r a. Gen a -> Eff (random :: RANDOM | r) (Array a)
+randomSample :: forall a. Gen a -> Effect (Array a)
 randomSample = randomSample' 10
 
 -- | A random generator which simply outputs the current seed
 lcgStep :: Gen Int
 lcgStep = Gen $ state f where
-  f s = Tuple (runSeed s.newSeed) (s { newSeed = lcgNext s.newSeed })
+  f s = Tuple (unSeed s.newSeed) (s { newSeed = lcgNext s.newSeed })
 
 -- | A random generator which approximates a uniform random variable on `[0, 1]`
 uniform :: Gen Number
-uniform = (\n -> toNumber n / toNumber lcgN) <$> lcgStep
+uniform = (\n -> toNumber n / toNumber lcgM) <$> lcgStep
 
 foreign import float32ToInt32 :: Number -> Int
 
 -- | Perturb a random generator by modifying the current seed
 perturbGen :: forall a. Number -> Gen a -> Gen a
 perturbGen n gen = Gen do
-  modify \s -> s { newSeed = lcgPerturb (toNumber (float32ToInt32 n)) s.newSeed }
+  void $ modify \s -> s { newSeed = lcgPerturb (toNumber (float32ToInt32 n)) s.newSeed }
   unGen gen
