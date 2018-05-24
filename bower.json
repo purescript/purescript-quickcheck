@@ -1,7 +1,7 @@
 {
   "name": "purescript-quickcheck",
   "homepage": "https://github.com/purescript/purescript-quickcheck",
-  "license": "MIT",
+  "license": "BSD-3-Clause",
   "authors": [
     "John A. De Goes <john@degoes.net> (http://degoes.net)",
     "Phil Freeman <freeman.phil@gmail.com>"
@@ -20,24 +20,36 @@
     "package.json"
   ],
   "dependencies": {
-    "purescript-arrays": "#compiler/0.12",
-    "purescript-console": "#compiler/0.12",
-    "purescript-either": "#compiler/0.12",
-    "purescript-enums": "#compiler/0.12",
-    "purescript-exceptions": "#compiler/0.12",
-    "purescript-gen": "#compiler/0.12",
-    "purescript-generics-rep": "#compiler/0.12",
-    "purescript-lcg": "#compiler/0.12",
-    "purescript-lists": "#compiler/0.12",
-    "purescript-nonempty": "#compiler/0.12",
-    "purescript-partial": "#compiler/0.12",
-    "purescript-random": "#compiler/0.12",
-    "purescript-record": "#compiler/0.12",
-    "purescript-strings": "#compiler/0.12",
-    "purescript-transformers": "#compiler/0.12",
-    "purescript-typelevel-prelude": "#compiler/0.12"
+    "purescript-arrays": "^5.0.0",
+    "purescript-console": "^4.0.0",
+    "purescript-control": "^4.0.0",
+    "purescript-effect": "^2.0.0",
+    "purescript-either": "^4.0.0",
+    "purescript-enums": "^4.0.0",
+    "purescript-exceptions": "^4.0.0",
+    "purescript-foldable-traversable": "^4.0.0",
+    "purescript-gen": "^2.0.0",
+    "purescript-generics-rep": "^6.0.0",
+    "purescript-identity": "^4.0.0",
+    "purescript-integers": "^4.0.0",
+    "purescript-lazy": "^4.0.0",
+    "purescript-lcg": "^2.0.0",
+    "purescript-lists": "^5.0.0",
+    "purescript-math": "^2.1.1",
+    "purescript-maybe": "^4.0.0",
+    "purescript-newtype": "^3.0.0",
+    "purescript-nonempty": "^5.0.0",
+    "purescript-partial": "^2.0.0",
+    "purescript-prelude": "^4.0.0",
+    "purescript-record": "^1.0.0",
+    "purescript-st": "^4.0.0",
+    "purescript-strings": "^4.0.0",
+    "purescript-tailrec": "^4.0.0",
+    "purescript-transformers": "^4.0.0",
+    "purescript-tuples": "^5.0.0",
+    "purescript-unfoldable": "^4.0.0"
   },
   "devDependencies": {
-    "purescript-assert": "#compiler/0.12"
+    "purescript-assert": "^4.0.0"
   }
 }
