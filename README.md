@@ -13,4 +13,5 @@ bower install purescript-quickcheck
 
 ## Documentation
 
-Module documentation is [published on Pursuit](http://pursuit.purescript.org/packages/purescript-quickcheck).
+* [Guide](GUIDE.md)
+* Module documentation is [published on Pursuit](http://pursuit.purescript.org/packages/purescript-quickcheck).
