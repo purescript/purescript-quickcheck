@@ -86,6 +86,7 @@ main = do
   quickCheck     $ 4 >?  3
   quickCheckFail $ 4 <=? 3
 
+  log "Checking that chooseFloat over the whole Number range always yields a finite value"
   randomSample (MGen.chooseFloat ((-1.7976931348623157e+308)) (1.7976931348623157e+308)) >>= assert <<< all isFinite
 
   where
