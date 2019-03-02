@@ -41,7 +41,7 @@
     "purescript-nonempty": "^5.0.0",
     "purescript-partial": "^2.0.0",
     "purescript-prelude": "^4.0.0",
-    "purescript-record": "^1.0.0",
+    "purescript-record": "^2.0.0",
     "purescript-st": "^4.0.0",
     "purescript-strings": "^4.0.0",
     "purescript-tailrec": "^4.0.0",
