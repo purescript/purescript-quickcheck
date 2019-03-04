@@ -23,7 +23,12 @@ module Test.QuickCheck
   , quickCheckWithSeed
   , quickCheckGenWithSeed
   , quickCheckPure
+  , quickCheckPure'
   , quickCheckGenPure
+  , quickCheckGenPure'
+  , ResultSummary
+  , checkResults
+  , printSummary
   , class Testable
   , test
   , Result(..)
@@ -51,7 +56,9 @@ import Prelude
 
 import Control.Monad.Rec.Class (Step(..), tailRec)
 import Data.Foldable (for_)
+import Data.FoldableWithIndex (foldlWithIndex)
 import Data.List (List)
+import Data.List as List
 import Data.Maybe (Maybe(..))
 import Data.Maybe.First (First(..))
 import Data.Tuple (Tuple(..))
@@ -61,7 +68,7 @@ import Effect.Console (log)
 import Effect.Exception (throwException, error)
 import Random.LCG (Seed, mkSeed, unSeed, randomSeed)
 import Test.QuickCheck.Arbitrary (class Arbitrary, arbitrary, class Coarbitrary, coarbitrary)
-import Test.QuickCheck.Gen (Gen, evalGen, runGen)
+import Test.QuickCheck.Gen (Gen, evalGen, runGen, stateful)
 
 -- | Test a property.
 -- |
@@ -144,9 +151,48 @@ type LoopState =
 quickCheckPure :: forall prop. Testable prop => Seed -> Int -> prop -> List Result
 quickCheckPure s n prop = evalGen (replicateA n (test prop)) { newSeed: s, size: 10 }
 
+-- | Test a property, returning all test results as a List, with the Seed that
+-- | was used for each result.
+-- |
+-- | The first argument is the _random seed_ to be passed to the random generator.
+-- | The second argument is the number of tests to run.
+quickCheckPure' :: forall prop. Testable prop => Seed -> Int -> prop -> List (Tuple Seed Result)
+quickCheckPure' s n prop = evalGen (replicateA n (go prop)) { newSeed: s, size: 10 }
+  where
+    go p = stateful \gs -> Tuple gs.newSeed <$> test p
+
 -- | A version of `quickCheckPure` with the property specialized to `Gen`.
 quickCheckGenPure :: forall prop. Testable prop => Seed -> Int -> Gen prop -> List Result
 quickCheckGenPure = quickCheckPure
+
+-- | A version of `quickCheckPure'` with the property specialized to `Gen`.
+quickCheckGenPure' :: forall prop. Testable prop => Seed -> Int -> Gen prop -> List (Tuple Seed Result)
+quickCheckGenPure' = quickCheckPure'
+
+-- | A type used to summarise the results from `quickCheckPure'`
+type ResultSummary =
+  { total :: Int
+  , successes :: Int
+  , failures :: List { index :: Int, seed :: Seed, message :: String }
+  }
+
+-- | Processes the results from `quickCheckPure'` to produce a `ResultSummary`.
+checkResults :: List (Tuple Seed Result) -> ResultSummary
+checkResults = foldlWithIndex go { total: 0, successes: 0, failures: List.Nil }
+  where
+    go :: Int -> ResultSummary -> Tuple Seed Result -> ResultSummary
+    go index st (Tuple seed result) =
+      case result of
+        Success ->
+          st { total = st.total + 1, successes = st.successes + 1 }
+        Failed message ->
+          st { total = st.total + 1, failures = List.Cons { index, seed, message } st.failures }
+
+-- | Print a one-line summary in the form "x/y test(s) passed."
+printSummary :: ResultSummary -> String
+printSummary summary =
+  show summary.successes <> "/" <> show summary.total
+    <> if summary.total == 1 then " test passed." else " tests passed."
 
 -- | The `Testable` class represents _testable properties_.
 -- |
