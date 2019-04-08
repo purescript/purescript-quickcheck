@@ -57,6 +57,7 @@ import Prelude
 import Control.Monad.Rec.Class (Step(..), tailRec)
 import Data.Foldable (for_)
 import Data.FoldableWithIndex (foldlWithIndex)
+import Data.HeytingAlgebra (ff)
 import Data.List (List)
 import Data.List as List
 import Data.Maybe (Maybe(..))
@@ -222,6 +223,32 @@ data Result = Success | Failed String
 instance showResult :: Show Result where
   show Success = "Success"
   show (Failed msg) = "Failed: " <> msg
+
+instance semigroupResult :: Semigroup Result where
+  append Success r = r
+  append (Failed str) _ = Failed str
+
+instance monoidResult :: Monoid Result where
+  mempty = Success
+
+instance heytingAlgebraResult :: HeytingAlgebra Result where
+  ff = Failed "ff"
+
+  tt = Success
+
+  implies (Failed _) _ = Success
+  implies Success    x = x
+
+  conj Success x = x
+  conj x Success = x
+  conj (Failed x) (Failed y) = Failed (x <> " and " <> y)
+
+  disj Success _ = Success
+  disj _ Success = Success
+  disj (Failed x) (Failed y) = Failed (x <> " or " <> y)
+
+  not Success    = ff
+  not (Failed _) = Success
 
 -- | This operator attaches an error message to a failed test.
 -- |
