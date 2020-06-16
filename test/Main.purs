@@ -39,6 +39,9 @@ testResize resize' =
   in
     fst $ runGen gen { newSeed: mkSeed 0, size: initialSize }
 
+effectfulTest :: Int ->  Effect Boolean
+effectfulTest i = pure $ i == i
+
 main :: Effect Unit
 main = do
   log "MonadGen.resize"
@@ -70,6 +73,7 @@ main = do
   quickCheck \(x :: Int) -> x >? x - 1
   quickCheck \(x :: Int) -> x + x ==? x * 2
   quickCheck \(x :: Int) -> x + x /=? x * 3
+  quickCheck effectfulTest
 
   quickCheck     $ 1 ==? 1
   quickCheckFail $ 1 /=? 1

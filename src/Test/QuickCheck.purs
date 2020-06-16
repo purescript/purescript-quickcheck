@@ -66,6 +66,7 @@ import Data.Unfoldable (replicateA)
 import Effect (Effect)
 import Effect.Console (log)
 import Effect.Exception (throwException, error)
+import Effect.Unsafe (unsafePerformEffect)
 import Random.LCG (Seed, mkSeed, unSeed, randomSeed)
 import Test.QuickCheck.Arbitrary (class Arbitrary, arbitrary, class Coarbitrary, coarbitrary)
 import Test.QuickCheck.Gen (Gen, evalGen, runGen, stateful)
@@ -215,6 +216,9 @@ instance testableFunction :: (Arbitrary t, Testable prop) => Testable (t -> prop
 
 instance testableGen :: Testable prop => Testable (Gen prop) where
   test = flip bind test
+
+instance testableEffect :: Testable prop => Testable (Effect prop) where
+  test = test <<< unsafePerformEffect
 
 -- | The result of a test: success or failure (with an error message).
 data Result = Success | Failed String
