@@ -17,6 +17,7 @@ module Test.QuickCheck.Gen
   , frequency
   , arrayOf
   , arrayOf1
+  , lazyListOf
   , listOf
   , vectorOf
   , elements
@@ -43,6 +44,7 @@ import Data.Enum (class BoundedEnum, fromEnum, toEnum)
 import Data.Foldable (fold)
 import Data.Int (toNumber, floor)
 import Data.List (List(..), toUnfoldable)
+import Data.List.Lazy as Lazy
 import Data.Maybe (fromMaybe, fromJust)
 import Data.Monoid.Additive (Additive(..))
 import Data.Newtype (unwrap)
@@ -199,6 +201,9 @@ replicateMRec k gen = tailRecM go (Tuple Nil k)
 -- | Create a random generator which generates a list of random values of the specified size.
 listOf :: forall a. Int -> Gen a -> Gen (List a)
 listOf = replicateMRec
+
+lazyListOf :: forall a. Int -> Gen a -> Gen (Lazy.List a)
+lazyListOf n gen = Lazy.fromFoldable <$> listOf n gen
 
 -- | Create a random generator which generates a vector of random values of a specified size.
 vectorOf :: forall a. Int -> Gen a -> Gen (Array a)

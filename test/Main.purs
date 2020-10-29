@@ -16,7 +16,7 @@ import Partial.Unsafe (unsafePartial)
 import Test.Assert (assert)
 import Test.QuickCheck (class Testable, quickCheck, (/=?), (<=?), (<?), (==?), (>=?), (>?))
 import Test.QuickCheck.Arbitrary (arbitrary, genericArbitrary, class Arbitrary)
-import Test.QuickCheck.Gen (Gen, vectorOf, randomSample', resize, Size, runGen, sized)
+import Test.QuickCheck.Gen (Gen, lazyListOf, vectorOf, randomSample', resize, Size, runGen, sized)
 import Random.LCG (mkSeed)
 
 data Foo a = F0 a | F1 a a | F2 { foo :: a, bar :: Array a }
@@ -55,6 +55,7 @@ main = do
   log "Testing stack safety of Gen"
   logShow =<< go 20000
   logShow =<< go 100000
+  logShow =<< go' 100000
 
   log "Generating via Generic"
   logShow =<< randomSample' 10 (arbitrary :: Gen (Foo Int))
@@ -86,6 +87,7 @@ main = do
 
   where
   go n = map (sum <<< unsafeHead) $ randomSample' 1 (vectorOf n (arbitrary :: Gen Int))
+  go' n = map (sum <<< unsafeHead) $ randomSample' 1 (lazyListOf n (arbitrary :: Gen Int))
 
   unsafeHead :: forall x. Array x -> x
   unsafeHead xs = unsafePartial (head xs)
