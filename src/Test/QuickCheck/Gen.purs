@@ -233,7 +233,7 @@ sample seed sz g = evalGen (vectorOf sz g) { newSeed: seed, size: sz }
 generate :: forall a. Gen a -> Effect a
 generate gen = do
   seed <- randomSeed
-  pure $ evalGen gen { newSeed: seed, size: 1 }
+  pure $ evalGen gen { newSeed: seed, size: 10 }
 
 -- | Sample a random generator, using a randomly generated seed
 randomSample' :: forall a. Size -> Gen a -> Effect (Array a)
