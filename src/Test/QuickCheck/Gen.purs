@@ -229,13 +229,19 @@ evalGen = evalState <<< unGen
 sample :: forall a. Seed -> Size -> Gen a -> Array a
 sample seed sz g = evalGen (vectorOf sz g) { newSeed: seed, size: sz }
 
+-- | Generate a single value using a randomly generated seed.
+randomSampleOne :: forall a. Gen a -> Effect a
+randomSampleOne gen = do
+  seed <- randomSeed
+  pure $ evalGen gen { newSeed: seed, size: 10 }
+
 -- | Sample a random generator, using a randomly generated seed
 randomSample' :: forall a. Size -> Gen a -> Effect (Array a)
 randomSample' n g = do
   seed <- randomSeed
   pure $ sample seed n g
 
--- | Get a random sample of 10 values
+-- | Get a random sample of 10 values. For a single value, use `randomSampleOne`.
 randomSample :: forall a. Gen a -> Effect (Array a)
 randomSample = randomSample' 10
 
