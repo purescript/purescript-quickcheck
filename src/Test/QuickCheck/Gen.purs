@@ -241,7 +241,7 @@ randomSample' n g = do
   seed <- randomSeed
   pure $ sample seed n g
 
--- | Get a random sample of 10 values. For a single value, use `randomOne`.
+-- | Get a random sample of 10 values. For a single value, use `randomSampleOne`.
 randomSample :: forall a. Gen a -> Effect (Array a)
 randomSample = randomSample' 10
 
