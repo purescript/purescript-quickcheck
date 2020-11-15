@@ -259,5 +259,5 @@ foreign import float32ToInt32 :: Number -> Int
 -- | Perturb a random generator by modifying the current seed
 perturbGen :: forall a. Number -> Gen a -> Gen a
 perturbGen n gen = Gen do
-  void $ modify \s -> s { newSeed = lcgPerturb (toNumber (float32ToInt32 n)) s.newSeed }
+  void $ modify \s -> s { newSeed = lcgPerturb (float32ToInt32 n) s.newSeed }
   unGen gen
