@@ -2,22 +2,22 @@ module Test.Main where
 
 import Prelude
 
-import Effect (Effect)
-import Effect.Console (log, logShow)
-import Effect.Exception (try)
 import Control.Monad.Gen.Class as MGen
 import Data.Array.Partial (head)
 import Data.Either (isLeft)
-import Data.Foldable (sum)
+import Data.Foldable (class Foldable, sum)
 import Data.Generic.Rep (class Generic)
 import Data.Generic.Rep.Show (genericShow)
 import Data.Tuple (fst)
+import Effect (Effect)
+import Effect.Console (log, logShow)
+import Effect.Exception (try)
 import Partial.Unsafe (unsafePartial)
+import Random.LCG (mkSeed)
 import Test.Assert (assert)
 import Test.QuickCheck (class Testable, quickCheck, (/=?), (<=?), (<?), (==?), (>=?), (>?))
 import Test.QuickCheck.Arbitrary (arbitrary, genericArbitrary, class Arbitrary)
-import Test.QuickCheck.Gen (Gen, vectorOf, randomSample', resize, Size, runGen, sized)
-import Random.LCG (mkSeed)
+import Test.QuickCheck.Gen (Gen, Size, lazyListOf, listOf, randomSample', resize, runGen, sized, vectorOf)
 
 data Foo a = F0 a | F1 a a | F2 { foo :: a, bar :: Array a }
 derive instance genericFoo :: Generic (Foo a) _
@@ -47,14 +47,16 @@ main = do
   assert (testResize (resize))
 
   log "Try with some little Gens first"
-  logShow =<< go 10
-  logShow =<< go 100
-  logShow =<< go 1000
-  logShow =<< go 10000
+  logShow =<< go vectorOf 10
+  logShow =<< go vectorOf 100
+  logShow =<< go vectorOf 1000
+  logShow =<< go vectorOf 10000
 
   log "Testing stack safety of Gen"
-  logShow =<< go 20000
-  logShow =<< go 100000
+  logShow =<< go vectorOf 20000
+  logShow =<< go vectorOf 100000
+  logShow =<< go listOf 100000
+  logShow =<< go lazyListOf 100000
 
   log "Generating via Generic"
   logShow =<< randomSample' 10 (arbitrary :: Gen (Foo Int))
@@ -85,7 +87,8 @@ main = do
   quickCheckFail $ 4 <=? 3
 
   where
-  go n = map (sum <<< unsafeHead) $ randomSample' 1 (vectorOf n (arbitrary :: Gen Int))
+  go :: forall f. Foldable f => (Int -> Gen Int -> Gen (f Int)) -> Int -> Effect Int
+  go f n = map (sum <<< unsafeHead) $ randomSample' 1 (f n (arbitrary :: Gen Int))
 
   unsafeHead :: forall x. Array x -> x
   unsafeHead xs = unsafePartial (head xs)

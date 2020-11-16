@@ -27,6 +27,7 @@ import Data.Identity (Identity(..))
 import Data.Int (toNumber)
 import Data.Lazy (Lazy, defer, force)
 import Data.List (List)
+import Data.List.Lazy as Lazy
 import Data.List.NonEmpty (NonEmptyList(..))
 import Data.Maybe (Maybe(..), fromJust)
 import Data.Newtype (wrap)
@@ -42,7 +43,7 @@ import Partial.Unsafe (unsafePartial)
 import Prim.Row as Row
 import Prim.RowList as RL
 import Record as Record
-import Test.QuickCheck.Gen (Gen, arrayOf, chooseInt, elements, listOf, oneOf, perturbGen, repeatable, sized, uniform)
+import Test.QuickCheck.Gen (Gen, arrayOf, chooseInt, elements, lazyListOf, listOf, oneOf, perturbGen, repeatable, sized, uniform)
 import Type.Data.RowList (RLProxy(..))
 
 -- | The `Arbitrary` class represents those types whose values can be
@@ -166,6 +167,12 @@ instance arbitraryList :: Arbitrary a => Arbitrary (List a) where
   arbitrary = sized \n -> chooseInt zero n >>= flip listOf arbitrary
 
 instance coarbList :: Coarbitrary a => Coarbitrary (List a) where
+  coarbitrary = foldl (\f x -> f <<< coarbitrary x) identity
+
+instance arbitraryLazyList :: Arbitrary a => Arbitrary (Lazy.List a) where
+  arbitrary = sized \n -> chooseInt zero n >>= flip lazyListOf arbitrary
+
+instance coarbLazyList :: Coarbitrary a => Coarbitrary (Lazy.List a) where
   coarbitrary = foldl (\f x -> f <<< coarbitrary x) identity
 
 instance arbitraryIdentity :: Arbitrary a => Arbitrary (Identity a) where
