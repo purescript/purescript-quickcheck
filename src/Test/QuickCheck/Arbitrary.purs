@@ -36,14 +36,14 @@ import Data.String.CodeUnits (charAt, fromCharArray)
 import Data.String.NonEmpty (NonEmptyString)
 import Data.String.NonEmpty as NES
 import Data.String.NonEmpty.CodeUnits as NESCU
-import Data.Symbol (class IsSymbol, SProxy(..))
+import Data.Symbol (class IsSymbol)
 import Data.Tuple (Tuple(..))
 import Partial.Unsafe (unsafePartial)
 import Prim.Row as Row
 import Prim.RowList as RL
 import Record as Record
 import Test.QuickCheck.Gen (Gen, arrayOf, chooseInt, elements, listOf, oneOf, perturbGen, repeatable, sized, uniform)
-import Type.Data.RowList (RLProxy(..))
+import Type.Proxy (Proxy(..))
 
 -- | The `Arbitrary` class represents those types whose values can be
 -- | _randomly-generated_.
@@ -244,8 +244,9 @@ genericCoarbitrary :: forall a rep. Generic a rep => Coarbitrary rep => a -> Gen
 genericCoarbitrary x g = to <$> coarbitrary (from x) (from <$> g)
 
 -- | A helper typeclass to implement `Arbitrary` for records.
+class ArbitraryRowList :: RL.RowList Type -> Row Type -> Constraint
 class ArbitraryRowList list row | list -> row where
-  arbitraryRecord :: RLProxy list -> Gen (Record row)
+  arbitraryRecord :: forall rlproxy. rlproxy list -> Gen (Record row)
 
 instance arbitraryRowListNil :: ArbitraryRowList RL.Nil () where
   arbitraryRecord _ = pure {}
@@ -260,11 +261,11 @@ instance arbitraryRowListCons ::
   ) => ArbitraryRowList (RL.Cons key a listRest) rowFull where
   arbitraryRecord _ = do
      value <- arbitrary
-     previous <- arbitraryRecord (RLProxy :: RLProxy listRest)
-     pure $ Record.insert (SProxy :: SProxy key) value previous
+     previous <- arbitraryRecord (Proxy :: Proxy listRest)
+     pure $ Record.insert (Proxy :: Proxy key) value previous
 
 instance arbitraryRecordInstance ::
   ( RL.RowToList row list
   , ArbitraryRowList list row
   ) => Arbitrary (Record row) where
-  arbitrary = arbitraryRecord (RLProxy :: RLProxy list)
+  arbitrary = arbitraryRecord (Proxy :: Proxy list)

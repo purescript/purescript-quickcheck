@@ -41,7 +41,7 @@
     "purescript-nonempty": "master",
     "purescript-partial": "master",
     "purescript-prelude": "master",
-    "purescript-record": "master",
+    "purescript-record": "kl0tl/purescript-record#no-monomorphic-proxies",
     "purescript-st": "master",
     "purescript-strings": "master",
     "purescript-tailrec": "master",
