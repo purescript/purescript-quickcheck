@@ -240,8 +240,8 @@ genericArbitrary :: forall a rep. Generic a rep => Arbitrary rep => Gen a
 genericArbitrary = to <$> (arbitrary :: Gen rep)
 
 -- | A `Generic` implementation of the `coarbitrary` member from the `Coarbitrary` type class.
-genericCoarbitrary :: forall a rep. Generic a rep => Coarbitrary rep => a -> Gen a -> Gen a
-genericCoarbitrary x g = to <$> coarbitrary (from x) (from <$> g)
+genericCoarbitrary :: forall a rep t. Generic a rep => Coarbitrary rep => a -> Gen t -> Gen t
+genericCoarbitrary x = coarbitrary (from x)
 
 -- | A helper typeclass to implement `Arbitrary` for records.
 class ArbitraryRowList :: RL.RowList Type -> Row Type -> Constraint
