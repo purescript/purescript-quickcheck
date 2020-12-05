@@ -1,14 +1,14 @@
 # purescript-quickcheck
 
 [![Latest release](http://img.shields.io/github/release/purescript/purescript-quickcheck.svg)](https://github.com/purescript/purescript-quickcheck/releases)
-[![Build status](https://travis-ci.org/purescript/purescript-quickcheck.svg?branch=master)](https://travis-ci.org/purescript/purescript-quickcheck)
+[![Build status](https://github.com/purescript/purescript-quickcheck/workflows/CI/badge.svg?branch=master)](https://github.com/purescript/purescript-quickcheck/actions?query=workflow%3ACI+branch%3Amaster)
 
 An implementation of QuickCheck in PureScript.
 
 ## Installation
 
 ```
-bower install purescript-quickcheck
+spago install quickcheck
 ```
 
 ## Documentation
