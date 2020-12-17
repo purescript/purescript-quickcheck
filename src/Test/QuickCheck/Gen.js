@@ -1,4 +1,4 @@
-/* global exports, ArrayBuffer, Float32Array, Int32Array */
+/* global ArrayBuffer, Float32Array, Int32Array */
 "use strict";
 
 // module Test.QuickCheck.Gen
