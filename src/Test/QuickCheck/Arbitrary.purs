@@ -16,6 +16,7 @@ import Prelude
 import Control.Monad.Gen.Class (chooseBool)
 import Control.Monad.Gen.Common as MGC
 import Control.Monad.ST as ST
+import Data.Array ((:))
 import Data.Array.NonEmpty (NonEmptyArray)
 import Data.Array.NonEmpty as NEA
 import Data.Array.ST as STA
@@ -30,7 +31,7 @@ import Data.List (List)
 import Data.List.NonEmpty (NonEmptyList(..))
 import Data.Maybe (Maybe(..), fromJust)
 import Data.Newtype (wrap)
-import Data.NonEmpty (NonEmpty(..), (:|))
+import Data.NonEmpty (NonEmpty(..))
 import Data.String (split)
 import Data.String.CodeUnits (charAt, fromCharArray)
 import Data.String.NonEmpty (NonEmptyString)
@@ -109,7 +110,7 @@ instance coarbUnit :: Coarbitrary Unit where
   coarbitrary _ = perturbGen 1.0
 
 instance arbOrdering :: Arbitrary Ordering where
-  arbitrary = elements $ LT :| [EQ, GT]
+  arbitrary = elements $ unsafePartial fromJust $ NEA.fromArray [LT, EQ, GT]
 
 instance coarbOrdering :: Coarbitrary Ordering where
   coarbitrary LT = perturbGen 1.0
@@ -205,13 +206,13 @@ class ArbitraryGenericSum t where
   arbitraryGenericSum :: Array (Gen t)
 
 instance arbGenSumSum :: (Arbitrary l, ArbitraryGenericSum r) => ArbitraryGenericSum (Sum l r) where
-  arbitraryGenericSum = [Inl <$> arbitrary] <> (map Inr <$> arbitraryGenericSum)
+  arbitraryGenericSum = (Inl <$> arbitrary) : (map Inr <$> arbitraryGenericSum)
 
 instance arbGenSumConstructor :: Arbitrary a => ArbitraryGenericSum (Constructor s a) where
   arbitraryGenericSum = [arbitrary]
 
 instance arbitrarySum :: (Arbitrary l, ArbitraryGenericSum r) => Arbitrary (Sum l r) where
-  arbitrary = oneOf $ (Inl <$> arbitrary) :| (map Inr <$> arbitraryGenericSum)
+  arbitrary = oneOf $ unsafePartial fromJust $ NEA.fromArray $ (Inl <$> arbitrary) : (map Inr <$> arbitraryGenericSum)
 
 instance coarbitrarySum :: (Coarbitrary l, Coarbitrary r) => Coarbitrary (Sum l r) where
   coarbitrary (Inl l) = coarbitrary l

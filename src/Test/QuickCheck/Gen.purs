@@ -38,15 +38,18 @@ import Control.Monad.Gen.Class (class MonadGen)
 import Control.Monad.Rec.Class (class MonadRec, Step(..), tailRecM)
 import Control.Monad.State (State, runState, evalState)
 import Control.Monad.State.Class (modify, state)
-import Data.Array ((!!), length, zip, sortBy)
+import Data.Array ((:), length, zip, sortBy)
+import Data.Array.NonEmpty (NonEmptyArray)
+import Data.Array.NonEmpty as NEA
 import Data.Enum (class BoundedEnum, fromEnum, toEnum)
 import Data.Foldable (fold)
 import Data.Int (toNumber, floor)
 import Data.List (List(..), toUnfoldable)
-import Data.Maybe (fromMaybe, fromJust)
+import Data.List.NonEmpty (NonEmptyList)
+import Data.List.NonEmpty as NEL
+import Data.Maybe (fromJust)
 import Data.Monoid.Additive (Additive(..))
 import Data.Newtype (unwrap)
-import Data.NonEmpty (NonEmpty, (:|))
 import Data.Tuple (Tuple(..), fst, snd)
 import Effect (Effect)
 import Math ((%))
@@ -148,15 +151,15 @@ chooseInt' a b = floor <<< clamp <$> choose32BitPosNumber
 
 -- | Create a random generator which selects and executes a random generator from
 -- | a non-empty array of random generators with uniform probability.
-oneOf :: forall a. NonEmpty Array (Gen a) -> Gen a
-oneOf (x :| xs) = do
-  n <- chooseInt zero (length xs)
-  if n < one then x else fromMaybe x (xs !! (n - one))
+oneOf :: forall a. NonEmptyArray (Gen a) -> Gen a
+oneOf xs = do
+  n <- chooseInt zero (NEA.length xs - one)
+  unsafePartial $ NEA.unsafeIndex xs n
 
 -- | Create a random generator which selects and executes a random generator from
 -- | a non-empty, weighted list of random generators.
-frequency :: forall a. NonEmpty List (Tuple Number (Gen a)) -> Gen a
-frequency (x :| xs) = let
+frequency :: forall a. NonEmptyList (Tuple Number (Gen a)) -> Gen a
+frequency = NEL.uncons >>> \{ head: x, tail: xs } -> let
     xxs   = Cons x xs
     total = unwrap $ fold (map (Additive <<< fst) xxs :: List (Additive Number))
     pick n d Nil = d
@@ -172,12 +175,12 @@ arrayOf g = sized $ \n ->
      vectorOf k g
 
 -- | Create a random generator which generates a non-empty array of random values.
-arrayOf1 :: forall a. Gen a -> Gen (NonEmpty Array a)
+arrayOf1 :: forall a. Gen a -> Gen (NonEmptyArray a)
 arrayOf1 g = sized $ \n ->
   do k <- chooseInt zero n
      x <- g
      xs <- vectorOf (k - one) g
-     pure $ x :| xs
+     pure $ unsafePartial fromJust $ NEA.fromArray $ x : xs
 
 -- | Create a random generator for a finite enumeration.
 -- | `toEnum i` must be well-behaved:
@@ -206,10 +209,10 @@ vectorOf k g = toUnfoldable <$> listOf k g
 
 -- | Create a random generator which selects a value from a non-empty array with
 -- | uniform probability.
-elements :: forall a. NonEmpty Array a -> Gen a
-elements (x :| xs) = do
-  n <- chooseInt zero (length xs)
-  pure if n == zero then x else fromMaybe x (xs !! (n - one))
+elements :: forall a. NonEmptyArray a -> Gen a
+elements xs = do
+  n <- chooseInt zero (NEA.length xs - one)
+  pure $ unsafePartial $ NEA.unsafeIndex xs n
 
 -- | Generate a random permutation of the given array
 shuffle :: forall a. Array a -> Gen (Array a)
