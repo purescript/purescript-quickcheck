@@ -151,25 +151,25 @@ instance coarbFunction :: (Arbitrary a, Coarbitrary b) => Coarbitrary (a -> b) w
     coarbitrary (map f (xs :: Array a)) gen
 
 instance arbFirst :: Arbitrary a => Arbitrary (First a) where
-  arbitrary = First arbitrary
+  arbitrary = First <$> arbitrary
 
 instance arbLast :: Arbitrary a => Arbitrary (Last a) where
-  arbitrary = Last arbitrary
+  arbitrary = Last <$> arbitrary
 
 instance arbAdditive :: Arbitrary a => Arbitrary (Additive a) where
-  arbitrary = Additive arbitrary
+  arbitrary = Additive <$> arbitrary
 
 instance arbMultiplicative :: Arbitrary a => Arbitrary (Multiplicative a) where
-  arbitrary = Multiplicative arbitrary
+  arbitrary = Multiplicative <$> arbitrary
 
 instance arbConj :: Arbitrary a => Arbitrary (Conj a) where
-  arbitrary = Conj arbitrary
+  arbitrary = Conj <$> arbitrary
 
 instance arbDisj :: Arbitrary a => Arbitrary (Disj a) where
-  arbitrary = Disj arbitrary
+  arbitrary = Disj <$> arbitrary
 
 instance arbDual :: Arbitrary a => Arbitrary (Dual a) where
-  arbitrary = Dual arbitrary
+  arbitrary = Dual <$> arbitrary
 
 instance arbTuple :: (Arbitrary a, Arbitrary b) => Arbitrary (Tuple a b) where
   arbitrary = Tuple <$> arbitrary <*> arbitrary
