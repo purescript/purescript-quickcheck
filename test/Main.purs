@@ -2,22 +2,24 @@ module Test.Main where
 
 import Prelude
 
-import Effect (Effect)
-import Effect.Console (log, logShow)
-import Effect.Exception (try)
 import Control.Monad.Gen.Class as MGen
+import Data.Array (all)
 import Data.Array.Partial (head)
 import Data.Either (isLeft)
 import Data.Foldable (sum)
 import Data.Generic.Rep (class Generic)
 import Data.Generic.Rep.Show (genericShow)
 import Data.Tuple (fst)
+import Effect (Effect)
+import Effect.Console (log, logShow)
+import Effect.Exception (try)
+import Global (isFinite)
 import Partial.Unsafe (unsafePartial)
+import Random.LCG (mkSeed)
 import Test.Assert (assert)
 import Test.QuickCheck (class Testable, quickCheck, (/=?), (<=?), (<?), (==?), (>=?), (>?))
 import Test.QuickCheck.Arbitrary (arbitrary, genericArbitrary, class Arbitrary)
-import Test.QuickCheck.Gen (Gen, vectorOf, randomSample', resize, Size, runGen, sized)
-import Random.LCG (mkSeed)
+import Test.QuickCheck.Gen (Gen, Size, randomSample, randomSample', resize, runGen, sized, vectorOf)
 
 data Foo a = F0 a | F1 a a | F2 { foo :: a, bar :: Array a }
 derive instance genericFoo :: Generic (Foo a) _
@@ -83,6 +85,9 @@ main = do
   quickCheckFail $ 4 ==? 3
   quickCheck     $ 4 >?  3
   quickCheckFail $ 4 <=? 3
+
+  log "Checking that chooseFloat over the whole Number range always yields a finite value"
+  randomSample (MGen.chooseFloat ((-1.7976931348623157e+308)) (1.7976931348623157e+308)) >>= assert <<< all isFinite
 
   where
   go n = map (sum <<< unsafeHead) $ randomSample' 1 (vectorOf n (arbitrary :: Gen Int))

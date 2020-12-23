@@ -122,9 +122,11 @@ resize sz g = Gen $ state \{ newSeed, size } ->
 -- | Create a random generator which samples a range of `Number`s i
 -- | with uniform probability.
 choose :: Number -> Number -> Gen Number
-choose a b = (*) (max' - min') >>> (+) min' <$> uniform where
-  min' = min a b
-  max' = max a b
+choose a b = (*) (max' - min') >>> (+) min' >>> unscale <$> uniform where
+  unscale = (_ * 2.0)
+  scale = (_ * 0.5)
+  min' = scale $ min a b
+  max' = scale $ max a b
 
 -- | Create a random generator which chooses uniformly distributed
 -- | integers from the closed interval `[a, b]`.
