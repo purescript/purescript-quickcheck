@@ -29,7 +29,6 @@
     "purescript-exceptions": "master",
     "purescript-foldable-traversable": "master",
     "purescript-gen": "master",
-    "purescript-generics-rep": "master",
     "purescript-identity": "master",
     "purescript-integers": "master",
     "purescript-lazy": "master",
