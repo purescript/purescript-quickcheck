@@ -50,6 +50,7 @@
     "purescript-unfoldable": "master"
   },
   "devDependencies": {
-    "purescript-assert": "master"
+    "purescript-assert": "master",
+    "purescript-numbers": "master"
   }
 }
