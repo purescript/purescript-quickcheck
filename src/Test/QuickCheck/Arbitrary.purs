@@ -172,7 +172,7 @@ instance arbDisj :: Arbitrary a => Arbitrary (Disj a) where
 instance arbDual :: Arbitrary a => Arbitrary (Dual a) where
   arbitrary = Dual <$> arbitrary
 
-instance arbEndo :: (Arbitrary (c a a), Arbitrary a) => Arbitrary (Endo c a) where
+instance arbEndo :: Arbitrary (c a a) => Arbitrary (Endo c a) where
   arbitrary = Endo <$> arbitrary
 
 instance arbTuple :: (Arbitrary a, Arbitrary b) => Arbitrary (Tuple a b) where
