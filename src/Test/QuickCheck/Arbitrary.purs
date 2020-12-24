@@ -34,6 +34,7 @@ import Data.Monoid.Additive (Additive(..))
 import Data.Monoid.Conj (Conj(..))
 import Data.Monoid.Disj (Disj(..))
 import Data.Monoid.Dual (Dual(..))
+import Data.Monoid.Endo (Endo(..))
 import Data.Monoid.Multiplicative (Multiplicative(..))
 import Data.Newtype (wrap)
 import Data.NonEmpty (NonEmpty(..))
@@ -170,6 +171,9 @@ instance arbDisj :: Arbitrary a => Arbitrary (Disj a) where
 
 instance arbDual :: Arbitrary a => Arbitrary (Dual a) where
   arbitrary = Dual <$> arbitrary
+
+instance arbEndo :: (Arbitrary (c a a), Arbitrary a) => Arbitrary (Endo c a) where
+  arbitrary = Endo <$> arbitrary
 
 instance arbTuple :: (Arbitrary a, Arbitrary b) => Arbitrary (Tuple a b) where
   arbitrary = Tuple <$> arbitrary <*> arbitrary
