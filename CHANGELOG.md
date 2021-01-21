@@ -6,8 +6,9 @@ Notable changes to this project are documented in this file. The format is based
 
 Breaking changes:
 - Added support for PureScript 0.14 and dropped support for all previous versions (#115)
-- Fix `genericCoarbitrary` so it no longer explicitly relates to the generated data (#99)
-- Replace `globals` dependency with `numbers` (#120) 
+- Fixed `genericCoarbitrary` so it no longer explicitly relates to the generated data (#99)
+- Replaced `NonEmpty Array` and `NonEmpty List` with `NonEmptyArray` and `NonEmptyList` (#118)
+- Replaced `globals` dependency with `numbers` (#120) 
 
 New features:
 - Added `randomSampleOne` (#114) 
@@ -17,7 +18,6 @@ Bugfixes:
 
 Other improvements:
 - Dropped `generics-rep` dependency as its now included in `prelude` (#121)
-- Replaced `NonEmpty Array` and `NonEmpty List` with `NonEmptyArray` and `NonEmptyList`
 - Replaced monomorphic proxies with `Type.Proxy.Proxy` and polymorphic variables (#116)
 - Migrated CI to GitHub Actions and updated installation instructions to use Spago (#117)
 - Added a changelog and pull request template (#122, #123)
