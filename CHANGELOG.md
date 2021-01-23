@@ -5,25 +5,35 @@ Notable changes to this project are documented in this file. The format is based
 ## [Unreleased]
 
 Breaking changes:
+- Added support for PureScript 0.14 and dropped support for all previous versions (#115)
+- Fixed `genericCoarbitrary` so it no longer explicitly relates to the generated data (#99)
+- Replaced `NonEmpty Array` and `NonEmpty List` with `NonEmptyArray` and `NonEmptyList` (#118)
+- Replaced `globals` dependency with `numbers` (#120) 
 
 New features:
+- Added `randomSampleOne` (#114) 
 
 Bugfixes:
+- Allowed full `Number` range for chooseFloat (#97) 
 
 Other improvements:
+- Dropped `generics-rep` dependency as its now included in `prelude` (#121)
+- Replaced monomorphic proxies with `Type.Proxy.Proxy` and polymorphic variables (#116)
+- Migrated CI to GitHub Actions and updated installation instructions to use Spago (#117)
+- Added a changelog and pull request template (#122, #123)
 
 ## [v6.1.0](https://github.com/purescript/purescript-quickcheck/releases/tag/v6.1.0) - 2019-03-04
 
-Added some functions to give better reporting abilities for pure QuickCheck runs
+- Added some functions to give better reporting abilities for pure QuickCheck runs
 
 ## [v6.0.0](https://github.com/purescript/purescript-quickcheck/releases/tag/v6.0.0) - 2019-03-02
 
-* Move guide over from documentation repo (@anttih)
-* Bump dependencies
+- Moved guide over from documentation repo (@anttih)
+- Bumped dependencies
 
 ## [v5.0.0](https://github.com/purescript/purescript-quickcheck/releases/tag/v5.0.0) - 2018-05-24
 
-Updated for PureScript 0.12
+- Updated for PureScript 0.12
 
 ## [v4.7.0](https://github.com/purescript/purescript-quickcheck/releases/tag/v4.7.0) - 2018-03-30
 
@@ -37,16 +47,15 @@ Updated for PureScript 0.12
 ## [v4.6.1](https://github.com/purescript/purescript-quickcheck/releases/tag/v4.6.1) - 2017-12-20
 
 - Fixed behaviour of `resize` (@safareli)
-
-Previously `resize` would alter the state of `Gen` forever, rather than it being local to the `Gen` that was passed into `resize`. This may alter the behaviour of some existing tests if they relied on the buggy behaviour.
+  Previously `resize` would alter the state of `Gen` forever, rather than it being local to the `Gen` that was passed into `resize`. This may alter the behaviour of some existing tests if they relied on the buggy behaviour.
 
 ## [v4.6.0](https://github.com/purescript/purescript-quickcheck/releases/tag/v4.6.0) - 2017-09-02
 
-Add `Arbitrary` instance for records (@sharkdp)
+- Added `Arbitrary` instance for records (@sharkdp)
 
 ## [v4.5.0](https://github.com/purescript/purescript-quickcheck/releases/tag/v4.5.0) - 2017-09-01
 
-Added some more helper comparison operations (@Risto-Stevcev)
+- Added some more helper comparison operations (@Risto-Stevcev)
 
 ## [v4.4.0](https://github.com/purescript/purescript-quickcheck/releases/tag/v4.4.0) - 2017-06-18
 
@@ -54,11 +63,11 @@ Added some more helper comparison operations (@Risto-Stevcev)
 
 ## [v4.3.0](https://github.com/purescript/purescript-quickcheck/releases/tag/v4.3.0) - 2017-06-03
 
-Generic deriving for `Arbitrary` and `Coarbitrary` (@LiamGoodacre)
+- Added generic deriving for `Arbitrary` and `Coarbitrary` (@LiamGoodacre)
 
 ## [v4.2.0](https://github.com/purescript/purescript-quickcheck/releases/tag/v4.2.0) - 2017-06-03
 
-Add shuffle generator (@matthewleon)
+- Added shuffle generator (@matthewleon)
 
 ## [v4.1.0](https://github.com/purescript/purescript-quickcheck/releases/tag/v4.1.0) - 2017-05-28
 
@@ -94,21 +103,13 @@ Add shuffle generator (@matthewleon)
 
 ## [v1.0.0](https://github.com/purescript/purescript-quickcheck/releases/tag/v1.0.0) - 2016-06-01
 
-This release is intended for the PureScript 0.9.1 compiler and newer.
-
-**Note**: The v1.0.0 tag is not meant to indicate the library is “finished”, the core libraries are all being bumped to this for the 0.9 compiler release so as to use semver more correctly.
-
-## [v1.0.0-rc.2](https://github.com/purescript/purescript-quickcheck/releases/tag/v1.0.0-rc.2) - 2016-05-20
+This release is intended for the PureScript 0.9.1 compiler and newer. **Note**: The v1.0.0 tag is not meant to indicate the library is “finished”, the core libraries are all being bumped to this for the 0.9 compiler release so as to use semver more correctly.
 
 - Update dependencies and fix warnings
 
-## [v1.0.0-rc.1](https://github.com/purescript/purescript-quickcheck/releases/tag/v1.0.0-rc.1) - 2016-03-27
-
-- Release candidate for the psc 0.8+ core libraries
-
 ## [v0.12.2](https://github.com/purescript/purescript-quickcheck/releases/tag/v0.12.2) - 2015-12-16
 
-Fix `repeatable`.
+- Fixed `repeatable`.
 
 ## [v0.12.1](https://github.com/purescript/purescript-quickcheck/releases/tag/v0.12.1) - 2015-11-19
 
@@ -121,7 +122,7 @@ Fix `repeatable`.
 
 ## [v0.11.0](https://github.com/purescript/purescript-quickcheck/releases/tag/v0.11.0) - 2015-08-25
 
-Bump `transformers` dependency to `0.7.1`. As such, this release requires version `0.7.4` of the PureScript compiler.
+- Bumped `transformers` dependency to `0.7.1`. As such, this release requires version `0.7.4` of the PureScript compiler.
 
 ## [v0.10.1](https://github.com/purescript/purescript-quickcheck/releases/tag/v0.10.1) - 2015-08-17
 
@@ -133,7 +134,7 @@ Bump `transformers` dependency to `0.7.1`. As such, this release requires versio
 
 ## [v0.9.0](https://github.com/purescript/purescript-quickcheck/releases/tag/v0.9.0) - 2015-08-13
 
-Updated dependencies
+- Updated dependencies
 
 ## [v0.8.0](https://github.com/purescript/purescript-quickcheck/releases/tag/v0.8.0) - 2015-08-10
 
@@ -142,19 +143,13 @@ Updated dependencies
 
 ## [v0.7.0](https://github.com/purescript/purescript-quickcheck/releases/tag/v0.7.0) - 2015-07-17
 
-Modify `QC` type synonym to work around type class instance bug in PSCi.
+- Modified `QC` type synonym to work around type class instance bug in PSCi.
 
 ## [v0.6.0](https://github.com/purescript/purescript-quickcheck/releases/tag/v0.6.0) - 2015-06-30
 
 This release works with versions 0.7.\* of the PureScript compiler. It will not work with older versions. If you are using an older version, you should require an older, compatible version of this library.
 
-## [v0.6.0-rc.2](https://github.com/purescript/purescript-quickcheck/releases/tag/v0.6.0-rc.2) - 2015-06-18
-
-Fix LCG function.
-
-## [v0.6.0-rc.1](https://github.com/purescript/purescript-quickcheck/releases/tag/v0.6.0-rc.1) - 2015-06-10
-
-Initial release candidate of the library intended for the 0.7 compiler.
+- Fixed LCG function.
 
 ## [v0.5.2](https://github.com/purescript/purescript-quickcheck/releases/tag/v0.5.2) - 2015-04-04
 
@@ -162,7 +157,7 @@ Initial release candidate of the library intended for the 0.7 compiler.
 
 ## [v0.5.1](https://github.com/purescript/purescript-quickcheck/releases/tag/v0.5.1) - 2015-03-20
 
-Updated docs
+- Updated docs
 
 ## [v0.5.0](https://github.com/purescript/purescript-quickcheck/releases/tag/v0.5.0) - 2015-02-21
 
@@ -176,41 +171,39 @@ Updated docs
 
 ## [v0.3.2](https://github.com/purescript/purescript-quickcheck/releases/tag/v0.3.2) - 2014-12-02
 
-Bump dependencies
+- Bumped dependencies
 
 ## [v0.3.1](https://github.com/purescript/purescript-quickcheck/releases/tag/v0.3.1) - 2014-11-26
 
-
+- Removed `enums` dependency and update other dependencies (#16)
 
 ## [v0.3.0](https://github.com/purescript/purescript-quickcheck/releases/tag/v0.3.0) - 2014-11-08
 
-Revert to pre-'machines' state. 
-
-`purescript-strongcheck` is recommended if you need the industrial-strength version of this library, until the necessary libraries are moved into the core GitHub organization.
+- Reverted to pre-'machines' state. `strongcheck` is recommended if you need the industrial-strength version of this library, until the necessary libraries are moved into the core GitHub organization.
 
 ## [v0.2.2](https://github.com/purescript/purescript-quickcheck/releases/tag/v0.2.2) - 2014-10-14
 
-
+- Updated dependencies and add arb / coarb for Char (#11)
 
 ## [v0.2.1](https://github.com/purescript/purescript-quickcheck/releases/tag/v0.2.1) - 2014-10-13
 
-- Export functions of type classes, fix dependency versions, added some overlooked conveniences (@jdegoes)
+- Exported functions of type classes, fix dependency versions, added some overlooked conveniences (@jdegoes)
 
 ## [v0.2.0](https://github.com/purescript/purescript-quickcheck/releases/tag/v0.2.0) - 2014-10-10
 
-
+- Made general enhancements to Gen (#9)
 
 ## [v0.1.5](https://github.com/purescript/purescript-quickcheck/releases/tag/v0.1.5) - 2014-09-26
 
-
+- Added instances for `Either`, `Waybe`, and `Tuple`, and some helper functions (#8)
 
 ## [0.1.4](https://github.com/purescript/purescript-quickcheck/releases/tag/0.1.4) - 2014-09-25
 
-
+- Added instances for `String` & alpha num `String` add sized generators (#7)
 
 ## [v0.1.3](https://github.com/purescript/purescript-quickcheck/releases/tag/v0.1.3) - 2014-08-07
 
-
+- Updated for new exceptions
 
 ## [v0.1.2](https://github.com/purescript/purescript-quickcheck/releases/tag/v0.1.2) - 2014-06-14
 
@@ -218,9 +211,8 @@ Revert to pre-'machines' state.
 
 ## [v0.1.1](https://github.com/purescript/purescript-quickcheck/releases/tag/v0.1.1) - 2014-04-27
 
-
+- Removed version, updated ignored files
 
 ## [v0.1.0](https://github.com/purescript/purescript-quickcheck/releases/tag/v0.1.0) - 2014-04-27
 
-
-
+- Initial release
