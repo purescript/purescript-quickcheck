@@ -5,6 +5,16 @@ Notable changes to this project are documented in this file. The format is based
 ## [Unreleased]
 
 Breaking changes:
+
+New features:
+
+Bugfixes:
+
+Other improvements:
+
+## [v7.0.0](https://github.com/purescript/purescript-quickcheck/releases/tag/v7.0.0) - 2021-02-26
+
+Breaking changes:
 - Added support for PureScript 0.14 and dropped support for all previous versions (#115)
 - Fixed `genericCoarbitrary` so it no longer explicitly relates to the generated data (#99)
 - Replaced `NonEmpty Array` and `NonEmpty List` with `NonEmptyArray` and `NonEmptyList` (#118)

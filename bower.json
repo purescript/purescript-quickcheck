@@ -8,7 +8,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git://github.com/purescript/purescript-quickcheck.git"
+    "url": "https://github.com/purescript/purescript-quickcheck.git"
   },
   "ignore": [
     "**/.*",
@@ -20,36 +20,36 @@
     "package.json"
   ],
   "dependencies": {
-    "purescript-arrays": "master",
-    "purescript-console": "master",
-    "purescript-control": "master",
-    "purescript-effect": "master",
-    "purescript-either": "master",
-    "purescript-enums": "master",
-    "purescript-exceptions": "master",
-    "purescript-foldable-traversable": "master",
-    "purescript-gen": "master",
-    "purescript-identity": "master",
-    "purescript-integers": "master",
-    "purescript-lazy": "master",
-    "purescript-lcg": "master",
-    "purescript-lists": "master",
-    "purescript-math": "master",
-    "purescript-maybe": "master",
-    "purescript-newtype": "master",
-    "purescript-nonempty": "master",
-    "purescript-partial": "master",
-    "purescript-prelude": "master",
-    "purescript-record": "master",
-    "purescript-st": "master",
-    "purescript-strings": "master",
-    "purescript-tailrec": "master",
-    "purescript-transformers": "master",
-    "purescript-tuples": "master",
-    "purescript-unfoldable": "master"
+    "purescript-arrays": "^6.0.0",
+    "purescript-console": "^5.0.0",
+    "purescript-control": "^5.0.0",
+    "purescript-effect": "^3.0.0",
+    "purescript-either": "^5.0.0",
+    "purescript-enums": "^5.0.0",
+    "purescript-exceptions": "^5.0.0",
+    "purescript-foldable-traversable": "^5.0.0",
+    "purescript-gen": "^3.0.0",
+    "purescript-identity": "^5.0.0",
+    "purescript-integers": "^5.0.0",
+    "purescript-lazy": "^5.0.0",
+    "purescript-lcg": "^3.0.0",
+    "purescript-lists": "^6.0.0",
+    "purescript-math": "^3.0.0",
+    "purescript-maybe": "^5.0.0",
+    "purescript-newtype": "^4.0.0",
+    "purescript-nonempty": "^6.0.0",
+    "purescript-partial": "^3.0.0",
+    "purescript-prelude": "^5.0.0",
+    "purescript-record": "^3.0.0",
+    "purescript-st": "^5.0.0",
+    "purescript-strings": "^5.0.0",
+    "purescript-tailrec": "^5.0.0",
+    "purescript-transformers": "^5.0.0",
+    "purescript-tuples": "^6.0.0",
+    "purescript-unfoldable": "^5.0.0"
   },
   "devDependencies": {
-    "purescript-assert": "master",
-    "purescript-numbers": "master"
+    "purescript-assert": "^5.0.0",
+    "purescript-numbers": "^8.0.0"
   }
 }
