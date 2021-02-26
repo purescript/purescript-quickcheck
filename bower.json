@@ -50,6 +50,6 @@
   },
   "devDependencies": {
     "purescript-assert": "^5.0.0",
-    "purescript-numbers": "^7.0.0"
+    "purescript-numbers": "^8.0.0"
   }
 }
