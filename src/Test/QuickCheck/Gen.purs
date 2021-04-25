@@ -17,6 +17,7 @@ module Test.QuickCheck.Gen
   , frequency
   , arrayOf
   , arrayOf1
+  , enum
   , listOf
   , vectorOf
   , elements
@@ -28,6 +29,7 @@ module Test.QuickCheck.Gen
   , sample
   , randomSample
   , randomSample'
+  , randomSampleOne
   ) where
 
 import Prelude
@@ -164,7 +166,7 @@ frequency :: forall a. NonEmptyList (Tuple Number (Gen a)) -> Gen a
 frequency = NEL.uncons >>> \{ head: x, tail: xs } -> let
     xxs   = Cons x xs
     total = unwrap $ fold (map (Additive <<< fst) xxs :: List (Additive Number))
-    pick n d Nil = d
+    pick _ d Nil = d
     pick n d (Cons (Tuple k x') xs') = if n <= k then x' else pick (n - k) d xs'
   in do
     n <- choose zero total
