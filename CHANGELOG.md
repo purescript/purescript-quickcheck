@@ -7,9 +7,15 @@ Notable changes to this project are documented in this file. The format is based
 Breaking changes:
 
 New features:
-- Export `enum` and `randomSampleOne` (#125 by @JordanMartinez)
 
 Bugfixes:
+
+Other improvements:
+
+## [v7.1.0](https://github.com/purescript/purescript-quickcheck/releases/tag/v7.1.0) - 2021-04-27
+
+New features:
+- Export `enum` and `randomSampleOne` (#125 by @JordanMartinez)
 
 Other improvements:
 - Fix warning revealed by v0.14.1 PS release (#125 by @JordanMartinez)
