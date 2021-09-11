@@ -30,8 +30,16 @@ import Data.Lazy (Lazy, defer, force)
 import Data.List (List)
 import Data.List.NonEmpty (NonEmptyList(..))
 import Data.Maybe (Maybe(..), fromJust)
+import Data.Monoid.Additive (Additive(..))
+import Data.Monoid.Conj (Conj(..))
+import Data.Monoid.Disj (Disj(..))
+import Data.Monoid.Dual (Dual(..))
+import Data.Monoid.Endo (Endo(..))
+import Data.Monoid.Multiplicative (Multiplicative(..))
 import Data.Newtype (wrap)
 import Data.NonEmpty (NonEmpty(..))
+import Data.Semigroup.First (First(..))
+import Data.Semigroup.Last (Last(..))
 import Data.String (split)
 import Data.String.CodeUnits (charAt, fromCharArray)
 import Data.String.NonEmpty (NonEmptyString)
@@ -142,6 +150,30 @@ instance coarbFunction :: (Arbitrary a, Coarbitrary b) => Coarbitrary (a -> b) w
   coarbitrary f gen = do
     xs <- arbitrary
     coarbitrary (map f (xs :: Array a)) gen
+
+instance arbFirst :: Arbitrary a => Arbitrary (First a) where
+  arbitrary = First <$> arbitrary
+
+instance arbLast :: Arbitrary a => Arbitrary (Last a) where
+  arbitrary = Last <$> arbitrary
+
+instance arbAdditive :: Arbitrary a => Arbitrary (Additive a) where
+  arbitrary = Additive <$> arbitrary
+
+instance arbMultiplicative :: Arbitrary a => Arbitrary (Multiplicative a) where
+  arbitrary = Multiplicative <$> arbitrary
+
+instance arbConj :: Arbitrary a => Arbitrary (Conj a) where
+  arbitrary = Conj <$> arbitrary
+
+instance arbDisj :: Arbitrary a => Arbitrary (Disj a) where
+  arbitrary = Disj <$> arbitrary
+
+instance arbDual :: Arbitrary a => Arbitrary (Dual a) where
+  arbitrary = Dual <$> arbitrary
+
+instance arbEndo :: Arbitrary (c a a) => Arbitrary (Endo c a) where
+  arbitrary = Endo <$> arbitrary
 
 instance arbTuple :: (Arbitrary a, Arbitrary b) => Arbitrary (Tuple a b) where
   arbitrary = Tuple <$> arbitrary <*> arbitrary
