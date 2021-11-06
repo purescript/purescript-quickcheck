@@ -9,6 +9,7 @@ Breaking changes:
 New features:
 
 Bugfixes:
+- `quickCheckPure` and `quickCheckPure'` stack safety (#127)
 
 Other improvements:
 

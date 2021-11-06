@@ -57,18 +57,17 @@ import Prelude
 import Control.Monad.Rec.Class (Step(..), tailRec)
 import Data.Foldable (for_)
 import Data.FoldableWithIndex (foldlWithIndex)
-import Data.List (List)
+import Data.List (List, (:))
 import Data.List as List
 import Data.Maybe (Maybe(..))
 import Data.Maybe.First (First(..))
-import Data.Tuple (Tuple(..))
-import Data.Unfoldable (replicateA)
+import Data.Tuple (Tuple(..), snd)
 import Effect (Effect)
 import Effect.Console (log)
 import Effect.Exception (throwException, error)
 import Random.LCG (Seed, mkSeed, unSeed, randomSeed)
 import Test.QuickCheck.Arbitrary (class Arbitrary, arbitrary, class Coarbitrary, coarbitrary)
-import Test.QuickCheck.Gen (Gen, evalGen, runGen, stateful)
+import Test.QuickCheck.Gen (Gen, runGen)
 
 -- | Test a property.
 -- |
@@ -149,7 +148,7 @@ type LoopState =
 -- | The first argument is the _random seed_ to be passed to the random generator.
 -- | The second argument is the number of tests to run.
 quickCheckPure :: forall prop. Testable prop => Seed -> Int -> prop -> List Result
-quickCheckPure s n prop = evalGen (replicateA n (test prop)) { newSeed: s, size: 10 }
+quickCheckPure s n prop = map snd (quickCheckPure' s n prop)
 
 -- | Test a property, returning all test results as a List, with the Seed that
 -- | was used for each result.
@@ -157,9 +156,25 @@ quickCheckPure s n prop = evalGen (replicateA n (test prop)) { newSeed: s, size:
 -- | The first argument is the _random seed_ to be passed to the random generator.
 -- | The second argument is the number of tests to run.
 quickCheckPure' :: forall prop. Testable prop => Seed -> Int -> prop -> List (Tuple Seed Result)
-quickCheckPure' s n prop = evalGen (replicateA n (go prop)) { newSeed: s, size: 10 }
+quickCheckPure' s n prop = tailRec loop { seed: s, index: 0, results: mempty }
   where
-    go p = stateful \gs -> Tuple gs.newSeed <$> test p
+    loop :: PureLoopState -> Step PureLoopState (List (Tuple Seed Result))
+    loop { seed, index, results }
+      | index == n = Done (List.reverse (results))
+      | otherwise =
+          case runGen (test prop) { newSeed: seed, size: 10 } of
+            Tuple r {newSeed} ->
+              Loop
+                { seed: newSeed
+                , index: index + 1
+                , results: (Tuple seed r) : results
+                }
+
+type PureLoopState =
+  { seed :: Seed
+  , index :: Int
+  , results :: List (Tuple Seed Result)
+  }
 
 -- | A version of `quickCheckPure` with the property specialized to `Gen`.
 quickCheckGenPure :: forall prop. Testable prop => Seed -> Int -> Gen prop -> List Result
