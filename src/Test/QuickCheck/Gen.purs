@@ -40,16 +40,14 @@ import Control.Monad.Gen.Class (class MonadGen)
 import Control.Monad.Rec.Class (class MonadRec, Step(..), tailRecM)
 import Control.Monad.State (State, runState, evalState)
 import Control.Monad.State.Class (modify, state)
-import Data.Array ((:), length, zip, sortBy)
+import Data.Array ((:), index, length, zip, sortBy)
 import Data.Array.NonEmpty (NonEmptyArray)
 import Data.Array.NonEmpty as NEA
 import Data.Enum (class BoundedEnum, fromEnum, toEnum)
 import Data.Foldable (fold)
 import Data.Int (toNumber, floor)
 import Data.List (List(..), toUnfoldable)
-import Data.List.NonEmpty (NonEmptyList)
-import Data.List.NonEmpty as NEL
-import Data.Maybe (fromJust)
+import Data.Maybe (Maybe(..), fromJust)
 import Data.Monoid.Additive (Additive(..))
 import Data.Newtype (unwrap)
 import Data.Tuple (Tuple(..), fst, snd)
@@ -162,18 +160,20 @@ oneOf xs = do
   unsafePartial $ NEA.unsafeIndex xs n
 
 -- | Create a random generator which selects and executes a random generator from
--- | a non-empty, weighted list of random generators.
-frequency :: forall a. NonEmptyList (Tuple Number (Gen a)) -> Gen a
-frequency = NEL.uncons >>> \{ head: x, tail: xs } ->
+-- | a non-empty, weighted array of random generators.
+frequency :: forall a. NonEmptyArray (Tuple Number (Gen a)) -> Gen a
+frequency neArr = do
   let
-    xxs = Cons x xs
-    total = unwrap $ fold (map (Additive <<< fst) xxs :: List (Additive Number))
-    pick _ d Nil = d
-    pick n d (Cons (Tuple k x') xs') = if n <= k then x' else pick (n - k) d xs'
-  in
-    do
-      n <- choose zero total
-      pick n (snd x) xxs
+    x = NEA.head neArr
+    arr = NEA.toArray neArr
+    total = unwrap $ fold (map (Additive <<< fst) neArr :: NonEmptyArray (Additive Number))
+    pick idx n' default = case index arr idx of
+      Nothing -> default
+      Just (Tuple k x')
+        | n' <= k -> x'
+        | otherwise -> pick (idx + 1) (n' - k) default
+  n <- choose zero total
+  pick 0 n (snd x)
 
 -- | Create a random generator which generates an array of random values.
 arrayOf :: forall a. Gen a -> Gen (Array a)
