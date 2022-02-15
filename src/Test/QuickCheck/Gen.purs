@@ -119,12 +119,13 @@ sized f = stateful (\s -> f s.size)
 -- | Modify a random generator by setting a new size parameter.
 resize :: forall a. Size -> Gen a -> Gen a
 resize sz g = Gen $ state \{ newSeed, size } ->
-  (_ {size = size} ) <$> runGen g { newSeed, size: sz}
+  (_ { size = size }) <$> runGen g { newSeed, size: sz }
 
 -- | Create a random generator which samples a range of `Number`s i
 -- | with uniform probability.
 choose :: Number -> Number -> Gen Number
-choose a b = (*) (max' - min') >>> (+) min' >>> unscale <$> uniform where
+choose a b = (*) (max' - min') >>> (+) min' >>> unscale <$> uniform
+  where
   unscale = (_ * 2.0)
   scale = (_ * 0.5)
   min' = scale $ min a b
@@ -140,18 +141,18 @@ chooseInt a b = if a <= b then chooseInt' a b else chooseInt' b a
 chooseInt' :: Int -> Int -> Gen Int
 chooseInt' a b = floor <<< clamp <$> choose32BitPosNumber
   where
-    choose32BitPosNumber :: Gen Number
-    choose32BitPosNumber =
-      (+) <$> choose31BitPosNumber <*> (((*) 2.0) <$> choose31BitPosNumber)
+  choose32BitPosNumber :: Gen Number
+  choose32BitPosNumber =
+    (+) <$> choose31BitPosNumber <*> (((*) 2.0) <$> choose31BitPosNumber)
 
-    choose31BitPosNumber :: Gen Number
-    choose31BitPosNumber = toNumber <$> lcgStep
+  choose31BitPosNumber :: Gen Number
+  choose31BitPosNumber = toNumber <$> lcgStep
 
-    clamp :: Number -> Number
-    clamp x = numA + (x % (numB - numA + one))
+  clamp :: Number -> Number
+  clamp x = numA + (x % (numB - numA + one))
 
-    numA = toNumber a
-    numB = toNumber b
+  numA = toNumber a
+  numB = toNumber b
 
 -- | Create a random generator which selects and executes a random generator from
 -- | a non-empty array of random generators with uniform probability.
@@ -163,28 +164,32 @@ oneOf xs = do
 -- | Create a random generator which selects and executes a random generator from
 -- | a non-empty, weighted list of random generators.
 frequency :: forall a. NonEmptyList (Tuple Number (Gen a)) -> Gen a
-frequency = NEL.uncons >>> \{ head: x, tail: xs } -> let
-    xxs   = Cons x xs
+frequency = NEL.uncons >>> \{ head: x, tail: xs } ->
+  let
+    xxs = Cons x xs
     total = unwrap $ fold (map (Additive <<< fst) xxs :: List (Additive Number))
     pick _ d Nil = d
     pick n d (Cons (Tuple k x') xs') = if n <= k then x' else pick (n - k) d xs'
-  in do
-    n <- choose zero total
-    pick n (snd x) xxs
+  in
+    do
+      n <- choose zero total
+      pick n (snd x) xxs
 
 -- | Create a random generator which generates an array of random values.
 arrayOf :: forall a. Gen a -> Gen (Array a)
 arrayOf g = sized $ \n ->
-  do k <- chooseInt zero n
-     vectorOf k g
+  do
+    k <- chooseInt zero n
+    vectorOf k g
 
 -- | Create a random generator which generates a non-empty array of random values.
 arrayOf1 :: forall a. Gen a -> Gen (NonEmptyArray a)
 arrayOf1 g = sized $ \n ->
-  do k <- chooseInt zero n
-     x <- g
-     xs <- vectorOf (k - one) g
-     pure $ unsafePartial fromJust $ NEA.fromArray $ x : xs
+  do
+    k <- chooseInt zero n
+    x <- g
+    xs <- vectorOf (k - one) g
+    pure $ unsafePartial fromJust $ NEA.fromArray $ x : xs
 
 -- | Create a random generator for a finite enumeration.
 -- | `toEnum i` must be well-behaved:
@@ -254,7 +259,8 @@ randomSample = randomSample' 10
 
 -- | A random generator which simply outputs the current seed
 lcgStep :: Gen Int
-lcgStep = Gen $ state f where
+lcgStep = Gen $ state f
+  where
   f s = Tuple (unSeed s.newSeed) (s { newSeed = lcgNext s.newSeed })
 
 -- | A random generator which approximates a uniform random variable on `[0, 1]`
