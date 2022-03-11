@@ -1,6 +1,4 @@
 /* global ArrayBuffer, Float32Array, Int32Array */
-"use strict";
-
 // module Test.QuickCheck.Gen
 
 export function float32ToInt32(n) {
