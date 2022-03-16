@@ -44,12 +44,10 @@ import Data.Array ((:), length, zip, sortBy)
 import Data.Array.NonEmpty (NonEmptyArray)
 import Data.Array.NonEmpty as NEA
 import Data.Enum (class BoundedEnum, fromEnum, toEnum)
-import Data.Foldable (fold)
+import Data.Semigroup.Foldable (foldMap1)
 import Data.Int (toNumber, floor)
 import Data.List (List(..), toUnfoldable)
-import Data.List.NonEmpty (NonEmptyList)
-import Data.List.NonEmpty as NEL
-import Data.Maybe (fromJust)
+import Data.Maybe (Maybe(..), fromJust)
 import Data.Monoid.Additive (Additive(..))
 import Data.Newtype (unwrap)
 import Data.Tuple (Tuple(..), fst, snd)
@@ -162,15 +160,19 @@ oneOf xs = do
 
 -- | Create a random generator which selects and executes a random generator from
 -- | a non-empty, weighted list of random generators.
-frequency :: forall a. NonEmptyList (Tuple Number (Gen a)) -> Gen a
-frequency = NEL.uncons >>> \{ head: x, tail: xs } -> let
-    xxs   = Cons x xs
-    total = unwrap $ fold (map (Additive <<< fst) xxs :: List (Additive Number))
-    pick _ d Nil = d
-    pick n d (Cons (Tuple k x') xs') = if n <= k then x' else pick (n - k) d xs'
+frequency :: forall a. NonEmptyArray (Tuple Number (Gen a)) -> Gen a
+frequency xxs =
+  let
+    default = snd $ NEA.head xxs
+    total = unwrap $ foldMap1 (Additive <<< fst) xxs
+    pick i n = case NEA.index xxs i of
+      Nothing -> default
+      Just (Tuple k x')
+        | n <= k -> x'
+        | otherwise -> pick (i + 1) (n - k)
   in do
     n <- choose zero total
-    pick n (snd x) xxs
+    pick 0 n
 
 -- | Create a random generator which generates an array of random values.
 arrayOf :: forall a. Gen a -> Gen (Array a)
