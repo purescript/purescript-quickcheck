@@ -6,6 +6,7 @@ Notable changes to this project are documented in this file. The format is based
 
 Breaking changes:
 - Migrate FFI to ES modules (#130 by @kl0tl and @JordanMartinez)
+- Replaced polymorphic proxies with monomorphic `Proxy` (#132 by @JordanMartinez)
 - Make `frequency` use `NonEmptyArray` (#131 by @JordanMartinez)
 
   Now `oneOf` and `frequency` both use `NonEmptyArray` rather than `NonEmptyList`.
