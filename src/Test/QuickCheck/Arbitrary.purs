@@ -279,7 +279,7 @@ genericCoarbitrary x = coarbitrary (from x)
 -- | A helper typeclass to implement `Arbitrary` for records.
 class ArbitraryRowList :: RL.RowList Type -> Row Type -> Constraint
 class ArbitraryRowList list row | list -> row where
-  arbitraryRecord :: forall rlproxy. rlproxy list -> Gen (Record row)
+  arbitraryRecord :: Proxy list -> Gen (Record row)
 
 instance arbitraryRowListNil :: ArbitraryRowList RL.Nil () where
   arbitraryRecord _ = pure {}
