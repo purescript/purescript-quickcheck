@@ -17,6 +17,7 @@ Bugfixes:
 - `quickCheckPure` and `quickCheckPure'` stack safety (#127)
 
 Other improvements:
+- Drop `math` dependency; update imports (#133 by @JordanMartinez)
 
 ## [v7.1.0](https://github.com/purescript/purescript-quickcheck/releases/tag/v7.1.0) - 2021-04-27
 
