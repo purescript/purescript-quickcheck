@@ -49,6 +49,6 @@
     "purescript-unfoldable": "^6.0.0"
   },
   "devDependencies": {
-    "purescript-assert": "^6.0.0",
+    "purescript-assert": "^6.0.0"
   }
 }
