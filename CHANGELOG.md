@@ -15,7 +15,7 @@ Other improvements:
 ## [v8.0.1](https://github.com/purescript/purescript-quickcheck/releases/tag/v8.0.1) - 2022-04-27
 
 Bugfixes:
-- Remove duplicate `numbers` import from the bower.json file to support publishing to Pursuit (#128)
+- Remove duplicate `numbers` import from the bower.json file to support publishing to Pursuit (#128 by @thomashoneyman)
 
 ## [v8.0.0](https://github.com/purescript/purescript-quickcheck/releases/tag/v8.0.0) - 2022-04-27
 
