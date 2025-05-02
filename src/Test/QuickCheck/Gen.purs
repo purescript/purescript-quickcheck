@@ -263,6 +263,31 @@ lcgStep = Gen $ state f where
 uniform :: Gen Number
 uniform = (\n -> toNumber n / toNumber lcgM) <$> lcgStep
 
+-- | Generates a random integer in the range [min, ∞), with exponentially decreasing probability.
+-- |
+-- | This approximates a geometric distribution:
+-- | - 50% chance to draw from [min, 2 * min]
+-- | - 25% chance to draw from [2 * min, 4 * min]
+-- | - 12.5% chance to draw from [4 * min, 8 * min], etc.
+-- |
+-- | Example (min = 0):
+-- |   0 - 50%
+-- |   1 - 25%
+-- |   2 - 12.5%
+-- |   3+ - decreasing
+-- |
+-- | Example (min = 1):
+-- |   0 - 0%
+-- |   1 - 50%
+-- |   2 - 25%
+-- |   3+ - decreasing
+exponential :: Int -> Gen Int
+exponential minVal = go minVal
+  where
+  go maxVal = do
+    falseIsDontIncreaseMaxVal <- chooseBool
+    if falseIsDontIncreaseMaxVal then go (maxVal * 2) else chooseInt minVal maxVal
+
 foreign import float32ToInt32 :: Number -> Int
 
 -- | Perturb a random generator by modifying the current seed
