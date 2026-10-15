@@ -2,15 +2,11 @@
 
 Notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-Breaking changes:
-
-New features:
-
-Bugfixes:
+## [v8.0.2](https://github.com/purescript/purescript-quickcheck/releases/tag/v8.0.2)
 
 Other improvements:
+
+- Migrate from Bower/Pulp to Spago and update CI, linting, and formatting.
 
 ## [v8.0.1](https://github.com/purescript/purescript-quickcheck/releases/tag/v8.0.1) - 2022-04-27
 
