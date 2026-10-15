@@ -64,9 +64,9 @@ import Data.Maybe.First (First(..))
 import Data.Tuple (Tuple(..), snd)
 import Effect (Effect)
 import Effect.Console (log)
-import Effect.Exception (throwException, error)
-import Random.LCG (Seed, mkSeed, unSeed, randomSeed)
-import Test.QuickCheck.Arbitrary (class Arbitrary, arbitrary, class Coarbitrary, coarbitrary)
+import Effect.Exception (error, throwException)
+import Random.LCG (Seed, mkSeed, randomSeed, unSeed)
+import Test.QuickCheck.Arbitrary (class Arbitrary, class Coarbitrary, arbitrary, coarbitrary)
 import Test.QuickCheck.Gen (Gen, runGen)
 
 -- | Test a property.
@@ -108,8 +108,10 @@ quickCheckWithSeed initialSeed n prop = do
   for_ result.firstFailure \{ index, message, seed: failureSeed } ->
     throwException $ error
       $ "Test " <> show (index + 1)
-      <> " (seed " <> show (unSeed failureSeed) <> ") failed: \n"
-      <> message
+          <> " (seed "
+          <> show (unSeed failureSeed)
+          <> ") failed: \n"
+          <> message
   where
   loop :: LoopState -> Step LoopState LoopState
   loop state@{ seed, index, successes, firstFailure }
@@ -158,17 +160,17 @@ quickCheckPure s n prop = map snd (quickCheckPure' s n prop)
 quickCheckPure' :: forall prop. Testable prop => Seed -> Int -> prop -> List (Tuple Seed Result)
 quickCheckPure' s n prop = tailRec loop { seed: s, index: 0, results: mempty }
   where
-    loop :: PureLoopState -> Step PureLoopState (List (Tuple Seed Result))
-    loop { seed, index, results }
-      | index == n = Done (List.reverse (results))
-      | otherwise =
-          case runGen (test prop) { newSeed: seed, size: 10 } of
-            Tuple r {newSeed} ->
-              Loop
-                { seed: newSeed
-                , index: index + 1
-                , results: (Tuple seed r) : results
-                }
+  loop :: PureLoopState -> Step PureLoopState (List (Tuple Seed Result))
+  loop { seed, index, results }
+    | index == n = Done (List.reverse (results))
+    | otherwise =
+        case runGen (test prop) { newSeed: seed, size: 10 } of
+          Tuple r { newSeed } ->
+            Loop
+              { seed: newSeed
+              , index: index + 1
+              , results: (Tuple seed r) : results
+              }
 
 type PureLoopState =
   { seed :: Seed
@@ -195,13 +197,13 @@ type ResultSummary =
 checkResults :: List (Tuple Seed Result) -> ResultSummary
 checkResults = foldlWithIndex go { total: 0, successes: 0, failures: List.Nil }
   where
-    go :: Int -> ResultSummary -> Tuple Seed Result -> ResultSummary
-    go index st (Tuple seed result) =
-      case result of
-        Success ->
-          st { total = st.total + 1, successes = st.successes + 1 }
-        Failed message ->
-          st { total = st.total + 1, failures = List.Cons { index, seed, message } st.failures }
+  go :: Int -> ResultSummary -> Tuple Seed Result -> ResultSummary
+  go index st (Tuple seed result) =
+    case result of
+      Success ->
+        st { total = st.total + 1, successes = st.successes + 1 }
+      Failed message ->
+        st { total = st.total + 1, failures = List.Cons { index, seed, message } st.failures }
 
 -- | Print a one-line summary in the form "x/y test(s) passed."
 printSummary :: ResultSummary -> String

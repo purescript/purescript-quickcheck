@@ -23,7 +23,7 @@ import Data.Array.ST as STA
 import Data.Either (Either(..))
 import Data.Enum (fromEnum, toEnumWithDefaults)
 import Data.Foldable (foldl)
-import Data.Generic.Rep (class Generic, to, from, NoArguments(..), Sum(..), Product(..), Constructor(..), Argument(..))
+import Data.Generic.Rep (class Generic, Argument(..), Constructor(..), NoArguments(..), Product(..), Sum(..), from, to)
 import Data.Identity (Identity(..))
 import Data.Int (toNumber)
 import Data.Lazy (Lazy, defer, force)
@@ -118,7 +118,7 @@ instance coarbUnit :: Coarbitrary Unit where
   coarbitrary _ = perturbGen 1.0
 
 instance arbOrdering :: Arbitrary Ordering where
-  arbitrary = elements $ unsafePartial fromJust $ NEA.fromArray [LT, EQ, GT]
+  arbitrary = elements $ unsafePartial fromJust $ NEA.fromArray [ LT, EQ, GT ]
 
 instance coarbOrdering :: Coarbitrary Ordering where
   coarbitrary LT = perturbGen 1.0
@@ -133,12 +133,12 @@ instance coarbArray :: Coarbitrary a => Coarbitrary (Array a) where
 
 instance arbNonEmptyArray :: Arbitrary a => Arbitrary (NonEmptyArray a) where
   arbitrary = do
-     x <- arbitrary
-     xs <- arbitrary
-     pure $ unsafePartial fromJust $ NEA.fromArray $ ST.run do
-        mxs <- STA.unsafeThaw xs
-        _ <- STA.push x mxs
-        STA.unsafeFreeze mxs
+    x <- arbitrary
+    xs <- arbitrary
+    pure $ unsafePartial fromJust $ NEA.fromArray $ ST.run do
+      mxs <- STA.unsafeThaw xs
+      _ <- STA.push x mxs
+      STA.unsafeFreeze mxs
 
 instance coarbNonEmptyArray :: Coarbitrary a => Coarbitrary (NonEmptyArray a) where
   coarbitrary = coarbitrary <<< NEA.toArray
@@ -192,7 +192,7 @@ instance arbEither :: (Arbitrary a, Arbitrary b) => Arbitrary (Either a b) where
   arbitrary = MGC.genEither arbitrary arbitrary
 
 instance coarbEither :: (Coarbitrary a, Coarbitrary b) => Coarbitrary (Either a b) where
-  coarbitrary (Left a)  = coarbitrary a
+  coarbitrary (Left a) = coarbitrary a
   coarbitrary (Right b) = coarbitrary b
 
 instance arbitraryList :: Arbitrary a => Arbitrary (List a) where
@@ -241,7 +241,7 @@ instance arbGenSumSum :: (Arbitrary l, ArbitraryGenericSum r) => ArbitraryGeneri
   arbitraryGenericSum = (Inl <$> arbitrary) : (map Inr <$> arbitraryGenericSum)
 
 instance arbGenSumConstructor :: Arbitrary a => ArbitraryGenericSum (Constructor s a) where
-  arbitraryGenericSum = [arbitrary]
+  arbitraryGenericSum = [ arbitrary ]
 
 instance arbitrarySum :: (Arbitrary l, ArbitraryGenericSum r) => Arbitrary (Sum l r) where
   arbitrary = oneOf $ unsafePartial fromJust $ NEA.fromArray $ (Inl <$> arbitrary) : (map Inr <$> arbitraryGenericSum)
@@ -291,14 +291,16 @@ instance arbitraryRowListCons ::
   , Row.Cons key a rowRest rowFull
   , RL.RowToList rowFull (RL.Cons key a listRest)
   , IsSymbol key
-  ) => ArbitraryRowList (RL.Cons key a listRest) rowFull where
+  ) =>
+  ArbitraryRowList (RL.Cons key a listRest) rowFull where
   arbitraryRecord _ = do
-     value <- arbitrary
-     previous <- arbitraryRecord (Proxy :: Proxy listRest)
-     pure $ Record.insert (Proxy :: Proxy key) value previous
+    value <- arbitrary
+    previous <- arbitraryRecord (Proxy :: Proxy listRest)
+    pure $ Record.insert (Proxy :: Proxy key) value previous
 
 instance arbitraryRecordInstance ::
   ( RL.RowToList row list
   , ArbitraryRowList list row
-  ) => Arbitrary (Record row) where
+  ) =>
+  Arbitrary (Record row) where
   arbitrary = arbitraryRecord (Proxy :: Proxy list)
