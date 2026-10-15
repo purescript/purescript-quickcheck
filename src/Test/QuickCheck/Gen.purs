@@ -161,7 +161,7 @@ oneOf xs = do
 -- | Create a random generator which selects and executes a random generator from
 -- | a non-empty, weighted list of random generators.
 frequency :: forall a. NonEmptyArray (Tuple Number (Gen a)) -> Gen a
-frequency xxs =
+frequency xxs = do
   let
     default = snd $ NEA.head xxs
     total = unwrap $ foldMap1 (Additive <<< fst) xxs
@@ -170,9 +170,8 @@ frequency xxs =
       Just (Tuple k x')
         | n <= k -> x'
         | otherwise -> pick (i + 1) (n - k)
-  in do
-    n <- choose zero total
-    pick 0 n
+  n <- choose zero total
+  pick 0 n
 
 -- | Create a random generator which generates an array of random values.
 arrayOf :: forall a. Gen a -> Gen (Array a)
