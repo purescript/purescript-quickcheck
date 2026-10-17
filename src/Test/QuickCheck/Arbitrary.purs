@@ -78,8 +78,9 @@ instance arbBoolean :: Arbitrary Boolean where
   arbitrary = chooseBool
 
 instance coarbBoolean :: Coarbitrary Boolean where
-  coarbitrary true = perturbGen 1.0
-  coarbitrary false = perturbGen 2.0
+  coarbitrary = case _ of
+    true -> perturbGen 1.0
+    false -> perturbGen 2.0
 
 instance arbNumber :: Arbitrary Number where
   arbitrary = uniform
@@ -121,9 +122,10 @@ instance arbOrdering :: Arbitrary Ordering where
   arbitrary = elements $ unsafePartial fromJust $ NEA.fromArray [ LT, EQ, GT ]
 
 instance coarbOrdering :: Coarbitrary Ordering where
-  coarbitrary LT = perturbGen 1.0
-  coarbitrary EQ = perturbGen 2.0
-  coarbitrary GT = perturbGen 3.0
+  coarbitrary = case _ of
+    LT -> perturbGen 1.0
+    EQ -> perturbGen 2.0
+    GT -> perturbGen 3.0
 
 instance arbArray :: Arbitrary a => Arbitrary (Array a) where
   arbitrary = arrayOf arbitrary
@@ -185,15 +187,17 @@ instance arbMaybe :: Arbitrary a => Arbitrary (Maybe a) where
   arbitrary = MGC.genMaybe arbitrary
 
 instance coarbMaybe :: Coarbitrary a => Coarbitrary (Maybe a) where
-  coarbitrary Nothing = perturbGen 1.0
-  coarbitrary (Just a) = coarbitrary a
+  coarbitrary = case _ of
+    Nothing -> perturbGen 1.0
+    Just a -> coarbitrary a
 
 instance arbEither :: (Arbitrary a, Arbitrary b) => Arbitrary (Either a b) where
   arbitrary = MGC.genEither arbitrary arbitrary
 
 instance coarbEither :: (Coarbitrary a, Coarbitrary b) => Coarbitrary (Either a b) where
-  coarbitrary (Left a) = coarbitrary a
-  coarbitrary (Right b) = coarbitrary b
+  coarbitrary = case _ of
+    Left a -> coarbitrary a
+    Right b -> coarbitrary b
 
 instance arbitraryList :: Arbitrary a => Arbitrary (List a) where
   arbitrary = sized \n -> chooseInt zero n >>= flip listOf arbitrary
@@ -247,8 +251,9 @@ instance arbitrarySum :: (Arbitrary l, ArbitraryGenericSum r) => Arbitrary (Sum 
   arbitrary = oneOf $ unsafePartial fromJust $ NEA.fromArray $ (Inl <$> arbitrary) : (map Inr <$> arbitraryGenericSum)
 
 instance coarbitrarySum :: (Coarbitrary l, Coarbitrary r) => Coarbitrary (Sum l r) where
-  coarbitrary (Inl l) = coarbitrary l
-  coarbitrary (Inr r) = coarbitrary r
+  coarbitrary = case _ of
+    Inl l -> coarbitrary l
+    Inr r -> coarbitrary r
 
 instance arbitraryProduct :: (Arbitrary l, Arbitrary r) => Arbitrary (Product l r) where
   arbitrary = Product <$> arbitrary <*> arbitrary

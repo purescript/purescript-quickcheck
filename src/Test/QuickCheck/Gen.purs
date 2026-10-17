@@ -204,8 +204,9 @@ replicateMRec k _ | k <= 0 = pure Nil
 replicateMRec k gen = tailRecM go (Tuple Nil k)
   where
   go :: (Tuple (List a) Int) -> m (Step (Tuple (List a) Int) (List a))
-  go (Tuple acc 0) = pure $ Done acc
-  go (Tuple acc n) = gen <#> \x -> Loop (Tuple (Cons x acc) (n - 1))
+  go = case _ of
+    Tuple acc 0 -> pure $ Done acc
+    Tuple acc n -> gen <#> \x -> Loop (Tuple (Cons x acc) (n - 1))
 
 -- | Create a random generator which generates a list of random values of the specified size.
 listOf :: forall a. Int -> Gen a -> Gen (List a)

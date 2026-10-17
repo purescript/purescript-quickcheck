@@ -36,16 +36,14 @@ quickCheckFail :: forall t. Testable t => t -> Effect Unit
 quickCheckFail = assert <=< map isLeft <<< try <<< quickCheck
 
 testResize :: (forall a. Size -> Gen a -> Gen a) -> Boolean
-testResize resize' =
-  let
-    initialSize = 2
-    gen = do
-      s1 <- sized pure
-      s2 <- resize' 1 (sized pure)
-      s3 <- sized pure
-      pure $ [ s1, s2, s3 ] == [ initialSize, 1, initialSize ]
-  in
-    fst $ runGen gen { newSeed: mkSeed 0, size: initialSize }
+testResize resize' = fst $ runGen gen { newSeed: mkSeed 0, size: initialSize }
+  where
+  initialSize = 2
+  gen = do
+    s1 <- sized pure
+    s2 <- resize' 1 (sized pure)
+    s3 <- sized pure
+    pure $ [ s1, s2, s3 ] == [ initialSize, 1, initialSize ]
 
 main :: Effect Unit
 main = do
@@ -99,7 +97,8 @@ main = do
   log ("Completed " <> show n <> " runs.")
 
   log "Checking that chooseFloat over the whole Number range always yields a finite value"
-  randomSample (MGen.chooseFloat ((-1.7976931348623157e+308)) (1.7976931348623157e+308)) >>= assert <<< all isFinite
+  samples <- randomSample (MGen.chooseFloat (-1.7976931348623157e+308) 1.7976931348623157e+308)
+  assert $ all isFinite samples
 
   where
   go n = map (sum <<< unsafeHead) $ randomSample' 1 (vectorOf n (arbitrary :: Gen Int))

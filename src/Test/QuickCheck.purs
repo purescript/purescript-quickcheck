@@ -224,8 +224,9 @@ instance testableResult :: Testable Result where
   test = pure
 
 instance testableBoolean :: Testable Boolean where
-  test true = pure Success
-  test false = pure $ Failed "Test returned false"
+  test = case _ of
+    true -> pure Success
+    false -> pure $ Failed "Test returned false"
 
 instance testableFunction :: (Arbitrary t, Testable prop) => Testable (t -> prop) where
   test f = arbitrary >>= test <<< f
@@ -237,8 +238,9 @@ instance testableGen :: Testable prop => Testable (Gen prop) where
 data Result = Success | Failed String
 
 instance showResult :: Show Result where
-  show Success = "Success"
-  show (Failed msg) = "Failed: " <> msg
+  show = case _ of
+    Success -> "Success"
+    Failed msg -> "Failed: " <> msg
 
 -- | This operator attaches an error message to a failed test.
 -- |
@@ -248,8 +250,9 @@ instance showResult :: Show Result where
 -- | test x = myProperty x <?> ("myProperty did not hold for " <> show x)
 -- | ```
 withHelp :: Boolean -> String -> Result
-withHelp true _ = Success
-withHelp false msg = Failed msg
+withHelp condition msg = case condition of
+  true -> Success
+  false -> Failed msg
 
 infix 2 withHelp as <?>
 
