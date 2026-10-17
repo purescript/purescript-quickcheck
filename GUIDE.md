@@ -16,12 +16,12 @@ QuickCheck works by generating random data with which to test your properties. T
 
 QuickCheck defines the `quickCheck` function, which will print test results to the console, or fail with an exception in the event of a test failure.
 
-Create a new project using Pulp, install `purescript-quickcheck`, and open PSCi:
+Create a new project using Spago, install `quickcheck`, and open PSCi:
 
 ```text
-pulp init
-bower install purescript-quickcheck
-pulp repl
+spago init
+spago install quickcheck
+spago repl
 ```
 
 Start by importing the QuickCheck library:

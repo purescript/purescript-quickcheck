@@ -38,23 +38,23 @@ import Control.Alt (class Alt)
 import Control.Lazy (class Lazy)
 import Control.Monad.Gen.Class (class MonadGen)
 import Control.Monad.Rec.Class (class MonadRec, Step(..), tailRecM)
-import Control.Monad.State (State, runState, evalState)
+import Control.Monad.State (State, evalState, runState)
 import Control.Monad.State.Class (modify, state)
-import Data.Array ((:), length, zip, sortBy)
+import Data.Array (length, sortBy, zip, (:))
 import Data.Array.NonEmpty (NonEmptyArray)
 import Data.Array.NonEmpty as NEA
 import Data.Enum (class BoundedEnum, fromEnum, toEnum)
-import Data.Semigroup.Foldable (foldMap1)
-import Data.Int (toNumber, floor)
+import Data.Int (floor, toNumber)
 import Data.List (List(..), toUnfoldable)
 import Data.Maybe (Maybe(..), fromJust)
 import Data.Monoid.Additive (Additive(..))
 import Data.Newtype (unwrap)
 import Data.Number ((%))
+import Data.Semigroup.Foldable (foldMap1)
 import Data.Tuple (Tuple(..), fst, snd)
 import Effect (Effect)
 import Partial.Unsafe (unsafePartial)
-import Random.LCG (Seed, lcgPerturb, lcgM, lcgNext, unSeed, randomSeed)
+import Random.LCG (Seed, lcgM, lcgNext, lcgPerturb, randomSeed, unSeed)
 
 -- | Tests are parameterized by the `Size` of the randomly-generated data,
 -- | the meaning of which depends on the particular generator used.
@@ -117,12 +117,13 @@ sized f = stateful (\s -> f s.size)
 -- | Modify a random generator by setting a new size parameter.
 resize :: forall a. Size -> Gen a -> Gen a
 resize sz g = Gen $ state \{ newSeed, size } ->
-  (_ {size = size} ) <$> runGen g { newSeed, size: sz}
+  (_ { size = size }) <$> runGen g { newSeed, size: sz }
 
 -- | Create a random generator which samples a range of `Number`s i
 -- | with uniform probability.
 choose :: Number -> Number -> Gen Number
-choose a b = (*) (max' - min') >>> (+) min' >>> unscale <$> uniform where
+choose a b = (*) (max' - min') >>> (+) min' >>> unscale <$> uniform
+  where
   unscale = (_ * 2.0)
   scale = (_ * 0.5)
   min' = scale $ min a b
@@ -138,18 +139,18 @@ chooseInt a b = if a <= b then chooseInt' a b else chooseInt' b a
 chooseInt' :: Int -> Int -> Gen Int
 chooseInt' a b = floor <<< clamp <$> choose32BitPosNumber
   where
-    choose32BitPosNumber :: Gen Number
-    choose32BitPosNumber =
-      (+) <$> choose31BitPosNumber <*> (((*) 2.0) <$> choose31BitPosNumber)
+  choose32BitPosNumber :: Gen Number
+  choose32BitPosNumber =
+    (+) <$> choose31BitPosNumber <*> (((*) 2.0) <$> choose31BitPosNumber)
 
-    choose31BitPosNumber :: Gen Number
-    choose31BitPosNumber = toNumber <$> lcgStep
+  choose31BitPosNumber :: Gen Number
+  choose31BitPosNumber = toNumber <$> lcgStep
 
-    clamp :: Number -> Number
-    clamp x = numA + (x % (numB - numA + one))
+  clamp :: Number -> Number
+  clamp x = numA + (x % (numB - numA + one))
 
-    numA = toNumber a
-    numB = toNumber b
+  numA = toNumber a
+  numB = toNumber b
 
 -- | Create a random generator which selects and executes a random generator from
 -- | a non-empty array of random generators with uniform probability.
@@ -161,7 +162,7 @@ oneOf xs = do
 -- | Create a random generator which selects and executes a random generator from
 -- | a non-empty, weighted list of random generators.
 frequency :: forall a. NonEmptyArray (Tuple Number (Gen a)) -> Gen a
-frequency xxs =
+frequency xxs = do
   let
     default = snd $ NEA.head xxs
     total = unwrap $ foldMap1 (Additive <<< fst) xxs
@@ -170,23 +171,24 @@ frequency xxs =
       Just (Tuple k x')
         | n <= k -> x'
         | otherwise -> pick (i + 1) (n - k)
-  in do
-    n <- choose zero total
-    pick 0 n
+  n <- choose zero total
+  pick 0 n
 
 -- | Create a random generator which generates an array of random values.
 arrayOf :: forall a. Gen a -> Gen (Array a)
 arrayOf g = sized $ \n ->
-  do k <- chooseInt zero n
-     vectorOf k g
+  do
+    k <- chooseInt zero n
+    vectorOf k g
 
 -- | Create a random generator which generates a non-empty array of random values.
 arrayOf1 :: forall a. Gen a -> Gen (NonEmptyArray a)
 arrayOf1 g = sized $ \n ->
-  do k <- chooseInt zero n
-     x <- g
-     xs <- vectorOf (k - one) g
-     pure $ unsafePartial fromJust $ NEA.fromArray $ x : xs
+  do
+    k <- chooseInt zero n
+    x <- g
+    xs <- vectorOf (k - one) g
+    pure $ unsafePartial fromJust $ NEA.fromArray $ x : xs
 
 -- | Create a random generator for a finite enumeration.
 -- | `toEnum i` must be well-behaved:
@@ -202,8 +204,9 @@ replicateMRec k _ | k <= 0 = pure Nil
 replicateMRec k gen = tailRecM go (Tuple Nil k)
   where
   go :: (Tuple (List a) Int) -> m (Step (Tuple (List a) Int) (List a))
-  go (Tuple acc 0) = pure $ Done acc
-  go (Tuple acc n) = gen <#> \x -> Loop (Tuple (Cons x acc) (n - 1))
+  go = case _ of
+    Tuple acc 0 -> pure $ Done acc
+    Tuple acc n -> gen <#> \x -> Loop (Tuple (Cons x acc) (n - 1))
 
 -- | Create a random generator which generates a list of random values of the specified size.
 listOf :: forall a. Int -> Gen a -> Gen (List a)
@@ -256,7 +259,8 @@ randomSample = randomSample' 10
 
 -- | A random generator which simply outputs the current seed
 lcgStep :: Gen Int
-lcgStep = Gen $ state f where
+lcgStep = Gen $ state f
+  where
   f s = Tuple (unSeed s.newSeed) (s { newSeed = lcgNext s.newSeed })
 
 -- | A random generator which approximates a uniform random variable on `[0, 1]`
