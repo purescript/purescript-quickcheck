@@ -2,7 +2,7 @@
 
 Notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [Unreleased](https://github.com/purescript/purescript-quickcheck/compare/v8.0.2...HEAD)
 
 Breaking changes:
 
@@ -12,14 +12,22 @@ Bugfixes:
 
 Other improvements:
 
+## [v8.0.2](https://github.com/purescript/purescript-quickcheck/releases/tag/v8.0.2) - 2026-10-17
+
+Other improvements:
+
+- Migrate from Bower/Pulp to Spago and update CI, linting, and formatting (#138 by @thomashoneyman).
+
 ## [v8.0.1](https://github.com/purescript/purescript-quickcheck/releases/tag/v8.0.1) - 2022-04-27
 
 Bugfixes:
+
 - Remove duplicate `numbers` import from the bower.json file to support publishing to Pursuit (#128 by @thomashoneyman)
 
 ## [v8.0.0](https://github.com/purescript/purescript-quickcheck/releases/tag/v8.0.0) - 2022-04-27
 
 Breaking changes:
+
 - Migrate FFI to ES modules (#130 by @kl0tl and @JordanMartinez)
 - Replaced polymorphic proxies with monomorphic `Proxy` (#132 by @JordanMartinez)
 - Make `frequency` use `NonEmptyArray` (#131 by @JordanMartinez)
@@ -29,34 +37,42 @@ Breaking changes:
 New features:
 
 Bugfixes:
+
 - `quickCheckPure` and `quickCheckPure'` stack safety (#127)
 
 Other improvements:
+
 - Drop `math` dependency; update imports (#133 by @JordanMartinez)
 
 ## [v7.1.0](https://github.com/purescript/purescript-quickcheck/releases/tag/v7.1.0) - 2021-04-27
 
 New features:
+
 - Export `enum` and `randomSampleOne` (#125 by @JordanMartinez)
 
 Other improvements:
+
 - Fix warning revealed by v0.14.1 PS release (#125 by @JordanMartinez)
 
 ## [v7.0.0](https://github.com/purescript/purescript-quickcheck/releases/tag/v7.0.0) - 2021-02-26
 
 Breaking changes:
+
 - Added support for PureScript 0.14 and dropped support for all previous versions (#115)
 - Fixed `genericCoarbitrary` so it no longer explicitly relates to the generated data (#99)
 - Replaced `NonEmpty Array` and `NonEmpty List` with `NonEmptyArray` and `NonEmptyList` (#118)
-- Replaced `globals` dependency with `numbers` (#120) 
+- Replaced `globals` dependency with `numbers` (#120)
 
 New features:
-- Added `randomSampleOne` (#114) 
+
+- Added `randomSampleOne` (#114)
 
 Bugfixes:
-- Allowed full `Number` range for chooseFloat (#97) 
+
+- Allowed full `Number` range for chooseFloat (#97)
 
 Other improvements:
+
 - Dropped `generics-rep` dependency as its now included in `prelude` (#121)
 - Replaced monomorphic proxies with `Type.Proxy.Proxy` and polymorphic variables (#116)
 - Migrated CI to GitHub Actions and updated installation instructions to use Spago (#117)
@@ -118,7 +134,7 @@ Other improvements:
 - Updated for PureScript 0.11
 - Use `NonEmpty` for `Gen`s where called for (@matthewleon)
 - Improved behaviour of `chooseInt` (@matthewleon)
-- Added `Arbitrary` and `Coarbitrary` instances for `NonEmpty` and `NonEmptyList`  (@matthewleon)
+- Added `Arbitrary` and `Coarbitrary` instances for `NonEmpty` and `NonEmptyList` (@matthewleon)
 - Added `enum` `Gen` for `BoundedEnum` values (@matthewleon)
 
 ## [v3.1.1](https://github.com/purescript/purescript-quickcheck/releases/tag/v3.1.1) - 2016-11-22
@@ -202,6 +218,7 @@ This release works with versions 0.7.\* of the PureScript compiler. It will not 
 ## [v0.5.0](https://github.com/purescript/purescript-quickcheck/releases/tag/v0.5.0) - 2015-02-21
 
 **This release requires PureScript v0.6.8 or later**
+
 - Updated dependencies
 
 ## [v0.4.0](https://github.com/purescript/purescript-quickcheck/releases/tag/v0.4.0) - 2015-01-10
